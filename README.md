@@ -1,106 +1,107 @@
-# Aplikácia
+# Application Overview
 
-Tento projekt predstavuje aplikáciu, ktorá sprostredkováva prenájom reklamného priestoru na autách. 
-Obsahuje dve hlavné užívateľské role – Majiteľ auta a Firma. Cieľom je vytvoriť platformu, 
-kde majitelia áut môžu ponúkať reklamný priestor(svoje auto) a firmy môžu tieto reklamy nakupovať. 
-
-## Užívateľské role
-
-1. **Nezaregistrovaný užívateľ**
-   - Nemá prístup do aplikácie, vidí len úvodnú obrazovku s možnosťou registrácie.
-   - Môže si pozrieť demo v read-only režime.
-   - Možnosť registrácie ako firma alebo ako majiteľ auta.
-
-2. **Registrovaný užívateľ (Majiteľ auta)**
-   - Má prístup k funkcionalite na registráciu auta, zobrazenie štatistík, príjmov a nastavení.
-
-3. **Registrovaná firma**
-   - Má prístup k funkcionalite na nákup reklamného priestoru na autách, zobrazenie štatistík, 
-     prehľad platieb a nastavení.
-
-4. **Admin account**
-   - Správa celého systému (nie je detailne rozpísané).
+This project represents an application that facilitates the rental of advertising space on cars. 
+It features two primary user roles – **Car Owner** and **Company**. The goal is to create a platform 
+where car owners can offer advertising space (their cars) and companies can purchase these ads.
 
 ---
 
-## Funkčné požiadavky
+## User Roles
 
-### 1. Pre registrovaných majiteľov áut
-- **Pred registráciou auta:**
-  - Užívateľ musí podpísať zmluvné podmienky a GDPR (ak aj odmietne, musí mať možnosť pokračovať 
-    v obmedzenom režime)
-  - Musí existovať možnosť zmazať účet
+1. **Unregistered User**
+   - No access to the main application features; sees only a welcome screen with an option to register.
+   - Can view a demo in read-only mode.
+   - Has the option to register as either a Company or a Car Owner.
 
-- **Registrovanie auta:**
-  - Registrácia auta na minimálne mesiac a viac.
-  - Zadáva sa značka, typ auta, lokalita (kde sa bude najčastejšie jazdiť) a plánovaný mesačný nájazd kilometrov.
-  - Na základe týchto údajov sa vypočíta cena reklamy, ktorú bude firma platiť (majiteľ auta musí splniť 
-    stanovený limit kilometrov).
+2. **Registered User (Car Owner)**
+   - Access to functionalities for registering a car, viewing statistics, income, and settings.
 
-- **Hlavné menu (Majiteľ auta):**
-  - Zobrazuje, koľko kilometrov najazdil za daný mesiac.
-  - Koľko mu chýba do splnenia limitu na získanie platby za prenájom.
-  - Rýchly prehľad podstatných informácií.
+3. **Registered Company**
+   - Access to functionalities for purchasing advertising space on cars, viewing statistics, payment overviews, and settings.
 
-- **Sledovanie cez GPS (voliteľne):**
-  - Aplikácia trackuje, koľko a v akých časoch majiteľ auta jazdil.
-  - Na základe týchto údajov by sa mohol odhadnúť dosah reklamy (hot oblasti).
-  - Vo verzii 1 nie je nevyhnutné.
-
-- **Nastavenia (Majiteľ auta):**
-  - Nastavenie bankového účtu, zmena hesla, e-mailu, a iných osobných údajov.
-
-- **Štatistika (Majiteľ auta):**
-  - Ako veľa najazdil.
-  - Koľko peňazí zarobil.
-
-- **Detailné záznamy o platbách:**
-  - Možnosť kontroly, reklamácie, storna platieb a podobne.
-
-- **Stručný prehľad obrazoviek (Majiteľ auta):**
-  - **STATS** | **INCOME** | **MENU** | **REGISTER CAR** | **SETTINGS**
+4. **Admin Account**
+   - Manages the entire system
 
 ---
 
-### 2. Pre registrovanú firmu
-- **Nutnosť registrácie firmy:**
-  - Podpísanie zmluvných podmienok (pre účely projektu sa nebudeme zaoberať detailmi).
+## Functional Requirements
 
-- **Hlavné menu (Firma):**
-  - Zobrazenie základnej štatistiky:
-    - Počet prenajatých áut.
-    - Koľko áut najazdilo.
-    - Koľko firma míňa na reklamu.
-  - Odhad dosahu reklamy (voliteľné).
+### 1. For Registered Car Owners
 
-- **STATS page (Firma):**
-  - Všetky možné štatistiky (počet prenajatých áut, cena reklamy, mapa Slovenska s lokalitami, kde sú 
-    zakúpené reklamy).
+- **Before Registering a Car:**
+  - The user must sign Terms & Conditions and GDPR. (If they refuse, they can continue in a limited mode.)
+  - There must be an option to delete the account.
 
-- **BUY AD (Firma):**
-  - Možnosť firmy vidieť aktuálnu ponuku vozidiel, na ktoré môže umiestniť reklamu.
-  - Filter a/alebo odporúčací algoritmus (napr. podľa lokality, značky, nájazdu).
+- **Car Registration:**
+  - The car can be registered for a minimum of one month or more.
+  - The user provides the car brand, model, location (where it will be driven most frequently), and planned monthly mileage.
+  - Based on these details, the advertising price is calculated (the Car Owner must meet the set mileage limit to receive payment).
 
-- **SETTINGS (Firma):**
-  - Podobné nastavenia ako pri užívateľovi (zmena hesla, e-mailu atď.).
+- **Main Menu (Car Owner):**
+  - Shows how many kilometers have been driven in the current month.
+  - Indicates how many kilometers remain to fulfill the mileage requirement for earning the rental fee.
+  - Provides a quick overview of key information.
 
-- **PAYMENT (Firma):**
-  - Detailné záznamy o platbách.
-  - Možnosť kontroly, reklamácie, storna platieb.
+- **GPS Tracking (Optional):**
+  - The app can track how much and when the Car Owner drives.
+  - This data could be used to estimate the reach of the advertisement (e.g., “hot areas”).
+
+- **Settings (Car Owner):**
+  - Allows the user to set up a bank account, change password, email, and other personal details.
+
+- **Statistics (Car Owner):**
+  - Shows the total distance driven.
+  - Displays the total earnings.
+
+- **Detailed Payment Records:**
+  - Includes options for checks, complaints, refunds, and so on.
+
+- **Car Owner Screen Overview:**
+  - **HOME** | **FIND AD** | **STATS** | **PROFILE** 
 
 ---
 
-### 3. Vzájomná interakcia (Firma - Majiteľ auta)
-- Firmy si vyberajú autá od majiteľov, na ktoré chcú umiestniť reklamu.
-- Môže existovať odporúčací algoritmus pre firmy na základe lokality a iných parametrov.
+### 2. For Registered Companies
+
+- **Company Registration:**
+  - Must sign Terms & Conditions (details not covered in depth here).
+
+- **Main Menu (Company):**
+  - Displays basic statistics:
+    - Number of rented cars.
+    - How many cars have met their mileage requirements.
+    - Total advertising expenditure.
+  - May include an estimate of the ad reach (optional).
+
+- **STATS Page (Company):**
+  - Shows all relevant statistics (number of rented cars, advertising costs, a map of regions where ads have been placed, etc.).
+
+- **BUY AD (Company):**
+  - Allows the company to view the current list of vehicles available for advertising.
+  - Provides a filter and/or recommendation algorithm (e.g., by location, car brand, mileage).
+
+- **SETTINGS (Company):**
+  - Similar to the Car Owner settings (password change, email update, etc.).
+
+- **PAYMENT (Company):**
+  - Detailed records of payments.
+  - Options for checks, complaints, refunds, etc.
 
 ---
 
-## Nefunkčné požiadavky
+### 3. Mutual Interaction (Company – Car Owner)
 
-1. **Intuitívne UI**
-   - Jednoduchá orientácia, dôraz na prehľadnosť.
-2. **Kompatibilita s iOS**
-   - Cieľom je mať aplikáciu spustiteľnú na iOS.
+- Companies select the cars on which they wish to place advertisements.
+- A recommendation algorithm can be implemented for companies based on location and other parameters.
 
+---
 
+## Non-Functional Requirements
+
+1. **Intuitive UI**
+   - Emphasis on simplicity and clarity.
+
+2. **iOS Compatibility**
+   - The goal is for the application to run on iOS devices.
+
+---
