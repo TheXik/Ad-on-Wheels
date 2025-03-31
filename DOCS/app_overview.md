@@ -1,107 +1,66 @@
 # Application Overview
 
-This project represents an application that facilitates the rental of advertising space on cars. 
-It features two primary user roles – **Car Owner** and **Company**. The goal is to create a platform 
-where car owners can offer advertising space (their cars) and companies can purchase these ads.
+This application provides an innovative platform enabling individuals to earn money by renting advertising space on their cars. It features two primary user roles: **Car Owners** and **Companies** looking to advertise. The goal is to seamlessly connect car owners with companies wishing to place targeted ads on vehicles, creating a mutually beneficial relationship.
 
 ---
 
 ## User Roles
 
-1. **Unregistered User**
-   - No access to the main application features; sees only a welcome screen with an option to register.
-   - Can view a demo in read-only mode.
-   - Has the option to register as either a Company or a Car Owner.
+### 1. Unregistered Users
+- View an introductory page highlighting opportunities to earn money by driving.
+- Access a demo in read-only mode.
+- Options to sign up as either a **Car Owner** or **Company**.
 
-2. **Registered User (Car Owner)**
-   - Access to functionalities for registering a car, viewing statistics, income, and settings.
+### 2. Registered Car Owners
+- Clearly designed Home screen displaying:
+  - Progress towards monthly mileage targets.
+  - Quick access to ride history and earnings.
+- QR code scanning feature to track rides (making sure user is riding in the correct car)
+- Option to end rides manually, logging time and valid kilometers.
+- Comprehensive **Statistics** section:
+  - Detailed summaries of monthly travel, earnings, and mileage compliance.
+  - Visual data representation for quick understanding.
+- Profile management for easy updates to personal details, banking information, security settings, and app preferences.
 
-3. **Registered Company**
-   - Access to functionalities for purchasing advertising space on cars, viewing statistics, payment overviews, and settings.
+### 3. Registered Companies
+- Dashboard overview of advertising campaigns:
+  - Number of rented cars.
+  - Mileage compliance by drivers.
+  - Total advertising spend and reach estimates.
+- Ability to search and select available cars for advertisement placements.
+- Advanced filtering and recommendation algorithms based on car brand, mileage, and geographical regions.
+- Detailed payment records, including invoices and transaction management (checks, refunds, and complaints).
 
-4. **Admin Account**
-   - Manages the entire system
-
----
-
-## Functional Requirements
-
-### 1. For Registered Car Owners
-
-- **Before Registering a Car:**
-  - The user must sign Terms & Conditions and GDPR. (If they refuse, they can continue in a limited mode.)
-  - There must be an option to delete the account.
-
-- **Car Registration:**
-  - The car can be registered for a minimum of one month or more.
-  - The user provides the car brand, model, location (where it will be driven most frequently), and planned monthly mileage.
-  - Based on these details, the advertising price is calculated (the Car Owner must meet the set mileage limit to receive payment).
-
-- **Main Menu (Car Owner):**
-  - Shows how many kilometers have been driven in the current month.
-  - Indicates how many kilometers remain to fulfill the mileage requirement for earning the rental fee.
-  - Provides a quick overview of key information.
-
-- **GPS Tracking (Optional):**
-  - The app can track how much and when the Car Owner drives.
-  - This data could be used to estimate the reach of the advertisement (e.g., “hot areas”).
-
-- **Settings (Car Owner):**
-  - Allows the user to set up a bank account, change password, email, and other personal details.
-
-- **Statistics (Car Owner):**
-  - Shows the total distance driven.
-  - Displays the total earnings.
-
-- **Detailed Payment Records:**
-  - Includes options for checks, complaints, refunds, and so on.
-
-- **Car Owner Screen Overview:**
-  - **HOME** | **FIND AD** | **STATS** | **PROFILE** 
+### 4. Admin
+- Full access to system-wide management and oversight functionalities.
 
 ---
 
-### 2. For Registered Companies
+## Functional Highlights
 
-- **Company Registration:**
-  - Must sign Terms & Conditions (details not covered in depth here).
+### Car Owner Experience
+- **Mileage Tracking**: Clear visual representation of kilometers required to achieve payout.
+- **QR Scanning**: Seamless integration to confirm rides and track activity.
+- **Earnings Management**: Transparent display of earnings, with easy access to detailed payment history.
 
-- **Main Menu (Company):**
-  - Displays basic statistics:
-    - Number of rented cars.
-    - How many cars have met their mileage requirements.
-    - Total advertising expenditure.
-  - May include an estimate of the ad reach (optional).
-
-- **STATS Page (Company):**
-  - Shows all relevant statistics (number of rented cars, advertising costs, a map of regions where ads have been placed, etc.).
-
-- **BUY AD (Company):**
-  - Allows the company to view the current list of vehicles available for advertising.
-  - Provides a filter and/or recommendation algorithm (e.g., by location, car brand, mileage).
-
-- **SETTINGS (Company):**
-  - Similar to the Car Owner settings (password change, email update, etc.).
-
-- **PAYMENT (Company):**
-  - Detailed records of payments.
-  - Options for checks, complaints, refunds, etc.
+### Company Experience
+- **Ad Placement Management**: Intuitive interface for selecting and renting available car ad spaces.
+- **Campaign Statistics**: Real-time insights into ad performance, geographic reach, and financial metrics.
 
 ---
 
-### 3. Mutual Interaction (Company – Car Owner)
-
-- Companies select the cars on which they wish to place advertisements.
-- A recommendation algorithm can be implemented for companies based on location and other parameters.
+## Key UI Features
+- Clean, minimalistic design ensuring intuitive user navigation.
+- Persistent navigation bar (**HOME | ADS | STATS | PROFILE**) ensuring consistent user experience.
+- Interactive progress indicators and ride summaries to motivate and engage car owners.
+- User-friendly registration and profile management.
 
 ---
 
 ## Non-Functional Requirements
 
-1. **Intuitive UI**
-   - Emphasis on simplicity and clarity.
+- **Intuitive UI**: Focused on simplicity and user clarity.
+- **iOS Compatibility**: Optimized for smooth operation on iOS devices.
 
-2. **iOS Compatibility**
-   - The goal is for the application to run on iOS devices.
+This comprehensive yet user-friendly design ensures both Car Owners and Companies can effortlessly participate in a rewarding advertising ecosystem.
 
----
