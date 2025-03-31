@@ -40,7 +40,7 @@ This application provides an innovative platform enabling individuals to earn mo
 
 ### Car Owner Experience
 - **Mileage Tracking**: Clear visual representation of kilometers required to achieve payout.
-- **QR Scanning**: Seamless integration to confirm rides and track activity.
+- **QR Scanning**: Seamless integration to confirm rides and track activity for companies and users.
 - **Earnings Management**: Transparent display of earnings, with easy access to detailed payment history.
 
 ### Company Experience
@@ -62,5 +62,4 @@ This application provides an innovative platform enabling individuals to earn mo
 - **Intuitive UI**: Focused on simplicity and user clarity.
 - **iOS Compatibility**: Optimized for smooth operation on iOS devices.
 
-This comprehensive yet user-friendly design ensures both Car Owners and Companies can effortlessly participate in a rewarding advertising ecosystem.
 
