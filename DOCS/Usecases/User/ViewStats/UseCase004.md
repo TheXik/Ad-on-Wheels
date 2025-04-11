@@ -10,11 +10,7 @@
 
 **Flow:**
 1. User opens the app and navigates to the **"Stats"** tab.
-2. The system loads key performance metrics, including:
-   - Total kilometers driven this month
-   - Remaining kilometers required for payout
-   - Estimated or confirmed earnings
-   - Time spent within required driving zone
+2. The system loads key performance metrics.
 3. Visual elements such as graphs or progress bars provide insights.
 4. User optionally switches to past months or completed campaigns for historical data.
 

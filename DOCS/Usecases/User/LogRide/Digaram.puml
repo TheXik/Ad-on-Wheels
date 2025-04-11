@@ -1,0 +1,24 @@
+@startuml RideDiagram
+actor CarOwner
+CarOwner -> App : Open Home Screen
+App -> CarOwner : Show possibility to start new ride
+CarOwner -> App : Navigate to Start Ride
+App -> App : Redirect to QR Scanner
+
+CarOwner -> App : Scan QR Code (Start)
+App -> App : Confirm ride started
+App -> App : Begin tracking (time, distance)
+
+... After some time driving ...
+
+CarOwner -> App : Open app again
+CarOwner -> App : Tap "End Ride"
+App -> App : Redirect to QR Scanner
+
+CarOwner -> App : Scan QR Code (End)
+App -> App : Calculate time + distance + calculate estimated reach and update
+App -> App : Log ride to database
+App -> App : Update campaign stats (km, earnings)
+
+App -> CarOwner : Show ride summary + updated progress
+@enduml
