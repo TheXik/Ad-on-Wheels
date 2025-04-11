@@ -1,0 +1,24 @@
+@startuml FindAd
+actor CarOwner
+
+CarOwner -> App : Open "Find Ad" page
+App -> CarOwner : Show Ad preview (details + visual)
+
+CarOwner -> App : Review Ad
+
+alt Swipe Right (Interested)
+    CarOwner -> App : Swipe Right
+    App -> App : Record interest in campaign
+    App -> CarOwner : Show next available ad
+else Swipe Left (Not Interested)
+    CarOwner -> App : Swipe Left
+    App -> App : Skip ad
+    App -> CarOwner : Show next available ad
+end
+
+alt Taps Back Arrow(return to previous ad) 
+    CarOwner -> App : Tap Back Arrow
+    App -> CarOwner : Show previous ad
+end
+
+@enduml
