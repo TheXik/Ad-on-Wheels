@@ -1,0 +1,14 @@
+@startuml DisplayCampaignDetails
+actor CarOwner
+
+CarOwner -> App : Open Home Screen
+App -> CarOwner : Display active campaign summary
+
+CarOwner -> App : Tap on campaign summary card
+App -> App : Load full campaign details
+
+App -> CarOwner : Show campaign details
+
+CarOwner -> App : Close detail view
+
+@enduml

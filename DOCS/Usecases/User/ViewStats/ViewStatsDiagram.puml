@@ -1,0 +1,14 @@
+@startuml ViewStats
+actor CarOwner
+
+CarOwner -> App : Navigate to Stats page
+
+App -> App : Load performance metrics
+
+App -> CarOwner : Display graphs, maps and progress bars
+
+CarOwner -> App : Switch to previous month / campaign
+App -> App : Load historical stats
+App -> CarOwner : Display past data
+
+@enduml

@@ -1,0 +1,16 @@
+@startuml ViewCampaignStats
+actor CompanyUser
+
+CompanyUser -> App : Navigate to "Stats" page
+App -> App : Check for existing campaigns (active + past)
+
+alt Campaigns exist
+    App -> CompanyUser : Show segmented list (Active | Past)
+    CompanyUser -> App : Select campaign from list
+    App -> App : Load campaign performance data
+    App -> CompanyUser : Display stats (reach, drivers, distance, budget)
+else No campaigns
+    App -> CompanyUser : Display "No campaigns available"
+end
+
+@enduml

@@ -1,0 +1,21 @@
+@startuml MessageCompany
+actor CarOwner
+
+CarOwner -> App : Open Home Screen
+CarOwner -> App : Navigates Company Messages
+App -> App : Load list of messages
+App -> CarOwner : Display message previews
+
+CarOwner -> App : Select a message
+App -> App : Load message content
+App -> CarOwner : Display full message
+
+alt Send a Reply or New Message
+    CarOwner -> App : Tap "Reply" or "New Message"
+    CarOwner -> App : Type message
+    CarOwner -> App : Send message
+    App -> App : Deliver message to company
+    App -> CarOwner : Show confirmation
+end
+
+@enduml
