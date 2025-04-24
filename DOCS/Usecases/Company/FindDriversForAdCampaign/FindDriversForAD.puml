@@ -1,0 +1,26 @@
+@startuml FindDriversForAdCampaign
+actor CompanyUser
+
+CompanyUser -> App : Navigate to "Find Drivers" page
+App -> App : Retrieve campaigns in Recruiting state
+
+alt Campaigns available
+    CompanyUser -> App : Select campaign
+    App -> App : Fetch driver applications
+
+    alt Applications exist
+        App -> CompanyUser : Display list with filters & sort
+        CompanyUser -> App : Apply filters / search
+        CompanyUser -> App : Select driver profile
+        App -> CompanyUser : Display driver details
+        CompanyUser -> App : Click Accept or Reject
+        App -> App : Record decision & update counter
+    else No applications
+        App -> CompanyUser : Show “No drivers have applied yet”
+    end
+
+else No campaigns
+    App -> CompanyUser : Show “No recruiting campaigns available”
+end
+
+@enduml

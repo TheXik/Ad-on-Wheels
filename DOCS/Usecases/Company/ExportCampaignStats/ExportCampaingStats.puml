@@ -1,0 +1,25 @@
+@startuml ExportCampaignStats
+actor CompanyUser
+
+CompanyUser -> App : Navigate to "Stats" page
+App -> App : Retrieve overall stats and campaign list
+App -> CompanyUser : Display stats and campaign selection box
+
+alt User selects a specific campaign
+  CompanyUser -> App : Select campaign
+  App -> App : Load campaign performance data
+  App -> CompanyUser : Display selected campaign stats
+else User exports overall stats
+  CompanyUser -> App : Leave default (all campaigns)
+end
+
+CompanyUser -> App : Click Export button
+App -> App : Generate file 
+
+alt Generation successful
+  App -> CompanyUser : Prompt download of file
+else Generation failed
+  App -> CompanyUser : Show “Unable to generate file. Please retry.” and Retry option
+end
+
+@enduml

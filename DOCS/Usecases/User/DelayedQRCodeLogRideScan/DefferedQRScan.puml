@@ -1,0 +1,14 @@
+@startuml DeferredEndRideScan
+actor CarOwner
+
+CarOwner -> App : Tap End Ride
+App -> App : Launch QR scanner
+CarOwner -> App : Scan QR at ride end
+App -> App : Detect missing start scan
+App -> CarOwner : Prompt “Use background GPS as start?” 
+CarOwner -> App : Confirm deferred start
+App -> App : Compute distance/time from GPS log
+App -> App : Log ride & update stats
+App -> CarOwner : Show ride summary
+
+@enduml
