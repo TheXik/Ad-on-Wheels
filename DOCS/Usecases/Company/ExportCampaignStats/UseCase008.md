@@ -3,7 +3,7 @@
 **Actor:** Registered Company User
 
 **Description:** The company user exports the performance metrics of a selected ad campaign 
-into a CSV(Maybe another formats also) file for offline analysis, reporting and sharing with the company.
+into a dataset file for offline analysis, reporting and sharing with the company.
 
 **Preconditions:**
 - User is logged in with a Company account.
@@ -15,16 +15,15 @@ into a CSV(Maybe another formats also) file for offline analysis, reporting and 
 3. User selects the desired campaign.
 4. The system loads and displays that campaign’s performance metrics.
 5. User clicks the Export button.
-6. The system generates a file containing all key metrics.
+6. The system generates a file(dataset) containing all key metrics.
 7. The system prompts the user to download the generated file.
 8. User saves the file to their device.
 
 **Alternative Flows:**
 3a. User exports overall stats for all the campaigns past / active.
-4a. No data to export. The Export CSV button is disabled, and a tooltip reads “No data available to export.”
-6a. Export error. The system shows “Unable to generate CSV. Please retry.” and offers a Retry action.
+4a. No data to export. The Export dataset button is disabled, and a tooltip reads “No data available to export.”
+6a. Export error. The system shows “Unable to generate Dataset. Please retry.” and offers a Retry action.
 
 **Postconditions:**
-- A CSV file with the campaign’s performance data is downloaded to the user’s device.
-- An audit entry is logged: “User X exported stats for Campaign Y at timestamp Z.”
+- A Dataset file with the campaign’s performance data is downloaded to the user’s device.
 
