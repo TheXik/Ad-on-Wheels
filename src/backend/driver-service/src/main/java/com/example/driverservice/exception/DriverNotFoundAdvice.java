@@ -1,4 +1,4 @@
-package com.example.driverservice;
+package com.example.driverservice.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;

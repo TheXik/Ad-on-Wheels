@@ -11,6 +11,7 @@
     <modules>
         <module>eureka-server</module>
         <module>driver-service</module>
+        <module>campaign-service</module>
     </modules>
 
     <properties>

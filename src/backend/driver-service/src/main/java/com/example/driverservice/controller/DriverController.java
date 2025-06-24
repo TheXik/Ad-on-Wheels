@@ -1,5 +1,8 @@
-package com.example.driverservice;
+package com.example.driverservice.controller;
 
+import com.example.driverservice.assembler.DriverModelAssembler;
+import com.example.driverservice.model.Driver;
+import com.example.driverservice.service.DriverService;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;

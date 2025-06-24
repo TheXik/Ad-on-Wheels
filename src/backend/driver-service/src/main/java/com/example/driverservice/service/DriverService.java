@@ -1,5 +1,8 @@
-package com.example.driverservice;
+package com.example.driverservice.service;
 
+import com.example.driverservice.model.Driver;
+import com.example.driverservice.exception.DriverNotFoundException;
+import com.example.driverservice.repository.DriverRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
