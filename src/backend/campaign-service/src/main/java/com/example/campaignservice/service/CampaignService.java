@@ -1,47 +1,32 @@
 package com.example.campaignservice.service;
 
 import com.example.campaignservice.model.Campaign;
+import com.example.campaignservice.repository.CampaignRepository;
 import com.example.campaignservice.exception.CampaignNotFoundException;
 import org.springframework.stereotype.Service;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 @Service
 public class CampaignService {
-    private final Map<Long, Campaign> campaigns = new HashMap<>();
-    private final AtomicLong idGen = new AtomicLong(3);
+    private final CampaignRepository repository;
 
-    public CampaignService() {
-        // Sample data
-        campaigns.put(1L, new Campaign(1L, "Spring Promo", "Advertise with us this spring!", 100L));
-        campaigns.put(2L, new Campaign(2L, "Summer Drive", "Join our summer campaign.", 101L));
+    public CampaignService(CampaignRepository repository) {
+        this.repository = repository;
     }
 
     public List<Campaign> findAll() {
-        return new ArrayList<>(campaigns.values());
+        return repository.findAll();
     }
 
     public Campaign findById(Long id) {
-        Campaign campaign = campaigns.get(id);
-        if (campaign == null) throw new CampaignNotFoundException(id);
-        return campaign;
+        return repository.findById(id).orElseThrow(() -> new CampaignNotFoundException(id));
     }
 
     public Campaign save(Campaign campaign) {
-        if (campaign.getId() == null) {
-            campaign.setId(idGen.getAndIncrement());
-        }
-        campaigns.put(campaign.getId(), campaign);
-        return campaign;
+        return repository.save(campaign);
     }
 
     public List<Campaign> findByCompanyId(Long companyId) {
-        List<Campaign> result = new ArrayList<>();
-        for (Campaign c : campaigns.values()) {
-            if (c.getCompanyId().equals(companyId)) {
-                result.add(c);
-            }
-        }
-        return result;
+        return repository.findByCompaemnyId(companyId);
     }
 } 

@@ -20,12 +20,12 @@ public class DriverController {
     private final DriverService service;
     private final DriverModelAssembler assembler;
 
-
     public DriverController(DriverService service, DriverModelAssembler assembler) {
         this.service = service;
         this.assembler = assembler;
     }
 
+    // GET /drivers Returns a collection of all drivers
     @GetMapping
     public CollectionModel<EntityModel<Driver>> all() {
         List<EntityModel<Driver>> drivers = service.getAllDrivers().stream()
@@ -38,6 +38,7 @@ public class DriverController {
         );
     }
 
+    // POST /drivers Creates a new driver
     @PostMapping
     public ResponseEntity<?> newDriver(@Valid @RequestBody Driver newDriver) {
         EntityModel<Driver> entityModel = assembler.toModel(service.addDriver(newDriver));
@@ -46,12 +47,14 @@ public class DriverController {
             .body(entityModel);
     }
 
+    // GET /drivers/{id} Returns a single driver by ID
     @GetMapping("/{id}")
     public EntityModel<Driver> one(@PathVariable Long id) {
         Driver driver = service.getDriver(id);
         return assembler.toModel(driver);
     }
 
+    // PUT /drivers/{id} Updates an existing driver by ID
     @PutMapping("/{id}")
     public ResponseEntity<?> replaceDriver(@Valid @RequestBody Driver newDriver, @PathVariable Long id) {
         Driver updatedDriver = service.updateDriver(id, newDriver);
@@ -61,6 +64,7 @@ public class DriverController {
             .body(entityModel);
     }
 
+    // DELETE /drivers/{id} Deletes a driver by ID
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDriver(@PathVariable Long id) {

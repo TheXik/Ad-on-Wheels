@@ -25,6 +25,13 @@ public class CampaignController {
         return campaignService.findAll();
     }
 
+    // POST /campaigns - Create a new campaign
+    @PostMapping
+    public ResponseEntity<Campaign> createCampaign(@RequestBody Campaign campaign) {
+        Campaign saved = campaignService.save(campaign);
+        return ResponseEntity.ok(saved);
+    }
+
     // POST /campaigns/{id}/apply - Driver applies to campaign
     @PostMapping("/{id}/apply")
     public ResponseEntity<Application> applyToCampaign(@PathVariable Long id, @RequestParam Long driverId) {
@@ -36,8 +43,7 @@ public class CampaignController {
     // GET /campaigns/{companyId}/applications - Company views applications to their campaigns
     @GetMapping("/{companyId}/applications")
     public List<Application> getApplicationsForCompany(@PathVariable Long companyId) {
-        List<Campaign> companyCampaigns = campaignService.findByCompanyId(companyId);
-        return applicationService.findByCompanyCampaigns(companyCampaigns);
+        return applicationService.findByCompanyCampaigns(campaignService.findByCompanyId(companyId));
     }
 
     // POST /applications/{id}/accept - Accept application
