@@ -5,7 +5,6 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 import jakarta.validation.Valid;
@@ -15,18 +14,18 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/drivers")
 public class DriverController {
-    private final DriverRepository repository;
+    private final DriverService service;
     private final DriverModelAssembler assembler;
 
-    @Autowired
-    public DriverController(DriverRepository repository, DriverModelAssembler assembler) {
-        this.repository = repository;
+
+    public DriverController(DriverService service, DriverModelAssembler assembler) {
+        this.service = service;
         this.assembler = assembler;
     }
 
     @GetMapping
     public CollectionModel<EntityModel<Driver>> all() {
-        List<EntityModel<Driver>> drivers = repository.findAll().stream()
+        List<EntityModel<Driver>> drivers = service.getAllDrivers().stream()
             .map(assembler::toModel)
             .collect(Collectors.toList());
         return CollectionModel.of(drivers,
@@ -38,7 +37,7 @@ public class DriverController {
 
     @PostMapping
     public ResponseEntity<?> newDriver(@Valid @RequestBody Driver newDriver) {
-        EntityModel<Driver> entityModel = assembler.toModel(repository.save(newDriver));
+        EntityModel<Driver> entityModel = assembler.toModel(service.addDriver(newDriver));
         return ResponseEntity
             .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
             .body(entityModel);
@@ -46,23 +45,13 @@ public class DriverController {
 
     @GetMapping("/{id}")
     public EntityModel<Driver> one(@PathVariable Long id) {
-        Driver driver = repository.findById(id)
-            .orElseThrow(() -> new DriverNotFoundException(id));
+        Driver driver = service.getDriver(id);
         return assembler.toModel(driver);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> replaceDriver(@Valid @RequestBody Driver newDriver, @PathVariable Long id) {
-        Driver updatedDriver = repository.findById(id)
-            .map(driver -> {
-                driver.setName(newDriver.getName());
-                driver.setEmail(newDriver.getEmail());
-                return repository.save(driver);
-            })
-            .orElseGet(() -> {
-                newDriver.setId(id);
-                return repository.save(newDriver);
-            });
+        Driver updatedDriver = service.updateDriver(id, newDriver);
         EntityModel<Driver> entityModel = assembler.toModel(updatedDriver);
         return ResponseEntity
             .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
@@ -72,6 +61,6 @@ public class DriverController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDriver(@PathVariable Long id) {
-        repository.deleteById(id);
+        service.deleteDriver(id);
     }
 } 
