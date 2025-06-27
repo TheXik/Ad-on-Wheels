@@ -27,6 +27,6 @@ public class CampaignService {
     }
 
     public List<Campaign> findByCompanyId(Long companyId) {
-        return repository.findByCompaemnyId(companyId);
+        return  repository.findByCompanyId(companyId);
     }
 } 

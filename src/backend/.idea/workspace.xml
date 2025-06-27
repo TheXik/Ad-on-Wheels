@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f26c7cbf-290f-4aef-b752-961db9815430" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/campaign-service/src/main/java/com/example/campaignservice/controller/CampaignController.java" beforeDir="false" afterPath="$PROJECT_DIR$/campaign-service/src/main/java/com/example/campaignservice/controller/CampaignController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campaign-service/src/main/java/com/example/campaignservice/service/ApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/campaign-service/src/main/java/com/example/campaignservice/service/ApplicationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campaign-service/src/main/java/com/example/campaignservice/service/CampaignService.java" beforeDir="false" afterPath="$PROJECT_DIR$/campaign-service/src/main/java/com/example/campaignservice/service/CampaignService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/driver-service/src/main/java/com/example/driverservice/assembler/DriverModelAssembler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/driver-service/src/main/java/com/example/driverservice/controller/DriverController.java" beforeDir="false" afterPath="$PROJECT_DIR$/driver-service/src/main/java/com/example/driverservice/controller/DriverController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp.xcodeproj/project.xcworkspace/xcuserdata/lukashellesch.xcuserdatad/UserInterfaceState.xcuserstate" beforeDir="false" afterPath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp.xcodeproj/project.xcworkspace/xcuserdata/lukashellesch.xcuserdatad/UserInterfaceState.xcuserstate" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp/AdOnWheelsAppApp.swift" beforeDir="false" afterPath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp/AdOnWheelsAppApp.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp/Driver.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp/DriverListView.swift" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../swift-ui/AdOnWheelsApp/AdOnWheelsApp/DriverViewModel.swift" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$/company-service">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand />
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;TheXik&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:TheXik/Ad-on-Wheels.git&quot;,
+    &quot;accountId&quot;: &quot;f0bf17c7-94dd-4597-96a5-e17dce8ddffc&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2xUQEXQ7G6dVkrZOE4V50kpOTBX" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Gradle.Build company-service.executor": "Run",
+    "HTTP Request.All in generated-requests.executor": "Run",
+    "HTTP Request.generated-requests | #1.executor": "Run",
+    "HTTP Request.generated-requests | #3.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.CampaignServiceApplication.executor": "Run",
+    "Spring Boot.CompanyServiceApplication (1).executor": "Run",
+    "Spring Boot.CompanyServiceApplication.executor": "Run",
+    "Spring Boot.DriverServiceApplication.executor": "Run",
+    "Spring Boot.EurekaServerApplication.executor": "Run",
+    "Spring Boot.UserServiceApplication.executor": "Run",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/lukashellesch/Desktop/REPOS/Ad-on-Wheels/src/backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.runner",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/campaign-service/src/main/java/com/example.campaignservice" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Spring Boot.CampaignServiceApplication">
+    <configuration name="All in generated-requests" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http">
+      <method v="2" />
+    </configuration>
+    <configuration name="generated-requests | #1" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" executionIdentifier="#1" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="generated-requests | #3" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" executionIdentifier="#3" index="3" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="CampaignServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="campaign-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.campaignservice.CampaignServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CompanyServiceApplication (1)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="company-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.companyservice.CompanyServiceApplication" />
+      <method v="2">
+        <option name="Maven" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DriverServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="driver-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.driverservice.DriverServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EurekaServerApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="eureka-server" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.example.eurekaserver.EurekaServerApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="HTTP Request.All in generated-requests" />
+      <item itemvalue="HTTP Request.generated-requests | #1" />
+      <item itemvalue="HTTP Request.generated-requests | #3" />
+      <item itemvalue="Spring Boot.CampaignServiceApplication" />
+      <item itemvalue="Spring Boot.CompanyServiceApplication (1)" />
+      <item itemvalue="Spring Boot.DriverServiceApplication" />
+      <item itemvalue="Spring Boot.EurekaServerApplication" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="HTTP Request.generated-requests | #3" />
+        <item itemvalue="HTTP Request.All in generated-requests" />
+        <item itemvalue="HTTP Request.generated-requests | #1" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.26927.53" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.26927.53" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f26c7cbf-290f-4aef-b752-961db9815430" name="Changes" comment="" />
+      <created>1747990061138</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1747990061138</updated>
+      <workItem from="1747990062273" duration="14333000" />
+      <workItem from="1750756710486" duration="15757000" />
+      <workItem from="1750829642550" duration="4716000" />
+      <workItem from="1750934853971" duration="68000" />
+      <workItem from="1750934980550" duration="69000" />
+      <workItem from="1750935063733" duration="171000" />
+      <workItem from="1750935269462" duration="91000" />
+      <workItem from="1750935379352" duration="15000" />
+      <workItem from="1750935423380" duration="49000" />
+      <workItem from="1750935541989" duration="457000" />
+      <workItem from="1750936007707" duration="372000" />
+      <workItem from="1750937119250" duration="376000" />
+      <workItem from="1750937502532" duration="211000" />
+      <workItem from="1750937761516" duration="73000" />
+      <workItem from="1750937861093" duration="104000" />
+      <workItem from="1750937968814" duration="67000" />
+      <workItem from="1750938039566" duration="9000" />
+      <workItem from="1750938051253" duration="9000" />
+      <workItem from="1750938072718" duration="4534000" />
+      <workItem from="1751014152717" duration="2614000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

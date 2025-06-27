@@ -41,9 +41,8 @@ public class ApplicationService {
     }
 
     public Application decline(Long id) {
-        Application app = applications.get(id);
+        Application app = applications.remove(id);
         if (app == null) throw new ApplicationNotFoundException(id);
-        app.setStatus("declined");
         return app;
     }
 } 
