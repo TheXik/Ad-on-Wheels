@@ -20,8 +20,8 @@ struct MainView: View {
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
-                .onChange(of: role) { newRole in
-                    if newRole == .driver {
+                .onChange(of: role) { oldValue, newValue in
+                    if newValue == .driver {
                         fetchDrivers()
                         driverViewModel.driverId = nil
                         selectedDriverIndex = nil
