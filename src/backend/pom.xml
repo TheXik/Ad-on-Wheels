@@ -13,6 +13,7 @@
         <module>driver-service</module>
         <module>campaign-service</module>
         <module>company-service</module>
+        <module>gateway-service</module>
     </modules>
 
     <properties>

@@ -13,5 +13,7 @@
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

@@ -3,46 +3,43 @@ package com.example.campaignservice.service;
 import com.example.campaignservice.model.Application;
 import com.example.campaignservice.model.Campaign;
 import com.example.campaignservice.exception.ApplicationNotFoundException;
+import com.example.campaignservice.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class ApplicationService {
-    private final Map<Long, Application> applications = new HashMap<>();
-    private final AtomicLong idGen = new AtomicLong(1);
+    private final ApplicationRepository applicationRepository;
+
+    @Autowired
+    public ApplicationService(ApplicationRepository applicationRepository) {
+        this.applicationRepository = applicationRepository;
+    }
 
     public Application apply(Long campaignId, Long driverId) {
-        Long appId = idGen.getAndIncrement();
-        Application app = new Application(appId, campaignId, driverId, "applied");
-        applications.put(appId, app);
-        return app;
+        Application app = new Application();
+        app.setCampaignId(campaignId);
+        app.setDriverId(driverId);
+        app.setStatus("applied");
+        return applicationRepository.save(app);
     }
 
     public List<Application> findByCompanyCampaigns(List<Campaign> companyCampaigns) {
-        Set<Long> campaignIds = new HashSet<>();
-        for (Campaign c : companyCampaigns) {
-            campaignIds.add(c.getId());
-        }
-        List<Application> result = new ArrayList<>();
-        for (Application app : applications.values()) {
-            if (campaignIds.contains(app.getCampaignId())) {
-                result.add(app);
-            }
-        }
-        return result;
+        List<Long> campaignIds = companyCampaigns.stream().map(Campaign::getId).collect(Collectors.toList());
+        return applicationRepository.findByCampaignIdIn(campaignIds);
     }
 
     public Application accept(Long id) {
-        Application app = applications.get(id);
-        if (app == null) throw new ApplicationNotFoundException(id);
+        Application app = applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
         app.setStatus("accepted");
-        return app;
+        return applicationRepository.save(app);
     }
 
     public Application decline(Long id) {
-        Application app = applications.remove(id);
-        if (app == null) throw new ApplicationNotFoundException(id);
+        Application app = applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
+        applicationRepository.deleteById(id);
         return app;
     }
 } 

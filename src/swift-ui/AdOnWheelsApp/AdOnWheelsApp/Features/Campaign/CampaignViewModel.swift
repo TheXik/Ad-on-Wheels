@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-struct ApplicationWithDriver: Identifiable {
+struct ApplicationWithDriver: Identifiable, Codable {
     let id: Int
     let campaignId: Int
     let campaignName: String
@@ -32,9 +32,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     // MARK: - Networking
-    let campaignServiceBase = "http://localhost:8082"
-    let driverServiceBase = "http://localhost:8081"
-    let companyServiceBase = "http://localhost:8083" 
+    let apiBase = "http://localhost:8084/api"
 
     func loginDriver(with id: Int) {
         driverId = id
@@ -44,7 +42,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     func fetchDrivers() {
-        guard let url = URL(string: "\(driverServiceBase)/drivers") else { return }
+        guard let url = URL(string: "\(apiBase)/drivers") else { return }
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
@@ -59,7 +57,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     func fetchCompanies() {
-        guard let url = URL(string: "\(companyServiceBase)/companies") else { return }
+        guard let url = URL(string: "\(apiBase)/companies") else { return }
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
@@ -76,37 +74,14 @@ class CampaignViewModel: ObservableObject {
     // Updated: Fetch applications for company and join with driver and campaign name
     func fetchCompanyApplicationsWithDrivers() {
         guard let companyId = selectedCompanyId else { return }
-        guard let url = URL(string: "\(campaignServiceBase)/campaigns/\(companyId)/applications") else { return }
+        guard let url = URL(string: "\(apiBase)/companies/\(companyId)/applications-with-drivers") else { return }
         Task {
             do {
-                // Fetch campaigns first for lookup
-                await fetchCampaigns()
                 let (data, _) = try await URLSession.shared.data(from: url)
-                let applications = try JSONDecoder().decode([Application].self, from: data)
-                var applied: [ApplicationWithDriver] = []
-                var accepted: [ApplicationWithDriver] = []
-                for app in applications {
-                    if app.status == "applied" || app.status == "accepted" {
-                        if let driver = try? await fetchDriverById(app.driverId),
-                           let campaign = campaigns.first(where: { $0.id == app.campaignId }) {
-                            let joined = ApplicationWithDriver(
-                                id: app.id,
-                                campaignId: app.campaignId,
-                                campaignName: campaign.name,
-                                status: app.status,
-                                driver: driver
-                            )
-                            if app.status == "applied" {
-                                applied.append(joined)
-                            } else if app.status == "accepted" {
-                                accepted.append(joined)
-                            }
-                        }
-                    }
-                }
+                let applications = try JSONDecoder().decode([ApplicationWithDriver].self, from: data)
                 DispatchQueue.main.async {
-                    self.appliedApplicationsWithDriver = applied
-                    self.acceptedApplicationsWithDriver = accepted
+                    self.appliedApplicationsWithDriver = applications.filter { $0.status == "applied" }
+                    self.acceptedApplicationsWithDriver = applications.filter { $0.status == "accepted" }
                 }
             } catch {
                 print("Error fetching company applications: \(error)")
@@ -115,7 +90,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     func fetchCampaigns() async {
-        guard let url = URL(string: "\(campaignServiceBase)/campaigns") else { return }
+        guard let url = URL(string: "\(apiBase)/campaigns") else { return }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let fetchedCampaigns = try JSONDecoder().decode([Campaign].self, from: data)
@@ -128,7 +103,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     func fetchDriverById(_ id: Int) async throws -> Driver {
-        guard let url = URL(string: "\(driverServiceBase)/drivers/\(id)") else {
+        guard let url = URL(string: "\(apiBase)/drivers/\(id)") else {
             throw URLError(.badURL)
         }
         let (data, _) = try await URLSession.shared.data(from: url)
@@ -137,7 +112,7 @@ class CampaignViewModel: ObservableObject {
 
     func applyToCampaign(campaignId: Int) {
         guard let driverId = driverId else { return }
-        guard let url = URL(string: "\(campaignServiceBase)/campaigns/\(campaignId)/apply?driverId=\(driverId)") else { return }
+        guard let url = URL(string: "\(apiBase)/campaigns/\(campaignId)/apply?driverId=\(driverId)") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         Task {
@@ -154,7 +129,7 @@ class CampaignViewModel: ObservableObject {
 
     func fetchApplicationsForCompany() {
         guard let companyId = selectedCompanyId else { return }
-        guard let url = URL(string: "\(campaignServiceBase)/campaigns/\(companyId)/applications") else { return }
+        guard let url = URL(string: "\(apiBase)/campaigns/\(companyId)/applications") else { return }
         Task {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
@@ -169,7 +144,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     func acceptApplication(applicationId: Int) {
-        guard let url = URL(string: "\(campaignServiceBase)/campaigns/applications/\(applicationId)/accept") else { return }
+        guard let url = URL(string: "\(apiBase)/campaigns/applications/\(applicationId)/accept") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         Task {
@@ -186,7 +161,7 @@ class CampaignViewModel: ObservableObject {
     }
 
     func declineApplication(applicationId: Int) {
-        guard let url = URL(string: "\(campaignServiceBase)/campaigns/applications/\(applicationId)/decline") else { return }
+        guard let url = URL(string: "\(apiBase)/campaigns/applications/\(applicationId)/decline") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         Task {
