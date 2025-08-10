@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/ad_on_wheels?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/driver-service?useSSL=false&serverTimezone=UTC
     username: ad_on_wheels_user
     password: test
     driver-class-name: com.mysql.cj.jdbc.Driver
