@@ -2,7 +2,7 @@ version: "3.9"
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql
+    container_name: ad_on_wheels_Database
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USER: ${MYSQL_USER}
