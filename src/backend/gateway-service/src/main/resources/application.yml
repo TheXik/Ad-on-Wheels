@@ -1,31 +1,12 @@
 spring:
   application:
     name: gateway-service
-
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: false
-      routes:
-        - id: campaign-service
-          uri: lb://CAMPAIGN-SERVICE
-          predicates:
-            - Path=/api/campaigns/**
-          filters:
-            - StripPrefix=1
-        - id: company-service
-          uri: lb://COMPANY-SERVICE
-          predicates:
-            - Path=/api/companies/**
-          filters:
-            - StripPrefix=1
-        - id: driver-service
-          uri: lb://DRIVER-SERVICE
-          predicates:
-            - Path=/api/drivers/**
-          filters:
-            - StripPrefix=1
+
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
 
 eureka:
   client:

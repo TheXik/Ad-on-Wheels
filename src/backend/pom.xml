@@ -14,6 +14,8 @@
         <module>campaign-service</module>
         <module>company-service</module>
         <module>gateway-service</module>
+        <module>auth-service</module>
+
     </modules>
 
     <properties>
@@ -51,4 +53,4 @@
             </plugins>
         </pluginManagement>
     </build>
-</project> 
+</project>
