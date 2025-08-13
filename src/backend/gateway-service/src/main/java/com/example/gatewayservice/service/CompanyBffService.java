@@ -1,10 +1,10 @@
 package com.example.gatewayservice.service;
 
-import com.example.gatewayservice.dto.ApplicationWithDriver;
-import com.example.gatewayservice.dto.Driver;
-import com.example.gatewayservice.dto.Campaign;
 import com.example.gatewayservice.dto.Application;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.gatewayservice.dto.ApplicationWithDriver;
+import com.example.gatewayservice.dto.Campaign;
+import com.example.gatewayservice.dto.Driver;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -12,17 +12,20 @@ import java.util.List;
 
 @Service
 public class CompanyBffService {
-    private final WebClient.Builder webClientBuilder;
 
-    @Autowired
-    public CompanyBffService(WebClient.Builder webClientBuilder) {
-        this.webClientBuilder = webClientBuilder;
+    // Inject the pre-configured WebClient beans instead of the builder
+    private final WebClient campaignClient;
+    private final WebClient driverClient;
+
+
+    public CompanyBffService(@Qualifier("campaignClient") WebClient campaignClient,
+                             @Qualifier("driverClient") WebClient driverClient) {
+        this.campaignClient = campaignClient;
+        this.driverClient = driverClient;
     }
 
     public Mono<List<ApplicationWithDriver>> getApplicationsWithDrivers(Long companyId) {
-        WebClient campaignClient = webClientBuilder.baseUrl("http://CAMPAIGN-SERVICE").build();
-        WebClient driverClient = webClientBuilder.baseUrl("http://DRIVER-SERVICE").build();
-
+        // The clients are now ready to be used directly. No more building!
         return campaignClient.get()
                 .uri("/campaigns")
                 .retrieve()
@@ -59,4 +62,4 @@ public class CompanyBffService {
                 })
                 .collectList();
     }
-} 
+}
