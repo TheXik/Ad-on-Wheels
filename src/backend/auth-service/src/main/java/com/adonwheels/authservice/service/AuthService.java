@@ -134,7 +134,7 @@ public class AuthService {
         );
 
         if (authentication.isAuthenticated()) {
-            return ResponseEntity.ok(JWTService.generateToken(user));
+            return ResponseEntity.ok(JWTService.generateToken(user.getEmail()));
         } else {
             return ResponseEntity.status(401).body("Invalid credentials");
         }

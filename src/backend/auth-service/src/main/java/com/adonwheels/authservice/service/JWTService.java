@@ -7,14 +7,8 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +18,9 @@ public class JWTService {
     @Value("${jwt.secret}")
     public String secretKey;
 
+
+    @Autowired
+    private AuthRepository authRepository;
 // Commented out cuz i am now using a one secret key thats stored in the .env files TODO review this approach later
 //    public JWTService() {
 //        try {
@@ -38,7 +35,12 @@ public class JWTService {
 //        }
 //    }
 
-    public String generateToken(User user) {
+    public String generateToken(String email) {
+
+        User user = authRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found for token generation"));
+
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());
         claims.put("profileID", user.getProfileId());
