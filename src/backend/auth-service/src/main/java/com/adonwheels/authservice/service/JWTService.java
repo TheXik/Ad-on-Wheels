@@ -1,8 +1,11 @@
 package com.adonwheels.authservice.service;
 
+import com.adonwheels.authservice.model.User;
+import com.adonwheels.authservice.repository.AuthRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,7 +24,7 @@ public class JWTService {
     @Value("${jwt.secret}")
     public String secretKey;
 
-
+// Commented out cuz i am now using a one secret key thats stored in the .env files TODO review this approach later
 //    public JWTService() {
 //        try {
 //            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
@@ -35,13 +38,17 @@ public class JWTService {
 //        }
 //    }
 
-    public String generateToken(String email) {
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());
+        claims.put("profileID", user.getProfileId());
+
+
 
         return Jwts.builder()
                 .claims()
                 .add(claims)
-                .subject(email)
+                .subject(user.getEmail())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60)) //TODO CHANGE LATER // for how long will the TOKEN BE VALID
                 .and()

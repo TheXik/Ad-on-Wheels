@@ -22,6 +22,7 @@ public class User {
     @Column(nullable = false)
     private Long profileId;
 
+
     public Long getId() {
         return id;
     }
