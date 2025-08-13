@@ -2,6 +2,7 @@ package com.example.gatewayservice.config;
 
 import com.example.gatewayservice.filter.RouteValidator;
 import com.example.gatewayservice.util.JwtUtil;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     public GatewayFilter apply(Config config) {
         return ((exchange, chain) -> {
             if (validator.isSecured.test(exchange.getRequest())) {
-                // Check if the request has the Authorization header
+                // Check for the auth header
                 if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing authorization header");
                 }
@@ -40,19 +41,21 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 }
 
                 try {
-                    // Validate the token using the util class
-                    jwtUtil.validateToken(authHeader);
+                    // AUTHENTICATION
+                    Claims claims = jwtUtil.extractAllClaims(authHeader);
+
+
+                    // TODO AUTHORIZATION later
+                    // String role = claims.get("role", String.class);
+                    // String path = exchange.getRequest().getURI().getPath();
 
                 } catch (ExpiredJwtException e) {
-                    // Handle expired token
                     System.err.println("JWT expired: " + e.getMessage());
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token has expired");
                 } catch (SignatureException e) {
-                    // Handle invalid signature
                     System.err.println("Invalid signature: " + e.getMessage());
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid JWT signature");
                 } catch (Exception e) {
-                    // Handle other validation errors
                     System.err.println("Invalid token: " + e.getMessage());
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized access: Invalid token");
                 }
