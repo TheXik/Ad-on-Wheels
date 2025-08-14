@@ -1,5 +1,6 @@
 package com.adonwheels.authservice.service;
 
+import com.adonwheels.authservice.dto.LoginResponse;
 import com.adonwheels.authservice.dto.ProfileRequest;
 import com.adonwheels.authservice.dto.ProfileResponse;
 import com.adonwheels.authservice.dto.RegistrationRequest;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -127,16 +129,17 @@ public class AuthService {
         }
     }
 
-    public ResponseEntity<String> verify(User user) {
-        // Spring Security handles the authentication
+    public LoginResponse verify(User user) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
         );
 
         if (authentication.isAuthenticated()) {
-            return ResponseEntity.ok(JWTService.generateToken(user.getEmail()));
+            String token = JWTService.generateToken(user.getEmail());
+            return new LoginResponse(token);
         } else {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            // This path will now throw an exception which Spring Security handles
+            throw new BadCredentialsException("Invalid credentials");
         }
     }
 }
