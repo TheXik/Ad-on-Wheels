@@ -1,6 +1,7 @@
 package com.adonwheels.authservice.controller;
 
 
+import com.adonwheels.authservice.dto.LoginResponse;
 import com.adonwheels.authservice.dto.RegistrationRequest;
 import com.adonwheels.authservice.exception.RegistrationException;
 import com.adonwheels.authservice.model.Role;
@@ -45,7 +46,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
+    public LoginResponse login(@RequestBody User user) {
       return authService.verify(user);
     }
 
