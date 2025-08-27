@@ -9,15 +9,15 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-///MyUserDetailsService is a highly specialized component that acts as the bridge between
-///our user data and the security framework.
+/// MyUserDetailsService is a highly specialized component that acts as the bridge between
+/// our user data and the security framework.
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
     @Autowired
     private AuthRepository authRepository;
-    
-    
+
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User credential = authRepository.findByEmail(email)

@@ -4,6 +4,7 @@ import com.example.campaignservice.model.Campaign;
 import com.example.campaignservice.repository.CampaignRepository;
 import com.example.campaignservice.exception.CampaignNotFoundException;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
@@ -27,6 +28,6 @@ public class CampaignService {
     }
 
     public List<Campaign> findByCompanyId(Long companyId) {
-        return  repository.findByCompanyId(companyId);
+        return repository.findByCompanyId(companyId);
     }
 } 

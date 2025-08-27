@@ -15,6 +15,7 @@
         <module>company-service</module>
         <module>gateway-service</module>
         <module>auth-service</module>
+        <module>common-dto</module>
 
     </modules>
 

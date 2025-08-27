@@ -4,13 +4,10 @@ import com.adonwheels.authservice.dto.LoginResponse;
 import com.adonwheels.authservice.dto.ProfileRequest;
 import com.adonwheels.authservice.dto.ProfileResponse;
 import com.adonwheels.authservice.dto.RegistrationRequest;
-import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
-import com.adonwheels.authservice.exception.RegistrationException;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import com.adonwheels.authservice.repository.AuthRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,59 +27,29 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private RestTemplate restTemplate;
-
     @Autowired
     private JWTService JWTService;
-
     @Autowired
     private AuthenticationManager authenticationManager;
 
     /**
-     * This method is the Saga Orchestrator for user registration.
-     * It handles the sequence of transactions and compensates if something fails.
+     * This method is called by the RegistrationSagaOrchestrator AFTER the profile has been created.
+     * It handles the final step of saving the user to the database.
      */
-    public User registerNewUser(RegistrationRequest request) throws RegistrationException {
-        Long profileId = null;
-        try {
-            // Create the profile in the appropriate service.
-            profileId = createProfile(request.getName(), request.getEmail(), request.getRole());
-
-            // Step 2: Save the user credentials in the auth database.
-            User newUser = new User();
-            newUser.setEmail(request.getEmail());
-            newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-            newUser.setRole(request.getRole());
-            newUser.setProfileId(profileId);
-
-            return repository.save(newUser);
-
-        } catch (DataIntegrityViolationException e) {
-            // When user types the same email that already exists
-            System.err.println("Registration failed: Data integrity violation.");
-            if (profileId != null) {
-                // Roll back the profile creation.
-                deleteProfile(profileId, request.getRole());
-            }
-            throw new EmailAlreadyExistsException(request.getEmail());
-
-        } catch (RestClientException e) {
-            // driver/company service is down.
-            System.err.println("Registration failed: Cannot create profile. Reason: " + e.getMessage());
-            throw new RegistrationException("A required service is currently unavailable. Please try again later.");
-
-        } catch (Exception e) {
-            // Catch any other unexpected errors.
-            System.err.println("An unexpected error occurred during registration: " + e.getMessage());
-            if (profileId != null) {
-                // Compensating Transaction: Roll back the profile creation.
-                deleteProfile(profileId, request.getRole());
-            }
-            throw new RegistrationException("An unexpected error occurred during registration.");
-        }
+    public User saveUserWithProfile(RegistrationRequest request, Long profileId) {
+        User newUser = new User();
+        newUser.setEmail(request.getEmail());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setRole(request.getRole());
+        newUser.setProfileId(profileId);
+        return repository.save(newUser);
     }
 
-    // This method is now effectively private to the service's orchestration logic.
-    private Long createProfile(String name, String email, Role role) {
+    /**
+     * Creates a profile in the appropriate service (driver or company).
+     * This is a step in the registration saga.
+     */
+    public Long createProfile(String name, String email, Role role) {
         String url;
         ProfileRequest requestBody = new ProfileRequest();
         requestBody.setName(name);
@@ -104,42 +71,38 @@ public class AuthService {
         }
     }
 
-    /// When something went wrong during the registration this will act as a
-    /// rollback of the already created profile in the driver/company service
-    private void deleteProfile(Long profileId, Role role) {
+    /**
+     * Compensating transaction for the saga. Deletes a profile if the saga fails.
+     */
+    public void deleteProfile(Long profileId, Role role) {
         String url;
         if (role == Role.DRIVER) {
-            // Use a URI template for the URL
             url = "http://driver-service/drivers/{id}";
         } else if (role == Role.COMPANY) {
-            // Use a URI template for the URL
             url = "http://company-service/companies/{id}";
         } else {
             System.err.println("Cannot delete profile. Invalid role: " + role);
             return;
         }
         try {
-            // Pass the profileId as a URI variable
-
             restTemplate.delete(url, profileId);
             System.out.println("Successfully rolled back profile for ID: " + profileId);
         } catch (Exception e) {
             System.err.println("CRITICAL: Failed to roll back profile for ID: " + profileId + ". Reason: " + e.getMessage());
-            // TODO In a real system this MUSTTTT trigger an alert for manual intervention
+            // In a real system this MUST trigger an alert for manual intervention
         }
     }
 
+    /**
+     * Verifies user credentials and generates a JWT token upon successful authentication.
+     */
     public LoginResponse verify(User user) {
-        Authentication authentication = authenticationManager.authenticate(
+
+
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
         );
+        return new LoginResponse(JWTService.generateToken(user.getEmail()));
 
-        if (authentication.isAuthenticated()) {
-            String token = JWTService.generateToken(user.getEmail());
-            return new LoginResponse(token);
-        } else {
-            // This path will now throw an exception which Spring Security handles
-            throw new BadCredentialsException("Invalid credentials");
-        }
     }
 }
