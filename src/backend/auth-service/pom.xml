@@ -54,6 +54,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!--  this is my own dto that i will be sharing with other services -->
+        <dependency>
+            <groupId>com.adonwheels</groupId>
+            <artifactId>common-dto</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
         <!--  FOR JWT tokens dependencies   START -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

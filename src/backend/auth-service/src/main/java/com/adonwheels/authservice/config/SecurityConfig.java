@@ -30,6 +30,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
+    // TODO research why am i using this method
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, HttpSession httpSession) throws Exception {
