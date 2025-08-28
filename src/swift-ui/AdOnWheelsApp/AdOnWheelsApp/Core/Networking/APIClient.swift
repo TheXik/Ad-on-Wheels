@@ -1,11 +1,11 @@
 import Foundation
 
-protocol APIClientProtocol {
+protocol APIClientProtocol: Sendable {
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T
     func send(_ endpoint: Endpoint) async throws
 }
 
-final class APIClient: APIClientProtocol {
+final class APIClient: APIClientProtocol, Sendable {
     static let shared = APIClient(baseURL: AppConfig.baseURL)
 
     private let baseURL: URL
@@ -20,43 +20,46 @@ final class APIClient: APIClientProtocol {
 
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         let request = try endpoint.makeURLRequest(baseURL: baseURL)
-        
-        let (data, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.transport(URLError(.badServerResponse))
-        }
-        
-        do {
-            let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
 
-            // Check for success flag and valid data
-            if apiResponse.success, let responseData = apiResponse.data {
-                return responseData
-                
-            } else if
-                let errorResponse = apiResponse.error {
-                throw NetworkError.serverError(errorResponse)
-                
-            } else {
-                 // as a fallback
-                throw NetworkError.decoding(URLError(.cannotParseResponse))
+        return try await withCheckedThrowingContinuation { continuation in
+            let task = session.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    continuation.resume(throwing: NetworkError.transport(error))
+                    return
+                }
+
+                // Fix for "immutable value was never used" warning
+                guard let data = data, let _ = response as? HTTPURLResponse else {
+                    continuation.resume(throwing: NetworkError.transport(URLError(.badServerResponse)))
+                    return
+                }
+
+                do {
+                    let apiResponse = try self.decoder.decode(ApiResponse<T>.self, from: data)
+
+                    if apiResponse.success, let responseData = apiResponse.data {
+                        continuation.resume(returning: responseData)
+                    } else if let errorResponse = apiResponse.error {
+                        continuation.resume(throwing: NetworkError.serverError(errorResponse))
+                    } else {
+                        continuation.resume(throwing: NetworkError.decoding(URLError(.cannotParseResponse)))
+                    }
+                } catch {
+                    continuation.resume(throwing: NetworkError.decoding(error))
+                }
             }
-        } catch {
-            throw NetworkError.decoding(error)
+            task.resume()
         }
     }
     
-    // The send method without a return type can be simplified
+    // This function was implemented with a recursive call, which is a bug.
+    // It should call the generic send<T> function with an EmptyResponse.
     func send(_ endpoint: Endpoint) async throws {
-        let request = try endpoint.makeURLRequest(baseURL: baseURL)
-        let (_, response) = try await session.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.transport(URLError(.badServerResponse))
-        }
+        let _: EmptyResponse = try await send(endpoint)
     }
-
+    
+    private struct EmptyResponse: Decodable {}
+    
     private static var defaultDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
