@@ -7,9 +7,14 @@ import dto.ErrorResponse;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
-    private final boolean success;
+    private boolean success;
     private T data;
     private ErrorResponse error;
+
+    // Public no-argument constructor for Jackson deserialization
+    public ApiResponse() {
+        this.success = false;
+    }
 
     private ApiResponse(boolean success) {
         this.success = success;
@@ -30,6 +35,10 @@ public class ApiResponse<T> {
 
     public boolean isSuccess() {
         return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
     }
 
     public T getData() {
