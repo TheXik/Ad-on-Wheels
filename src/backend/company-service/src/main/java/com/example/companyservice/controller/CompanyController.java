@@ -40,7 +40,7 @@ public class CompanyController {
     // POST /companies - Create a new company
     @PostMapping
     public ResponseEntity<ApiResponse<Company>> createCompany(@RequestBody Company company) {
-        Company saved = companyService.save(company);
+        Company saved = companyService.addCompany(company);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(saved));
