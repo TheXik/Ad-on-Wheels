@@ -23,8 +23,16 @@ final class APIClient: APIClientProtocol {
         do {
             let (data, response) = try await session.data(for: request)
             try Self.throwIfInvalidStatus(response: response, data: data)
+
             do {
-                return try decoder.decode(T.self, from: data)
+                let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
+                if let data = apiResponse.data {
+                    return data
+                } else if let error = apiResponse.error {
+                    throw error
+                } else {
+                    throw NetworkError.decoding(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No data or error in response"]))
+                }
             } catch {
                 throw NetworkError.decoding(error)
             }

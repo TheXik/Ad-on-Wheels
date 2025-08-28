@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" version="28.1.0">
   <diagram name="Page-1" id="74b105a0-9070-1c63-61bc-23e55f88626e">
-    <mxGraphModel dx="5544" dy="1094" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.5" pageWidth="1169" pageHeight="826" background="none" math="0" shadow="0">
+    <mxGraphModel dx="5290" dy="958" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.5" pageWidth="1169" pageHeight="826" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" style=";html=1;" />
         <mxCell id="1" style=";html=1;" parent="0" />
@@ -171,7 +171,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="F52go3VmSXpCUAL4Pi8X-5" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;CLIENT POST http://......8084/auth/register&lt;br&gt;&lt;br&gt;&amp;nbsp;with a JSON body containing &lt;code style=&quot;&quot; class=&quot;&quot;&gt;email&lt;/code&gt;, &lt;code style=&quot;&quot; class=&quot;&quot;&gt;password&lt;/code&gt;, &lt;code style=&quot;&quot; class=&quot;&quot;&gt;name&lt;/code&gt;, and &lt;code style=&quot;&quot; class=&quot;&quot;&gt;role&lt;/code&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="-2000" y="780" width="380" height="250" as="geometry" />
+          <mxGeometry x="-2030" y="855" width="380" height="250" as="geometry" />
         </mxCell>
         <mxCell id="F52go3VmSXpCUAL4Pi8X-89" value="" style="group" vertex="1" connectable="0" parent="1">
           <mxGeometry x="-2430" y="1120" width="2560" height="1440" as="geometry" />
@@ -354,6 +354,23 @@
             <mxPoint x="-22" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="F52go3VmSXpCUAL4Pi8X-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=0.25;exitDx=0;exitDy=0;" edge="1" parent="F52go3VmSXpCUAL4Pi8X-87" source="F52go3VmSXpCUAL4Pi8X-59" target="F52go3VmSXpCUAL4Pi8X-28">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="87.50543159622686" y="165" as="sourcePoint" />
+            <mxPoint x="703.3616663157283" y="145.6199999999999" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="88" y="188" />
+              <mxPoint x="88" y="126" />
+              <mxPoint x="703" y="126" />
+              <mxPoint x="703" y="145" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="F52go3VmSXpCUAL4Pi8X-84" value="NewUser is wrapped in RegistrationResponseDTO&amp;nbsp; &amp;nbsp; ---&amp;gt;&amp;nbsp; ResponseEntity&amp;lt;ApiResponse&amp;lt;RegistrationResponse&amp;gt;&amp;gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="F52go3VmSXpCUAL4Pi8X-83">
+          <mxGeometry x="0.1909" y="-1" relative="1" as="geometry">
+            <mxPoint x="-51" as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="F52go3VmSXpCUAL4Pi8X-36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="F52go3VmSXpCUAL4Pi8X-89" source="F52go3VmSXpCUAL4Pi8X-31" target="F52go3VmSXpCUAL4Pi8X-35">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -427,27 +444,11 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="F52go3VmSXpCUAL4Pi8X-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="F52go3VmSXpCUAL4Pi8X-89" target="F52go3VmSXpCUAL4Pi8X-28">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="137.50543159622686" y="210" as="sourcePoint" />
-            <mxPoint x="753.3616663157283" y="190.6199999999999" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="138" y="171" />
-              <mxPoint x="753" y="171" />
-              <mxPoint x="753" y="190" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="F52go3VmSXpCUAL4Pi8X-84" value="NewUser is wrapped in RegistrationResponseDTO&amp;nbsp; &amp;nbsp; ---&amp;gt;&amp;nbsp; ResponseEntity&amp;lt;ApiResponse&amp;lt;RegistrationResponse&amp;gt;&amp;gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="F52go3VmSXpCUAL4Pi8X-83">
-          <mxGeometry x="0.1909" y="-1" relative="1" as="geometry">
-            <mxPoint x="-51" as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="F52go3VmSXpCUAL4Pi8X-27" value="&lt;b style=&quot;color: rgb(18, 18, 18);&quot;&gt;&lt;font style=&quot;font-size: 48px;&quot;&gt;AUTH-SERVICE REGISTER&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="F52go3VmSXpCUAL4Pi8X-89">
           <mxGeometry width="666.6917401024145" height="160" as="geometry" />
         </mxCell>
         <mxCell id="F52go3VmSXpCUAL4Pi8X-90" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="-1270" y="775" width="1360" height="330" as="geometry" />
+          <mxGeometry x="-1430" y="890" width="1360" height="330" as="geometry" />
         </mxCell>
         <mxCell id="F52go3VmSXpCUAL4Pi8X-17" value="" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;align=center;movable=1;resizable=1;rotatable=1;deletable=1;editable=1;locked=0;connectable=1;" vertex="1" parent="F52go3VmSXpCUAL4Pi8X-90">
           <mxGeometry width="498.71345029239757" height="330" as="geometry" />
