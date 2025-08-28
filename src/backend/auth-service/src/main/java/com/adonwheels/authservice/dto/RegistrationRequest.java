@@ -1,42 +1,24 @@
 package com.adonwheels.authservice.dto;
 
 import com.adonwheels.authservice.model.Role;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-public class RegistrationRequest {
-    private String email;
-    private String password;
-    private String name; // Name for the profile
-    private Role role;   // Use the Role enum
+public record RegistrationRequest(
+        @NotBlank(message = "Email cannot be empty")
+        @Email(message = "Please provide a valid email address")
+        String email,
 
-    public String getEmail() {
-        return email;
-    }
+        @NotBlank(message = "Password cannot be empty")
+        @Size(min = 8, message = "Password must be at least 8 characters long")
+        String password,
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+        @NotBlank(message = "Name cannot be empty")
+        String name,
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+        @NotNull(message = "Role must be specified")
+        Role role
+) {
 }
