@@ -15,6 +15,15 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET_KEY}
+  expiration-ms: 3600000 # 1 hour in milliseconds  // TODO CHANGE LATER // for how long will the TOKEN BE VALID
+
+
+services:
+  driver-service:
+    url: "http://driver-service"
+  company-service:
+    url: "http://company-service"
+
 
 eureka:
   client:

@@ -3,6 +3,7 @@ package com.adonwheels.authservice.service;
 import com.adonwheels.authservice.dto.RegistrationRequest;
 import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
 import com.adonwheels.authservice.exception.RegistrationException;
+import com.adonwheels.authservice.exception.RegistrationFailedException;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
 public class RegistrationSagaOrchestratorService {
@@ -23,26 +25,31 @@ public class RegistrationSagaOrchestratorService {
         Long profileId = null;
         try {
             // Create Profile
-            profileId = authService.createProfile(request.getName(), request.getEmail(), request.getRole());
+            profileId = authService.createProfile(request.name(), request.email(), request.role());
 
             // Save the User
             return authService.saveUserWithProfile(request, profileId);
 
         } catch (DataIntegrityViolationException ex) {
-            logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.getEmail());
-            rollbackProfileCreation(profileId, request.getRole());
-            throw new EmailAlreadyExistsException("This email address is already in use: " + request.getEmail());
+            logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.email());
+            rollbackProfileCreation(profileId, request.role());
+            throw new EmailAlreadyExistsException("This email address is already in use: " + request.email());
 
-        } catch (RestClientException ex) {
-            logger.error("SAGA ROLLBACK: Service unavailable during profile creation for {}.", request.getEmail());
+        }  catch (WebClientResponseException ex) { // <-- ZMENA TU! NAJLEPŠÍ PRÍSTUP.
+            logger.error(
+                    "SAGA ROLLBACK: Communication with profile service failed for email {}. Status: {}, Body: {}",
+                    request.email(),
+                    ex.getStatusCode(),
+                    ex.getResponseBodyAsString()
+            );
             // No rollback needed as profile wasn't created
             throw new RegistrationException("A required service is currently unavailable. Please try again later.");
 
         } catch (Throwable ex) {
-            logger.error("SAGA ROLLBACK: Unexpected error for {}.", request.getEmail());
-            rollbackProfileCreation(profileId, request.getRole());
+            logger.error("SAGA ROLLBACK: Unexpected error for {}.", request.email());
+            rollbackProfileCreation(profileId, request.role());
             // Re-throw the original exception to be handled by the GlobalExceptionHandlerAspect
-            throw new RuntimeException(ex);
+            throw new RegistrationFailedException("An unexpected error occurred during registration.", ex);
         }
     }
 

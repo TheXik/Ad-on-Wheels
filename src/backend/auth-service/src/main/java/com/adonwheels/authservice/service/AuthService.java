@@ -1,22 +1,20 @@
 package com.adonwheels.authservice.service;
 
-import com.adonwheels.authservice.dto.LoginResponse;
-import com.adonwheels.authservice.dto.ProfileRequest;
-import com.adonwheels.authservice.dto.ProfileResponse;
-import com.adonwheels.authservice.dto.RegistrationRequest;
+import com.adonwheels.authservice.dto.*;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import com.adonwheels.authservice.repository.AuthRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 @Service
 public class AuthService {
@@ -26,11 +24,24 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
-    private RestTemplate restTemplate;
-    @Autowired
-    private JWTService JWTService;
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private WebClient.Builder webClientBuilder;
+
+    @Value("${services.driver-service.url}")
+    private String driverServiceUrl;
+
+    @Value("${services.company-service.url}")
+    private String companyServiceUrl;
+
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final  JWTService JWTService;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthService(AuthenticationManager authenticationManager,  JWTService JWTService) {
+        this.authenticationManager = authenticationManager;
+        this.JWTService = JWTService;
+    }
+
 
     /**
      * This method is called by the RegistrationSagaOrchestrator AFTER the profile has been created.
@@ -38,38 +49,46 @@ public class AuthService {
      */
     public User saveUserWithProfile(RegistrationRequest request, Long profileId) {
         User newUser = new User();
-        newUser.setEmail(request.getEmail());
-        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole(request.getRole());
+        newUser.setEmail(request.email());
+        newUser.setPassword(passwordEncoder.encode(request.password()));
+        newUser.setRole(request.role());
         newUser.setProfileId(profileId);
         return repository.save(newUser);
     }
 
     /**
-     * Creates a profile in the appropriate service (driver or company).
+     * Creates a profile in the appropriate service (driver or company) using WebClient.
      * This is a step in the registration saga.
      */
     public Long createProfile(String name, String email, Role role) {
         String url;
-        ProfileRequest requestBody = new ProfileRequest();
-        requestBody.setName(name);
-        requestBody.setEmail(email);
+        ProfileRequest requestBody = new ProfileRequest(name, email);
 
         if (role == Role.DRIVER) {
-            url = "http://driver-service/drivers";
+            url = driverServiceUrl + "/drivers";
         } else if (role == Role.COMPANY) {
-            url = "http://company-service/companies";
+            url = companyServiceUrl + "/companies";
         } else {
             throw new IllegalArgumentException("Invalid role for profile creation");
         }
-        ResponseEntity<ProfileResponse> response = restTemplate.postForEntity(url, requestBody, ProfileResponse.class);
 
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            return response.getBody().getId();
+        // if fails it throws WebClientResponseException which bubles to saga orchestrator it cathes it and logs it and displays it
+        ProfileResponse response = webClientBuilder.build().post()
+                .uri(url)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(ProfileResponse.class)
+                .block(); // Block to get the result in a synchronous flow
+
+
+        // safety for invalid state, webclient sents 200 OK but with no body (id etc)
+        if (response != null && response.id() != null) {
+            return response.id();
         } else {
-            throw new RestClientException("Failed to create profile. Status code: " + response.getStatusCode());
+            throw new IllegalStateException("Failed to create profile or received an empty response.");
         }
     }
+
 
     /**
      * Compensating transaction for the saga. Deletes a profile if the saga fails.
@@ -77,32 +96,32 @@ public class AuthService {
     public void deleteProfile(Long profileId, Role role) {
         String url;
         if (role == Role.DRIVER) {
-            url = "http://driver-service/drivers/{id}";
+            url = driverServiceUrl + "/drivers/{id}";
         } else if (role == Role.COMPANY) {
-            url = "http://company-service/companies/{id}";
+            url = companyServiceUrl + "/companies/{id}";
         } else {
-            System.err.println("Cannot delete profile. Invalid role: " + role);
+            logger.error("Cannot delete profile. Invalid role: {}", role);
             return;
         }
-        try {
-            restTemplate.delete(url, profileId);
-            System.out.println("Successfully rolled back profile for ID: " + profileId);
-        } catch (Exception e) {
-            System.err.println("CRITICAL: Failed to roll back profile for ID: " + profileId + ". Reason: " + e.getMessage());
-            // In a real system this MUST trigger an alert for manual intervention
-        }
+
+        webClientBuilder.build().delete()
+                .uri(url, profileId)
+                .retrieve()
+                .toBodilessEntity()
+                .doOnSuccess(response -> logger.info("Successfully rolled back profile for ID: {}", profileId))
+                .doOnError(error -> logger.error("CRITICAL: Failed to roll back profile for ID: {}. Reason: {}", profileId, error.getMessage()))
+                .retry(3) // retry on failure
+                .block(); // Block to ensure completion in the saga pattern
     }
+
 
     /**
      * Verifies user credentials and generates a JWT token upon successful authentication.
      */
-    public LoginResponse verify(User user) {
-
-
+    public LoginResponse verify(LoginRequest loginRequest) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
+                new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
-        return new LoginResponse(JWTService.generateToken(user.getEmail()));
-
+        return new LoginResponse(JWTService.generateToken(loginRequest.email()));
     }
 }

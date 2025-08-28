@@ -19,6 +19,8 @@ public class JWTService {
     @Value("${jwt.secret}")
     public String secretKey;
 
+    @Value("${jwt.expiration-ms}")
+    private long expirationTime;
 
     @Autowired
     private AuthRepository authRepository;
@@ -36,6 +38,8 @@ public class JWTService {
 //        }
 //    }
 
+
+    // TODO IS it correct to return as a string ?
     public String generateToken(String email) {
 
         User user = authRepository.findByEmail(email)
@@ -52,13 +56,12 @@ public class JWTService {
                 .add(claims)
                 .subject(user.getEmail())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60)) // TODO CHANGE LATER // for how long will the TOKEN BE VALID
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .and()
                 .signWith(getSigningKey())
                 .compact();
 
     }
-
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
