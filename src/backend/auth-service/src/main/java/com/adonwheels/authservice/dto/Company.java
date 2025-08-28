@@ -1,20 +1,14 @@
-package com.example.companyservice.model;
+package com.adonwheels.authservice.dto;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+//TODO figure out better way of transporting inside the profile REQUESTS
 
-@Entity
 public class Company {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
 
-    @NotBlank
+
     private String name;
 
-    @Email
-    @NotBlank
     private String email;
 
     public Company() {
@@ -48,4 +42,4 @@ public class Company {
     public void setEmail(String email) {
         this.email = email;
     }
-} 
+}
