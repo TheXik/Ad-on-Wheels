@@ -23,7 +23,7 @@ public class CompanyService {
         return repository.findById(id).orElseThrow(() -> new CompanyNotFoundException(id));
     }
 
-    public Company save(Company company) {
+    public Company addCompany(Company company) {
         return repository.save(company);
     }
 
