@@ -48,11 +48,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         LoginResponse loginData = authService.verify(loginRequest);
-
+        LoginResponse loginResponseData = new LoginResponse(loginData.token(), "User successfully logged in");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ApiResponse.success(loginData));
+                .body(ApiResponse.success(loginResponseData));
     }
 
 

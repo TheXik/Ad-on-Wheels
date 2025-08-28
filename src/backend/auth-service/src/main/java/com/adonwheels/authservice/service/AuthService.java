@@ -122,6 +122,6 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
-        return new LoginResponse(JWTService.generateToken(loginRequest.email()));
+        return new LoginResponse(JWTService.generateToken(loginRequest.email()), "Token Generated");
     }
 }
