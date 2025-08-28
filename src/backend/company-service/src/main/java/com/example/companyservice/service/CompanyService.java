@@ -15,7 +15,7 @@ public class CompanyService {
         this.repository = repository;
     }
 
-    public List<Company> findAll() {
+    public List<Company> GetAllCompanies() {
         return repository.findAll();
     }
 
