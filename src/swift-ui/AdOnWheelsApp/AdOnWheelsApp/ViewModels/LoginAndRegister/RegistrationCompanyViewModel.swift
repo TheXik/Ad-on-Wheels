@@ -30,7 +30,7 @@ class RegisterCompanyViewModel: ObservableObject {
                              "name": name,
                              "role": UserRole.company.rawValue.uppercased()])
             )
-            try await api.send(endpoint)
+            let _: RegistrationResponse = try await api.send(endpoint)
             registrationSuccessful = true
         } catch {
             errorMessage = error.localizedDescription

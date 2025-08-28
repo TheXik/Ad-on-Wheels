@@ -30,7 +30,7 @@ class RegisterDriverViewModel: ObservableObject {
                              "name": name,
                              "role": UserRole.driver.rawValue.uppercased()])
             )
-            try await api.send(endpoint)
+            let _: RegistrationResponse = try await api.send(endpoint)
             registrationSuccessful = true
         } catch {
             errorMessage = error.localizedDescription
