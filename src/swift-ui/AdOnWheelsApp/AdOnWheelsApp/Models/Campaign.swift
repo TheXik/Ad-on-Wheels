@@ -5,4 +5,6 @@ struct Campaign: Identifiable, Codable {
     let name: String
     let description: String
     let companyId: Int
-} 
+}
+
+
