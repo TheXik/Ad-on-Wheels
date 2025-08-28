@@ -1,4 +1,4 @@
 package com.adonwheels.authservice.dto;
 
-public record RegistrationResponse(Long userId, String message) {
+public record RegistrationResponse(String message) {
 }
