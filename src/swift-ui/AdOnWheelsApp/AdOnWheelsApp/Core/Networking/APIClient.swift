@@ -20,38 +20,40 @@ final class APIClient: APIClientProtocol {
 
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         let request = try endpoint.makeURLRequest(baseURL: baseURL)
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.transport(URLError(.badServerResponse))
+        }
+        
         do {
-            let (data, response) = try await session.data(for: request)
-            try Self.throwIfInvalidStatus(response: response, data: data)
+            let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
 
-            do {
-                let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
-                if let data = apiResponse.data {
-                    return data
-                } else if let error = apiResponse.error {
-                    throw error
-                } else {
-                    throw NetworkError.decoding(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No data or error in response"]))
-                }
-            } catch {
-                throw NetworkError.decoding(error)
+            // Check for success flag and valid data
+            if apiResponse.success, let responseData = apiResponse.data {
+                return responseData
+                
+            } else if
+                let errorResponse = apiResponse.error {
+                throw NetworkError.serverError(errorResponse)
+                
+            } else {
+                 // as a fallback
+                throw NetworkError.decoding(URLError(.cannotParseResponse))
             }
-        } catch let error as NetworkError {
-            throw error
         } catch {
-            throw NetworkError.transport(error)
+            throw NetworkError.decoding(error)
         }
     }
-
+    
+    // The send method without a return type can be simplified
     func send(_ endpoint: Endpoint) async throws {
         let request = try endpoint.makeURLRequest(baseURL: baseURL)
-        do {
-            let (data, response) = try await session.data(for: request)
-            try Self.throwIfInvalidStatus(response: response, data: data)
-        } catch let error as NetworkError {
-            throw error
-        } catch {
-            throw NetworkError.transport(error)
+        let (_, response) = try await session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.transport(URLError(.badServerResponse))
         }
     }
 
@@ -60,14 +62,4 @@ final class APIClient: APIClientProtocol {
         decoder.dateDecodingStrategy = .iso8601
         return decoder
     }()
-
-    private static func throwIfInvalidStatus(response: URLResponse, data: Data) throws {
-        guard let http = response as? HTTPURLResponse else { return }
-        switch http.statusCode {
-        case 200...299:
-            return
-        default:
-            throw NetworkError.requestFailed(statusCode: http.statusCode, data: data)
-        }
-    }
 }
