@@ -1,17 +1,16 @@
-//
-//  AdOnWheelsAppApp.swift
-//  AdOnWheelsApp
-//
-//  Created by Lukáš Hellesch on 17/05/2025.
-//
-
 import SwiftUI
 
 @main
 struct AdOnWheelsAppApp: App {
+    @StateObject private var authService = AuthenticationService()
+
     var body: some Scene {
         WindowGroup {
-            MainView()
+            if authService.isAuthenticated {
+                HomePageView(authService: authService)
+            } else {
+                AuthRouterView(authService: authService)
+            }
         }
     }
-} 
+}
