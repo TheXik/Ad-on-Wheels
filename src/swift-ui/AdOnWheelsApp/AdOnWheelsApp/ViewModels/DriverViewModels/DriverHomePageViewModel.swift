@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor
-class HomePageViewModel: ObservableObject {
+class DriverHomePageViewModel: ObservableObject {
     
     @Published var drivers: [Driver] = []
     @Published var isLoading = false

@@ -20,7 +20,6 @@ class AuthenticationService: ObservableObject {
         isAuthenticated = false
     }
     
-    // Túto metódu zavoláme po úspešnom prihlásení
     func didLogin() {
         self.isAuthenticated = true
     }

@@ -1,14 +1,14 @@
 import SwiftUI
 
-struct HomePageView: View {
-    @StateObject private var viewModel = HomePageViewModel()
+struct CompanyHomePageView: View {
+    @StateObject private var viewModel = CompanyHomePageViewModel()
     @ObservedObject var authService: AuthenticationService
 
     var body: some View {
         NavigationView {
             VStack {
                 if viewModel.isLoading {
-                    ProgressView("Loading drivers..")
+                    ProgressView("Loading companies..")
                 } else if let errorMessage = viewModel.errorMessage {
                     VStack {
                         Text("Mistake in loading the data")
@@ -18,12 +18,12 @@ struct HomePageView: View {
                             .padding()
                         Button("Try again") {
                             Task {
-                                await viewModel.fetchDrivers()
+                                await viewModel.fetchCompanies()
                             }
                         }
                     }
                 } else {
-                    List(viewModel.drivers) { driver in
+                    List(viewModel.company) { driver in
                         VStack(alignment: .leading, spacing: 5) {
                             Text(driver.name).font(.headline)
                             Text(driver.email).font(.subheadline).foregroundColor(.secondary)
@@ -32,7 +32,7 @@ struct HomePageView: View {
                     }
                 }
             }
-            .navigationTitle("All Drivers")
+            .navigationTitle("All Companies")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Logout") {
@@ -41,9 +41,9 @@ struct HomePageView: View {
                 }
             }
             .onAppear {
-                if viewModel.drivers.isEmpty {
+                if viewModel.company.isEmpty {
                     Task {
-                        await viewModel.fetchDrivers()
+                        await viewModel.fetchCompanies()
                     }
                 }
             }
