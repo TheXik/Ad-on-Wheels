@@ -12,6 +12,7 @@ public record RegistrationRequest(
         String email,
 
         @NotBlank(message = "Password cannot be empty")
+        @Size(min = 8, max = 50, message = "Password must be between 8 and 30 characters")
         String password,
 
         @NotBlank(message = "Name cannot be empty")

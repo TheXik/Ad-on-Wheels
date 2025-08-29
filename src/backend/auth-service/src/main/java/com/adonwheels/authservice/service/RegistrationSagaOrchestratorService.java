@@ -31,7 +31,7 @@ public class RegistrationSagaOrchestratorService {
         } catch (DataIntegrityViolationException ex) {
             logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.email());
             rollbackProfileCreation(profileId, request.role());
-            throw new EmailAlreadyExistsException("This email address is already in use: " + request.email());
+            throw new EmailAlreadyExistsException(request.email());
 
         }  catch (WebClientResponseException ex) {
             logger.error(
