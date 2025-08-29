@@ -4,9 +4,6 @@ import com.adonwheels.authservice.dto.LoginRequest;
 import com.adonwheels.authservice.dto.LoginResponse;
 import com.adonwheels.authservice.dto.RegistrationRequest;
 import com.adonwheels.authservice.dto.RegistrationResponse;
-import com.adonwheels.authservice.exception.RegistrationException;
-import com.adonwheels.authservice.model.Role;
-import com.adonwheels.authservice.model.User;
 import com.adonwheels.authservice.service.AuthService;
 import com.adonwheels.authservice.service.RegistrationSagaOrchestratorService;
 import dto.ApiResponse;
@@ -30,9 +27,7 @@ public class AuthController {
     private RegistrationSagaOrchestratorService registrationSagaOrchestratorService;
 
 
-    /// This firstly create a dto object that will be sent to the driver/company service based on the user role
-    /// it returns the profileID of the user that we created and now it creates the user with the password in the auth
-    /// service database
+    /// This method calls the SAGA orchestrator which takes care of creating UserProfile
     /// valid anotation chcecks if the dto RegistrationRequest have correctFields
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegistrationResponse>> register(@Valid @RequestBody RegistrationRequest request) {

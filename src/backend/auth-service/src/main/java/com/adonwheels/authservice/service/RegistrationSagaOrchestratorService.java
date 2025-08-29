@@ -5,13 +5,11 @@ import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
 import com.adonwheels.authservice.exception.RegistrationException;
 import com.adonwheels.authservice.exception.RegistrationFailedException;
 import com.adonwheels.authservice.model.Role;
-import com.adonwheels.authservice.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
@@ -21,21 +19,21 @@ public class RegistrationSagaOrchestratorService {
     @Autowired
     private AuthService authService;
 
-    public User register(RegistrationRequest request) {
+    public void register(RegistrationRequest request) {
         Long profileId = null;
         try {
             // Create Profile
             profileId = authService.createProfile(request.name(), request.email(), request.role());
 
             // Save the User
-            return authService.saveUserWithProfile(request, profileId);
+            authService.saveUserWithProfile(request, profileId);
 
         } catch (DataIntegrityViolationException ex) {
             logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.email());
             rollbackProfileCreation(profileId, request.role());
             throw new EmailAlreadyExistsException("This email address is already in use: " + request.email());
 
-        }  catch (WebClientResponseException ex) { // <-- ZMENA TU! NAJLEPŠÍ PRÍSTUP.
+        }  catch (WebClientResponseException ex) {
             logger.error(
                     "SAGA ROLLBACK: Communication with profile service failed for email {}. Status: {}, Body: {}",
                     request.email(),
