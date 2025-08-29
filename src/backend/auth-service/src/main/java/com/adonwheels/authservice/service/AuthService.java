@@ -73,20 +73,20 @@ public class AuthService {
         } else {
             throw new IllegalArgumentException("Invalid role for profile creation");
         }
-
-        // if fails it throws WebClientResponseException which bubles to saga orchestrator it cathes it and logs it and displays it
-        ProfileResponse response = webClientBuilder.build().post()
+        logger.info("Creating profile with body {}", requestBody);
+        ApiResponse<ProfileResponse> apiResponse = webClientBuilder.build().post()
                 .uri(url)
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(ProfileResponse.class)
-                .block(); // Block to get the result in a synchronous flow
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<ProfileResponse>>() {})
+                .block();
 
-
-        // safety for invalid state, webclient sents 200 OK but with no body (id etc)
-        if (response != null && response.id() != null) {
-            return response.id();
+        logger.info("Profile response {}", apiResponse);
+        if (apiResponse != null && apiResponse.isSuccess() && apiResponse.getData() != null && apiResponse.getData().id() != null) {
+            logger.info("Profile created with id {}", apiResponse.getData().id());
+            return apiResponse.getData().id();
         } else {
+            logger.info("Profile creation failed");
             throw new IllegalStateException("Failed to create profile or received an empty response.");
         }
     }

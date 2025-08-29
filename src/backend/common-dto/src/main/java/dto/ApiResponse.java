@@ -1,6 +1,8 @@
 package dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dto.ErrorResponse;
 
 
@@ -54,5 +56,13 @@ public class ApiResponse<T> {
 
     public void setError(ErrorResponse error) {
         this.error = error;
+    }
+    @Override
+    public String toString() {
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            return "Error converting to JSON: " + e.getMessage();
+        }
     }
 }
