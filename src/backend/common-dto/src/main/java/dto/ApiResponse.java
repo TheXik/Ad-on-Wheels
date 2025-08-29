@@ -11,7 +11,6 @@ public class ApiResponse<T> {
     private T data;
     private ErrorResponse error;
 
-    // Public no-argument constructor for Jackson deserialization
     public ApiResponse() {
         this.success = false;
     }

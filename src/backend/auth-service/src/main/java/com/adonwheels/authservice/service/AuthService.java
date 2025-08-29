@@ -65,45 +65,30 @@ public class AuthService {
     public Long createProfile(String name, String email, Role role) {
         String url;
         ProfileRequest requestBody = new ProfileRequest(name, email);
-        WebClient client = webClientBuilder.build();
-        Long profileId = null;
 
         if (role == Role.DRIVER) {
             url = driverServiceUrl + "/drivers";
-            //TODO figure out better way of transporting inside the profile REQUESTS
-            ApiResponse<Driver> apiResponse = client.post()
-                    .uri(url)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
-                    .block();
-
-            if (apiResponse != null && apiResponse.getData() != null) {
-                profileId = apiResponse.getData().getId();
-            } else {
-                throw new IllegalStateException("Failed to create profile or received an invalid response structure.");
-            }
-
         } else if (role == Role.COMPANY) {
             url = companyServiceUrl + "/companies";
-            //TODO figure out better way of transporting inside the profile REQUESTS
-            ApiResponse<Company> apiResponse = client.post()
-                    .uri(url)
-                    .bodyValue(requestBody)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Company>>() {})
-                    .block();
-
-            if (apiResponse != null && apiResponse.getData() != null) {
-                profileId = apiResponse.getData().getId();
-            } else {
-                throw new IllegalStateException("Failed to create profile or received an invalid response structure.");
-            }
         } else {
             throw new IllegalArgumentException("Invalid role for profile creation");
         }
 
-        return profileId;
+        // if fails it throws WebClientResponseException which bubles to saga orchestrator it cathes it and logs it and displays it
+        ProfileResponse response = webClientBuilder.build().post()
+                .uri(url)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(ProfileResponse.class)
+                .block(); // Block to get the result in a synchronous flow
+
+
+        // safety for invalid state, webclient sents 200 OK but with no body (id etc)
+        if (response != null && response.id() != null) {
+            return response.id();
+        } else {
+            throw new IllegalStateException("Failed to create profile or received an empty response.");
+        }
     }
 
 
