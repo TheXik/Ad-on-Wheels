@@ -1,5 +1,6 @@
 package com.adonwheels.authservice.aspect;
 
+import com.adonwheels.authservice.exception.InvalidRegistrationRequestException;
 import dto.ApiResponse;
 import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
 import com.adonwheels.authservice.exception.RegistrationException;
@@ -14,7 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.client.RestClientException;
+
+import java.util.stream.Collectors;
 
 @Aspect
 @Component
@@ -32,8 +37,15 @@ public class GlobalExceptionHandlerAspect {
         try {
             return joinPoint.proceed();
 
+        } catch (MethodArgumentNotValidException ex) {
+            String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.joining(", "));
+            logger.warn("Validation error in {}: {}", methodName, errorMessage);
+            throw new InvalidRegistrationRequestException(errorMessage);
+
         } catch (EmailAlreadyExistsException ex) {
-            logger.warn("Mistake in registration Email already exists {}: {}", methodName, ex.getMessage());
+            logger.warn("Mistake in registration Email already exists {}", ex.getMessage());
             ApiResponse<Object> errorResponse = ApiResponse.error(HttpStatus.CONFLICT.value(), ex.getMessage());
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
