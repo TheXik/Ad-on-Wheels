@@ -11,6 +11,7 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
@@ -31,11 +32,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             if (validator.isSecured.test(exchange.getRequest())) {
                 // Check for the auth header
                 if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing authorization header");
                 }
 
-                String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+                String authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     authHeader = authHeader.substring(7);
                 }
@@ -44,22 +44,20 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     // AUTHENTICATION
                     Claims claims = jwtUtil.extractAllClaims(authHeader);
 
+
                     // TODO AUTHORIZATION later
                     // String role = claims.get("role", String.class);
                     // String path = exchange.getRequest().getURI().getPath();
 
                 } catch (ExpiredJwtException e) {
                     System.err.println("JWT expired: " + e.getMessage());
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token has expired");
                 } catch (SignatureException e) {
                     System.err.println("Invalid signature: " + e.getMessage());
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid JWT signature");
                 } catch (Exception e) {
                     System.err.println("Invalid token: " + e.getMessage());
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return exchange.getResponse().setComplete();
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized access: Invalid token");
                 }
             }
             return chain.filter(exchange);

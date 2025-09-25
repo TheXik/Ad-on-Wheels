@@ -3,9 +3,6 @@ spring:
     name: gateway-service
   cloud:
     gateway:
-      httpclient:
-        connect-timeout: 5000
-        response-timeout: 10s
 
 jwt:
   secret: ${JWT_SECRET_KEY}
@@ -17,8 +14,3 @@ eureka:
 
 server:
   port: 8080
-
-logging:
-  level:
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty: DEBUG
