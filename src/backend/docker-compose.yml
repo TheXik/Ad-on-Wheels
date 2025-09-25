@@ -12,12 +12,95 @@ services:
       - mysql-data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 5s
       timeout: 5s
       retries: 20
 
+  eureka-server:
+    image: eureka-server
+    build:
+      context: eureka-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  gateway-service:
+    image: gateway-service
+    build:
+      context: gateway-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - eureka-server
+      - auth-service
+      - driver-service
+      - company-service
+      - campaign-service
+
+  auth-service:
+    image: auth-service
+    build:
+      context: auth-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  driver-service:
+    image: driver-service
+    build:
+      context: driver-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  company-service:
+    image: company-service
+    build:
+      context: company-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
+  campaign-service:
+    image: campaign-service
+    build:
+      context: campaign-service
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+
 volumes:
   mysql-data:
-
-
