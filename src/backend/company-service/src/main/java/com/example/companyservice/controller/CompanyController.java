@@ -41,7 +41,7 @@ public class CompanyController {
     @PostMapping
     public ResponseEntity<ApiResponse<Company>> createCompany(@RequestBody Company company) {
         Company saved = companyService.addCompany(company);
-        return ResponseEntity
+        return ResponseEntity //TODO Cross site scripting vulnerability sink
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(saved));
     }

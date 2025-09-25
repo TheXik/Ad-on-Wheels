@@ -33,7 +33,7 @@ public class DriverController {
     @PostMapping
     public ResponseEntity<ApiResponse<Driver>> newDriver(@Valid @RequestBody Driver newDriver) {
         Driver savedDriver = service.addDriver(newDriver);
-        return ResponseEntity
+        return ResponseEntity // TODO Cross site scripting vulnerability sink
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(savedDriver));
     }

@@ -3,8 +3,8 @@ spring:
     name: auth-service
   datasource:
     url: jdbc:mysql://localhost:3306/auth-service?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: ad_on_wheels_user
-    password: test
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
