@@ -3,7 +3,9 @@ spring:
     name: gateway-service
   cloud:
     gateway:
-
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
 
 jwt:
   secret: ${JWT_SECRET_KEY}
@@ -11,7 +13,12 @@ jwt:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
 
 server:
-  port: 8084
+  port: 8080
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG

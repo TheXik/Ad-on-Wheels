@@ -18,19 +18,19 @@ public class GatewayConfig {
         return builder.routes()
                 .route("auth-service", r -> r.path("/auth/**")
                         .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
-                        .uri("lb://AUTH-SERVICE"))
+                        .uri("lb://auth-service"))
 
                 .route("driver-service", r -> r.path("/drivers/**")
                         .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
-                        .uri("lb://DRIVER-SERVICE"))
+                        .uri("lb://driver-service"))
 
                 .route("company-service", r -> r.path("/companies/**")
                         .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
-                        .uri("lb://COMPANY-SERVICE"))
+                        .uri("lb://company-service"))
 
                 .route("campaign-service", r -> r.path("/campaigns/**")
                         .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
-                        .uri("lb://CAMPAIGN-SERVICE"))
+                        .uri("lb://campaign-service"))
                 .build();
     }
 }

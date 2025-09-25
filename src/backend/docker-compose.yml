@@ -24,10 +24,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8761:8761"
-    restart: always
     depends_on:
       mysql:
         condition: service_healthy
+    # --- FIX 1: Add a healthcheck to Eureka Server ---
+    # This ensures other services wait until the Eureka application is fully running.
+    healthcheck: # <-- ADD THIS BLOCK
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ] # Checks for an HTTP 200 response
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   gateway-service:
     image: gateway-service
@@ -38,13 +44,18 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    restart: always
     depends_on:
-      - eureka-server
-      - auth-service
-      - driver-service
-      - company-service
-      - campaign-service
+      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
+      eureka-server:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      driver-service:
+        condition: service_started
+      company-service:
+        condition: service_started
+      campaign-service:
+        condition: service_started
 
   auth-service:
     image: auth-service
@@ -53,12 +64,12 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    restart: always
     depends_on:
       mysql:
         condition: service_healthy
+      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
-        condition: service_started
+        condition: service_healthy
 
   driver-service:
     image: driver-service
@@ -67,12 +78,12 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    restart: always
     depends_on:
       mysql:
         condition: service_healthy
+      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
-        condition: service_started
+        condition: service_healthy
 
   company-service:
     image: company-service
@@ -81,12 +92,12 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    restart: always
     depends_on:
       mysql:
         condition: service_healthy
+      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
-        condition: service_started
+        condition: service_healthy
 
   campaign-service:
     image: campaign-service
@@ -95,12 +106,12 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    restart: always
     depends_on:
       mysql:
         condition: service_healthy
+      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
   mysql-data:
