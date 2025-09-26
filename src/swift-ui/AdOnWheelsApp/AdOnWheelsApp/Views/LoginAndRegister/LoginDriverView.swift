@@ -4,58 +4,62 @@ struct LoginDriverView: View {
     @StateObject private var viewModel = LoginDriverViewModel()
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
+    @State private var isPasswordVisible: Bool = false
 
     var body: some View {
-        VStack(spacing: 15) {
-            Text("Login as a Driver")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.bottom, 20)
-            
-            TextField("Email", text: $viewModel.email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-                .textContentType(.emailAddress)
-
-            SecureField("Password", text: $viewModel.password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.password)
-
-            if viewModel.isLoading {
-                ProgressView()
-                    .padding()
-            } else {
-                Button("Login") {
-                    Task {
-                        if await viewModel.login() {
-                            authService.didLogin()
-                        }
+        AOWAuthScaffold(
+            headerMode: .login(role: "Driver"),
+            subtitle: "Login to your Driver Account",
+            isLoading: viewModel.isLoading,
+            errorMessage: viewModel.errorMessage,
+            primaryButtonTitle: "Login",
+            primaryAction: {
+                Task {
+                    if let token = await viewModel.login() {
+                        authService.didLogin(token: token)
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
-            }
+            },
+            fields: {
+                TextField("Email", text: $viewModel.email)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .keyboardType(.emailAddress)
+                    .textContentType(.emailAddress)
+                    .aowAuthFieldStyle()
 
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-            }
+                HStack {
+                    if isPasswordVisible {
+                        TextField("Password", text: $viewModel.password)
+                    } else {
+                        SecureField("Password", text: $viewModel.password)
+                    }
+                }
+                .textContentType(.password)
+                .aowAuthFieldStyle()
+                .overlay(alignment: .trailing) {
+                    Button {
+                        isPasswordVisible.toggle()
+                    } label: {
+                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(Color("BrandColor"))
+                    }
+                    .padding(.trailing, 10)
+                }
+            },
+            bottomLinks: {
+                Button("Don't have an account? Register here") {
+                    navViewModel.currentScreen = .registerDriver
+                }
+                .foregroundColor(.primary)
+                .font(.callout)
 
-            Spacer()
-
-            Button("Don't have an account? Register here") {
-                navViewModel.currentScreen = .registerDriver
+                Button("Are you a company? Login here") {
+                    navViewModel.currentScreen = .loginCompany
+                }
+                .foregroundColor(.primary.opacity(0.7))
+                .font(.callout)
             }
-                        
-            Button("Are you a company? Login here") {
-                navViewModel.currentScreen = .loginCompany
-            }
-            .padding(.top, 10)
-        }
-        .padding(30)
+        )
     }
 }
-
-

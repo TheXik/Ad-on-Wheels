@@ -7,7 +7,14 @@ struct AdOnWheelsAppApp: App {
     var body: some Scene {
         WindowGroup {
             if authService.isAuthenticated {
-                HomePageView(authService: authService)
+                switch authService.userRole {
+                case .driver:
+                    DriverHomePageView(authService: authService)
+                case .company:
+                    CompanyHomePageView(authService: authService)
+                case .none:
+                    AuthRouterView(authService: authService)
+                }
             } else {
                 AuthRouterView(authService: authService)
             }

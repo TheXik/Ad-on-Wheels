@@ -30,7 +30,12 @@ struct Endpoint {
     }
 
     func makeURLRequest(baseURL: URL) throws -> URLRequest {
-        guard var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false) else {
+        let normalizedPath = path.hasPrefix("/") ? String(path.dropFirst()) : path
+
+        guard var components = URLComponents(
+            url: baseURL.appendingPathComponent(normalizedPath),
+            resolvingAgainstBaseURL: false
+        ) else {
             throw NetworkError.invalidURL
         }
         components.queryItems = queryItems.isEmpty ? nil : queryItems
@@ -39,17 +44,24 @@ struct Endpoint {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
 
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        // Only set Content-Type when there is a request body.
+        if let body = body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+
+        // Attach Bearer token if present.
         if let token = TokenManager.shared.retrieveToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
+        // Apply any per-request headers (overrides defaults if keys clash).
         headers.forEach { key, value in
             request.setValue(value, forHTTPHeaderField: key)
         }
-        if let body = body {
-            request.httpBody = body
-        }
+
         return request
-       }
+    }
 }

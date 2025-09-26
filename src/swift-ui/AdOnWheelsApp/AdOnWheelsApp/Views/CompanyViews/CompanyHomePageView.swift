@@ -23,10 +23,10 @@ struct CompanyHomePageView: View {
                         }
                     }
                 } else {
-                    List(viewModel.company) { driver in
+                    List(viewModel.company) { company in
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(driver.name).font(.headline)
-                            Text(driver.email).font(.subheadline).foregroundColor(.secondary)
+                            Text(company.name).font(.headline)
+                            Text(company.email).font(.subheadline).foregroundColor(.secondary)
                         }
                         .padding(.vertical, 5)
                     }
@@ -50,4 +50,3 @@ struct CompanyHomePageView: View {
         }
     }
 }
-

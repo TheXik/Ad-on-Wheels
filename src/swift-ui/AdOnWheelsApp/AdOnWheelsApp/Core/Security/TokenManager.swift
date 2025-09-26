@@ -1,9 +1,12 @@
 import Foundation
 import Security
 
-class TokenManager {
+final class TokenManager {
     static let shared = TokenManager()
-    private let service = "com.AdOnWheelsApp.token" 
+    private let service: String = {
+        let base = Bundle.main.bundleIdentifier ?? "com.AdOnWheelsApp"
+        return base + ".token"
+    }()
 
     private init() {}
 
@@ -20,7 +23,8 @@ class TokenManager {
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
         ]
 
-        SecItemDelete(query as CFDictionary) // Delete any existing token
+        // Replace any existing token.
+        SecItemDelete(query as CFDictionary)
 
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
@@ -33,17 +37,15 @@ class TokenManager {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: "user_token",
-            kSecReturnData as String: kCFBooleanTrue!,
+            kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
 
         var dataTypeRef: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
 
-        if status == errSecSuccess {
-            if let retrievedData = dataTypeRef as? Data {
-                return String(data: retrievedData, encoding: .utf8)
-            }
+        if status == errSecSuccess, let retrievedData = dataTypeRef as? Data {
+            return String(data: retrievedData, encoding: .utf8)
         }
         return nil
     }

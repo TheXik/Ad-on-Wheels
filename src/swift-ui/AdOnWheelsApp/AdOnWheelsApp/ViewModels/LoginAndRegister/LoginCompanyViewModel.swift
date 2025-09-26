@@ -13,7 +13,7 @@ class LoginCompanyViewModel: ObservableObject {
         self.api = api
     }
 
-    func login() async -> Bool {
+    func login() async -> String? {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -25,11 +25,10 @@ class LoginCompanyViewModel: ObservableObject {
                 body: try JSONEncoder().encode(["email": email, "password": password])
             )
             let response: LoginResponse = try await api.send(endpoint)
-            try TokenManager.shared.save(token: response.token)
-            return true
+            return response.token
         } catch {
             errorMessage = error.localizedDescription
-            return false
+            return nil
         }
     }
 }
