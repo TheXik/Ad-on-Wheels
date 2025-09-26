@@ -7,7 +7,7 @@ struct LoginDriverView: View {
     @State private var isPasswordVisible: Bool = false
 
     var body: some View {
-        AOWAuthScaffold(
+        AuthScaffold(
             headerMode: .login(role: "Driver"),
             subtitle: "Login to your Driver Account",
             isLoading: viewModel.isLoading,
@@ -26,7 +26,7 @@ struct LoginDriverView: View {
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
-                    .aowAuthFieldStyle()
+                    .authFieldStyle()
 
                 HStack {
                     if isPasswordVisible {
@@ -36,7 +36,7 @@ struct LoginDriverView: View {
                     }
                 }
                 .textContentType(.password)
-                .aowAuthFieldStyle()
+                .authFieldStyle()
                 .overlay(alignment: .trailing) {
                     Button {
                         isPasswordVisible.toggle()

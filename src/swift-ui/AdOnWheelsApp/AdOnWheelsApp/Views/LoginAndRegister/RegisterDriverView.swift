@@ -7,7 +7,7 @@ struct RegisterDriverView: View {
     @State private var isPasswordVisible: Bool = false
     
     var body: some View {
-        AOWAuthScaffold(
+        AuthScaffold(
             headerMode: .register(role: "Driver"),
             subtitle: "Create your Driver Account",
             isLoading: viewModel.isLoading,
@@ -19,14 +19,14 @@ struct RegisterDriverView: View {
             fields: {
                 TextField("Name and Surname", text: $viewModel.name)
                     .textContentType(.name)
-                    .aowAuthFieldStyle()
+                    .authFieldStyle()
 
                 TextField("Email", text: $viewModel.email)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
-                    .aowAuthFieldStyle()
+                    .authFieldStyle()
 
                 HStack {
                     if isPasswordVisible {
@@ -36,7 +36,7 @@ struct RegisterDriverView: View {
                     }
                 }
                 .textContentType(.newPassword)
-                .aowAuthFieldStyle()
+                .authFieldStyle()
                 .overlay(alignment: .trailing) {
                     Button {
                         isPasswordVisible.toggle()
@@ -72,4 +72,11 @@ struct RegisterDriverView: View {
             }
         )
     }
+}
+
+#Preview {
+    let auth = AuthenticationService()
+    let nav = AuthNavigationViewModel()
+    nav.currentScreen = .registerDriver
+    return RegisterDriverView(authService: auth, navViewModel: nav)
 }
