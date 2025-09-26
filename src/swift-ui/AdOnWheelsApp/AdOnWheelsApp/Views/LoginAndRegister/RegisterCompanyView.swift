@@ -4,68 +4,72 @@ struct RegisterCompanyView: View {
     @StateObject private var viewModel = RegisterCompanyViewModel()
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
+    @State private var isPasswordVisible: Bool = false
     
     var body: some View {
-        VStack(spacing: 15) {
-            Text("Company Registration")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.bottom, 20)
+        AOWAuthScaffold(
+            headerMode: .register(role: "Company"),
+            subtitle: "Create your Company Account",
+            isLoading: viewModel.isLoading,
+            errorMessage: viewModel.errorMessage,
+            primaryButtonTitle: "Register",
+            primaryAction: {
+                Task { await viewModel.register() }
+            },
+            fields: {
+                TextField("Company name", text: $viewModel.name)
+                    .textContentType(.organizationName)
+                    .aowAuthFieldStyle()
 
-            TextField("Company name", text: $viewModel.name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.organizationName)
+                TextField("Email", text: $viewModel.email)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .keyboardType(.emailAddress)
+                    .textContentType(.emailAddress)
+                    .aowAuthFieldStyle()
 
-            TextField("Email", text: $viewModel.email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-                .textContentType(.emailAddress)
-
-            SecureField("Password", text: $viewModel.password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.newPassword)
-            
-            if viewModel.isLoading {
-                ProgressView().padding()
-            } else {
-                Button("Register") {
-                    Task {
-                        await viewModel.register()
+                HStack {
+                    if isPasswordVisible {
+                        TextField("Password", text: $viewModel.password)
+                    } else {
+                        SecureField("Password", text: $viewModel.password)
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
-                .disabled(viewModel.registrationSuccessful)
-            }
+                .textContentType(.newPassword)
+                .aowAuthFieldStyle()
+                .overlay(alignment: .trailing) {
+                    Button {
+                        isPasswordVisible.toggle()
+                    } label: {
+                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(Color("BrandColor"))
+                    }
+                    .padding(.trailing, 10)
+                }
+            },
+            bottomLinks: {
+                if viewModel.registrationSuccessful {
+                    Text("Registration Successful! Please log in.")
+                        .foregroundColor(.green)
 
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-            }
-            
-            if viewModel.registrationSuccessful {
-                Text("Registration Successful! Please log in.")
-                    .foregroundColor(.green)
-                    .padding()
-                Button("Back to Login") {
+                    Button("Back to Login") {
+                        navViewModel.currentScreen = .loginCompany
+                    }
+                    .foregroundColor(.primary)
+                }
+
+                Button("Already have an account? Log in here") {
                     navViewModel.currentScreen = .loginCompany
                 }
-            }
-            
-            Spacer()
+                .foregroundColor(.primary)
+                .font(.callout)
 
-            Button("Already have an account ? Log in here") {
-                navViewModel.currentScreen = .loginCompany  
+                Button("Are you a driver? Register here") {
+                    navViewModel.currentScreen = .registerDriver
+                }
+                .foregroundColor(.primary.opacity(0.7))
+                .font(.callout)
             }
-            Button("Are you a driver? Register here")
-            {
-                navViewModel.currentScreen = .registerDriver
-            }
-            .padding(.top, 10)
-        }
-        .padding(30)
-        .navigationTitle("Company registration")
+        )
     }
 }

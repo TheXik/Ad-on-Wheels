@@ -4,69 +4,72 @@ struct RegisterDriverView: View {
     @StateObject private var viewModel = RegisterDriverViewModel()
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
-    
+    @State private var isPasswordVisible: Bool = false
     
     var body: some View {
-        VStack(spacing: 15) {
-            Text("Driver Registration")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.bottom, 20)
+        AOWAuthScaffold(
+            headerMode: .register(role: "Driver"),
+            subtitle: "Create your Driver Account",
+            isLoading: viewModel.isLoading,
+            errorMessage: viewModel.errorMessage,
+            primaryButtonTitle: "Register",
+            primaryAction: {
+                Task { await viewModel.register() }
+            },
+            fields: {
+                TextField("Name and Surname", text: $viewModel.name)
+                    .textContentType(.name)
+                    .aowAuthFieldStyle()
 
-            TextField("Name and Surname", text: $viewModel.name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.name)
+                TextField("Email", text: $viewModel.email)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .keyboardType(.emailAddress)
+                    .textContentType(.emailAddress)
+                    .aowAuthFieldStyle()
 
-            TextField("Email", text: $viewModel.email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-                .textContentType(.emailAddress)
-
-            SecureField("Password", text: $viewModel.password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.newPassword)
-            
-            if viewModel.isLoading {
-                ProgressView().padding()
-            } else {
-                Button("Register") {
-                    Task {
-                        await viewModel.register()
+                HStack {
+                    if isPasswordVisible {
+                        TextField("Password", text: $viewModel.password)
+                    } else {
+                        SecureField("Password", text: $viewModel.password)
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
-                .disabled(viewModel.registrationSuccessful)
-            }
+                .textContentType(.newPassword)
+                .aowAuthFieldStyle()
+                .overlay(alignment: .trailing) {
+                    Button {
+                        isPasswordVisible.toggle()
+                    } label: {
+                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                            .foregroundColor(Color("BrandColor"))
+                    }
+                    .padding(.trailing, 10)
+                }
+            },
+            bottomLinks: {
+                if viewModel.registrationSuccessful {
+                    Text("Registration successful! You can now log in.")
+                        .foregroundColor(.green)
 
-            if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-            }
-            
-            if viewModel.registrationSuccessful {
-                Text("Registration successful! You can now log in.")
-                    .foregroundColor(.green)
-                    .padding()
-                Button("Back to Login") {
+                    Button("Back to Login") {
+                        navViewModel.currentScreen = .loginDriver
+                    }
+                    .foregroundColor(.primary)
+                }
+
+                Button("Already have an account? Log in here") {
                     navViewModel.currentScreen = .loginDriver
                 }
+                .foregroundColor(.primary)
+                .font(.callout)
+
+                Button("Are you a company? Register here") {
+                    navViewModel.currentScreen = .registerCompany
+                }
+                .foregroundColor(.primary.opacity(0.7))
+                .font(.callout)
             }
-            
-            Spacer()
-            
-            Button("Already have an account ? Log in here") {
-                navViewModel.currentScreen = .loginDriver
-            }
-            Button("Are you a company? Register here")
-            {
-                navViewModel.currentScreen = .registerCompany
-            }
-            .padding(10)
-        }
-        .padding(30)
-        .navigationTitle("Driver Registration")
+        )
     }
 }

@@ -1,11 +1,11 @@
 import Foundation
 
-protocol APIClientProtocol: Sendable {
+protocol APIClientProtocol {
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T
     func send(_ endpoint: Endpoint) async throws
 }
 
-final class APIClient: APIClientProtocol, Sendable {
+final class APIClient: APIClientProtocol {
     static let shared = APIClient(baseURL: AppConfig.baseURL)
 
     private let baseURL: URL
@@ -21,45 +21,57 @@ final class APIClient: APIClientProtocol, Sendable {
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         let request = try endpoint.makeURLRequest(baseURL: baseURL)
 
-        return try await withCheckedThrowingContinuation { continuation in
-            let task = session.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    continuation.resume(throwing: NetworkError.transport(error))
-                    return
-                }
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw NetworkError.transport(URLError(.badServerResponse))
+        }
+        let status = http.statusCode
 
-                // Fix for "immutable value was never used" warning
-                guard let data = data, let _ = response as? HTTPURLResponse else {
-                    continuation.resume(throwing: NetworkError.transport(URLError(.badServerResponse)))
-                    return
-                }
+        // try decoding the standard API wrapper the server returns
+        do {
+            let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
 
-                do {
-                    let apiResponse = try self.decoder.decode(ApiResponse<T>.self, from: data)
-
-                    if apiResponse.success, let responseData = apiResponse.data {
-                        continuation.resume(returning: responseData)
-                    } else if let errorResponse = apiResponse.error {
-                        continuation.resume(throwing: NetworkError.serverError(errorResponse))
-                    } else {
-                        continuation.resume(throwing: NetworkError.decoding(URLError(.cannotParseResponse)))
-                    }
-                } catch {
-                    continuation.resume(throwing: NetworkError.decoding(error))
+            if apiResponse.success {
+                if let responseData = apiResponse.data {
+                    return responseData
+                } else if T.self == EmptyResponse.self {
+                    // Allow success with no data for endpoints that don't return a body.
+                    return EmptyResponse() as! T
+                } else {
+                    throw NetworkError.decoding(URLError(.cannotParseResponse))
                 }
+            } else if let errorResponse = apiResponse.error {
+                throw NetworkError.serverError(errorResponse)
+            } else if !(200..<300).contains(status) {
+                if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
+                    throw NetworkError.serverError(errorResponse)
+                } else {
+                    throw NetworkError.malformedErrorResponse(statusCode: status)
+                }
+            } else {
+                throw NetworkError.decoding(URLError(.cannotParseResponse))
             }
-            task.resume()
+        } catch {
+            // If wrapper decoding failed and status is non-2xx, try to decode a raw ErrorResponse.
+            if !(200..<300).contains(status) {
+                if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
+                    throw NetworkError.serverError(errorResponse)
+                } else {
+                    throw NetworkError.malformedErrorResponse(statusCode: status)
+                }
+            } else {
+                throw NetworkError.decoding(error)
+            }
         }
     }
     
-    // This function was implemented with a recursive call, which is a bug.
-    // It should call the generic send<T> function with an EmptyResponse.
+    
     func send(_ endpoint: Endpoint) async throws {
         let _: EmptyResponse = try await send(endpoint)
     }
-    
+
     private struct EmptyResponse: Decodable {}
-    
+
     private static var defaultDecoder: JSONDecoder = {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601

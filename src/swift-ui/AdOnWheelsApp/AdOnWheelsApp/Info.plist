@@ -13,6 +13,8 @@
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict/>
+	<key>CFBundleIdentifier</key>
+	<string></string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 </dict>
