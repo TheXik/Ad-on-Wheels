@@ -13,9 +13,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
-                "spring.cloud.discovery.client.simple.instances.AUTH-SERVICE[0].uri=http://localhost:${wiremock.server.port}",
-                "spring.cloud.discovery.client.simple.instances.CAMPAIGN-SERVICE[0].uri=http://localhost:${wiremock.server.port}",
-                "spring.cloud.discovery.client.simple.instances.DRIVER-SERVICE[0].uri=http://localhost:${wiremock.server.port}"
+                "spring.cloud.discovery.client.simple.instances.auth-service[0].uri=http://localhost:${wiremock.server.port}",
+                "spring.cloud.discovery.client.simple.instances.campaign-service[0].uri=http://localhost:${wiremock.server.port}",
+                "spring.cloud.discovery.client.simple.instances.driver-service[0].uri=http://localhost:${wiremock.server.port}"
         })
 @AutoConfigureWireMock(port = 0)
 public class GatewaySecurityIntegrationTest {
