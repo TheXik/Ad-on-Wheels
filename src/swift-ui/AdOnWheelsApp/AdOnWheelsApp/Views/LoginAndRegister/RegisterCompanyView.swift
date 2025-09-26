@@ -7,7 +7,7 @@ struct RegisterCompanyView: View {
     @State private var isPasswordVisible: Bool = false
     
     var body: some View {
-        AOWAuthScaffold(
+        AuthScaffold(
             headerMode: .register(role: "Company"),
             subtitle: "Create your Company Account",
             isLoading: viewModel.isLoading,
@@ -19,14 +19,14 @@ struct RegisterCompanyView: View {
             fields: {
                 TextField("Company name", text: $viewModel.name)
                     .textContentType(.organizationName)
-                    .aowAuthFieldStyle()
+                    .authFieldStyle()
 
                 TextField("Email", text: $viewModel.email)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
-                    .aowAuthFieldStyle()
+                    .authFieldStyle()
 
                 HStack {
                     if isPasswordVisible {
@@ -36,7 +36,7 @@ struct RegisterCompanyView: View {
                     }
                 }
                 .textContentType(.newPassword)
-                .aowAuthFieldStyle()
+                .authFieldStyle()
                 .overlay(alignment: .trailing) {
                     Button {
                         isPasswordVisible.toggle()

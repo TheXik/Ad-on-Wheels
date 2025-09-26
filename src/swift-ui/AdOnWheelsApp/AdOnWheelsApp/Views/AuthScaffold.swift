@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct AOWAuthScaffold<Fields: View, BottomLinks: View>: View {
-    enum HeaderMode {
-        case login(role: String)
-        case register(role: String)
-    }
+enum AuthHeaderMode {
+    case login(role: String)
+    case register(role: String)
+}
 
-    let headerMode: HeaderMode
+struct AuthScaffold<Fields: View, BottomLinks: View>: View {
+    let headerMode: AuthHeaderMode
     let subtitle: String
     let isLoading: Bool
     let errorMessage: String?
@@ -114,7 +114,7 @@ struct AOWAuthScaffold<Fields: View, BottomLinks: View>: View {
     }
 }
 
-private struct AOWAuthFieldStyle: ViewModifier {
+private struct AuthFieldStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding()
@@ -126,7 +126,7 @@ private struct AOWAuthFieldStyle: ViewModifier {
 }
 
 extension View {
-    func aowAuthFieldStyle() -> some View {
-        modifier(AOWAuthFieldStyle())
+    func authFieldStyle() -> some View {
+        modifier(AuthFieldStyle())
     }
 }

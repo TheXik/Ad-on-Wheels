@@ -6,12 +6,7 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		65A89FD72E86A7EC00F13060 /* AuthScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65A89FD62E86A7EC00F13060 /* AuthScaffold.swift */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
-		65A89FD62E86A7EC00F13060 /* AuthScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthScaffold.swift; sourceTree = "<group>"; };
 		65D162C92DE08F7100FF111B /* AdOnWheelsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AdOnWheelsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -52,7 +47,6 @@
 			children = (
 				65D162CB2DE08F7100FF111B /* AdOnWheelsApp */,
 				65D162CA2DE08F7100FF111B /* Products */,
-				65A89FD62E86A7EC00F13060 /* AuthScaffold.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -138,7 +132,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				65A89FD72E86A7EC00F13060 /* AuthScaffold.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
