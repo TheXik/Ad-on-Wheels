@@ -27,10 +27,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    # --- FIX 1: Add a healthcheck to Eureka Server ---
-    # This ensures other services wait until the Eureka application is fully running.
-    healthcheck: # <-- ADD THIS BLOCK
-      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ] # Checks for an HTTP 200 response
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,7 +43,6 @@ services:
     env_file:
       - .env
     depends_on:
-      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
         condition: service_healthy
       auth-service:
@@ -67,7 +64,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
         condition: service_healthy
 
@@ -81,7 +77,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
         condition: service_healthy
 
@@ -95,7 +90,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
         condition: service_healthy
 
@@ -109,7 +103,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      # --- FIX 2: Wait for Eureka to be healthy, not just started ---
       eureka-server:
         condition: service_healthy
 

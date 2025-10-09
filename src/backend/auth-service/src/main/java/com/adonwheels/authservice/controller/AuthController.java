@@ -32,7 +32,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegistrationResponse>> register(@Valid @RequestBody RegistrationRequest request) {
         registrationSagaOrchestratorService.register(request);
-        RegistrationResponse registrationData = new RegistrationResponse("User registered successfully");
+        
+        // Generate JWT token for auto-login after successful registration
+        String token = authService.generateTokenForNewUser(request.email());
+        RegistrationResponse registrationData = new RegistrationResponse("User registered successfully", token);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
