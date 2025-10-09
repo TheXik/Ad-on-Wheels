@@ -31,10 +31,7 @@ public class AuthController {
     /// valid anotation chcecks if the dto RegistrationRequest have correctFields
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegistrationResponse>> register(@Valid @RequestBody RegistrationRequest request) {
-        registrationSagaOrchestratorService.register(request);
-        
-        // Generate JWT token for auto-login after successful registration
-        String token = authService.generateTokenForNewUser(request.email());
+        String token = registrationSagaOrchestratorService.register(request);
         RegistrationResponse registrationData = new RegistrationResponse("User registered successfully", token);
 
         return ResponseEntity
