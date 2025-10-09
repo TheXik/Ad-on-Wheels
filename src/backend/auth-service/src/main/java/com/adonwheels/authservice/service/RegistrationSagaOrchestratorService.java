@@ -19,7 +19,7 @@ public class RegistrationSagaOrchestratorService {
     @Autowired
     private AuthService authService;
 
-    public void register(RegistrationRequest request) {
+    public String register(RegistrationRequest request) {
         Long profileId = null;
         try {
             // Create Profile
@@ -27,6 +27,10 @@ public class RegistrationSagaOrchestratorService {
 
             // Save the User
             authService.saveUserWithProfile(request, profileId);
+
+            // Generate JWT token for auto-login after successful registration
+            re token = authService.generateTokenForNewUser(request.email());
+            
 
         } catch (DataIntegrityViolationException ex) {
             logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.email());
