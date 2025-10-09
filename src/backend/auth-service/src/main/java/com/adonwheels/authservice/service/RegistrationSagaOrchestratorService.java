@@ -19,7 +19,7 @@ public class RegistrationSagaOrchestratorService {
     @Autowired
     private AuthService authService;
 
-    public String register(RegistrationRequest request) {
+    public void register(RegistrationRequest request) {
         Long profileId = null;
         try {
             // Create Profile
@@ -28,8 +28,7 @@ public class RegistrationSagaOrchestratorService {
             // Save the User
             authService.saveUserWithProfile(request, profileId);
 
-            // Generate JWT token for auto-login after successful registration
-            return authService.generateTokenForNewUser(request.email());
+            // Registration successful - TODO AUTO LOGIN
             
 
         } catch (DataIntegrityViolationException ex) {
