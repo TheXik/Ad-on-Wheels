@@ -29,7 +29,7 @@ public class RegistrationSagaOrchestratorService {
             authService.saveUserWithProfile(request, profileId);
 
             // Generate JWT token for auto-login after successful registration
-            re token = authService.generateTokenForNewUser(request.email());
+            return authService.generateTokenForNewUser(request.email());
             
 
         } catch (DataIntegrityViolationException ex) {
