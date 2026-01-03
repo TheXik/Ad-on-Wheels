@@ -18,6 +18,7 @@ public class ApiResponse<T> {
     }
 
     private ApiResponse(boolean success) {
+
         this.success = success;
     }
 
@@ -28,9 +29,13 @@ public class ApiResponse<T> {
         return response;
     }
 
-    public static <T> ApiResponse<T> error(int status, String message) {
+    public static <T> ApiResponse<T> error(AppErrorCode errorCode) {
+        return error(errorCode, errorCode.getMessage());
+    }
+
+    public static <T> ApiResponse<T> error(AppErrorCode errorCode, String customMessage) {
         ApiResponse<T> response = new ApiResponse<>(false);
-        response.setError(new ErrorResponse(status, message));
+        response.setError(new ErrorResponse(errorCode.getCode(), customMessage));
         return response;
     }
 

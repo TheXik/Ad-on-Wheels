@@ -1,6 +1,6 @@
 package dto;
 
 
-public record ErrorResponse(int status, String message) {
+public record ErrorResponse(int internalCode, String message) {
 
 }
