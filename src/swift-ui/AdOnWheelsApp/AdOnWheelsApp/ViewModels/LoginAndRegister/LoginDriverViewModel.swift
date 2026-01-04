@@ -9,6 +9,7 @@ class LoginDriverViewModel: ObservableObject{
     @Published var password : String = ""
     @Published var isLoading : Bool = false
     @Published var errorMessage : String?
+    @Published var fieldErrors: [String: String] = [:]
     
     private let api: APIClientProtocol
     
@@ -21,6 +22,7 @@ class LoginDriverViewModel: ObservableObject{
     func login() async -> String? {
         isLoading = true
         errorMessage = nil
+        fieldErrors = [:]
         defer { isLoading = false }
         
         do {
@@ -29,10 +31,15 @@ class LoginDriverViewModel: ObservableObject{
                 method: .post,
                 body: try JSONEncoder().encode(["email": email, "password": password])
             )
-            let response: LoginResponse = try await api.send(endpoint)
+            let response: LoginResponse = try await api.sendMapped(endpoint)
             return response.token
         } catch {
-            errorMessage = error.localizedDescription
+            if let appError = error as? AppError, case .validation(let errors) = appError {
+                self.fieldErrors = errors
+                self.errorMessage = "Please fix the errors below."
+            } else {
+                errorMessage = error.localizedDescription
+            }
             return nil
         }
     }
