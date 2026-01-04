@@ -11,11 +11,18 @@ enum AppError: LocalizedError, Equatable {
     // messages from the server for dynamic errors
     case serverMessage(String)
     
+    case validation([String: String])
     case networking(String)
     case unknown
     
     // Mapping Backend Codes
     init(backendError: ErrorResponse) {
+        // Validation Errors (9001) - Check for detailed map first
+        if let validationMap = backendError.validationErrors, !validationMap.isEmpty {
+            self = .validation(validationMap)
+            return
+        }
+
         switch backendError.internalCode {
         case 1001, 1002, 1004:
             self = .unauthorized
@@ -40,6 +47,8 @@ enum AppError: LocalizedError, Equatable {
             return "Please complete your profile to continue."
         case .serverMessage(let message):
             return message
+        case .validation(let errors):
+            return "Please check your input. (\(errors.values.first ?? "Invalid data"))"
         case .networking(let error):
             return "Connection failed. Please check your internet. (\(error))"
         case .unknown:
