@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Aspect
@@ -47,8 +48,14 @@ public class GlobalExceptionHandlerAspect {
 
             return buildResponse(AppErrorCode.INVALID_CREDENTIALS);
 
+        } catch (WebClientRequestException ex) {
+            // Microservices Communication Failure - request exception
+            logger.error("Inter-service request failed in {}: {}", methodName, ex.getMessage());
+
+            return buildResponse(AppErrorCode.SERVICE_UNAVAILABLE);
+
         } catch (WebClientResponseException ex) {
-            // Microservices Communication Failure
+            // Microservices Communication Failure - response exception
             logger.error("Inter-service communication failed in {}: {}", methodName, ex.getMessage());
 
             return buildResponse(AppErrorCode.SERVICE_UNAVAILABLE);
