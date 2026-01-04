@@ -1,11 +1,22 @@
 import SwiftUI
 
 struct RegisterDriverView: View {
-    @StateObject private var viewModel = RegisterDriverViewModel()
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
+    var lockedRole: InitialUserRole? = nil
+    var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
     
+    @StateObject private var viewModel: RegisterDriverViewModel
+    
+    init(authService: AuthenticationService, navViewModel: AuthNavigationViewModel, lockedRole: InitialUserRole? = nil, onBack: (() -> Void)? = nil) {
+        self.authService = authService
+        self.navViewModel = navViewModel
+        self.lockedRole = lockedRole
+        self.onBack = onBack
+        self._viewModel = StateObject(wrappedValue: RegisterDriverViewModel(authService: authService))
+    }
+
     var body: some View {
         AuthScaffold(
             headerMode: .register(role: "Driver"),
@@ -16,23 +27,28 @@ struct RegisterDriverView: View {
             primaryAction: {
                 Task { await viewModel.register() }
             },
+            onBack: onBack,
             fields: {
-                TextField("Name and Surname", text: $viewModel.name)
+                TextField("Name and Surname", text: $viewModel.name, prompt: Text("Name and Surname").foregroundColor(Color("BrandColor")))
                     .textContentType(.name)
+                    .foregroundColor(.primary)
                     .authFieldStyle()
 
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: $viewModel.email, prompt: Text("Email").foregroundColor(Color("BrandColor")))
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
+                    .foregroundColor(.primary)
                     .authFieldStyle()
 
                 HStack {
                     if isPasswordVisible {
-                        TextField("Password", text: $viewModel.password)
+                        TextField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
+                            .foregroundColor(.primary)
                     } else {
-                        SecureField("Password", text: $viewModel.password)
+                        SecureField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
+                            .foregroundColor(.primary)
                     }
                 }
                 .textContentType(.newPassword)
@@ -49,26 +65,33 @@ struct RegisterDriverView: View {
             },
             bottomLinks: {
                 if viewModel.registrationSuccessful {
-                    Text("Registration successful! You can now log in.")
-                        .foregroundColor(.green)
-
-                    Button("Back to Login") {
+                    VStack(spacing: 10) {
+                        Text("Registration successful!")
+                            .foregroundColor(.green)
+                            .font(.headline)
+                        
+                        Text("Please log in with your credentials.")
+                            .foregroundColor(.primary.opacity(0.8))
+                            .font(.callout)
+                        
+                        Button("Go to Login") {
+                            navViewModel.currentScreen = .loginDriver
+                        }
+                        .foregroundColor(.white)
+                        .font(.headline)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color("BrandColor"))
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
+                    }
+                } else {
+                    Button("Already have an account? Log in here") {
                         navViewModel.currentScreen = .loginDriver
                     }
                     .foregroundColor(.primary)
+                    .font(.callout)
                 }
-
-                Button("Already have an account? Log in here") {
-                    navViewModel.currentScreen = .loginDriver
-                }
-                .foregroundColor(.primary)
-                .font(.callout)
-
-                Button("Are you a company? Register here") {
-                    navViewModel.currentScreen = .registerCompany
-                }
-                .foregroundColor(.primary.opacity(0.7))
-                .font(.callout)
             }
         )
     }
@@ -78,5 +101,5 @@ struct RegisterDriverView: View {
     let auth = AuthenticationService()
     let nav = AuthNavigationViewModel()
     nav.currentScreen = .registerDriver
-    return RegisterDriverView(authService: auth, navViewModel: nav)
+    return RegisterDriverView(authService: auth, navViewModel: nav, lockedRole: nil, onBack: nil)
 }

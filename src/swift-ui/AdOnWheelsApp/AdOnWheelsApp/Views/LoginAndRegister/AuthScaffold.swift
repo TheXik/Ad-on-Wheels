@@ -12,6 +12,7 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
     let errorMessage: String?
     let primaryButtonTitle: String
     let primaryAction: () -> Void
+    let onBack: (() -> Void)?
 
     @ViewBuilder var fields: () -> Fields
     @ViewBuilder var bottomLinks: () -> BottomLinks
@@ -29,7 +30,22 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
             .edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 20) {
-                Spacer()
+                // Back button at the top
+                if let onBack = onBack {
+                    HStack {
+                        Button(action: onBack) {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(Color("BrandColor"))
+                                .imageScale(.large)
+                                .padding()
+                                .clipShape(Circle())
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 10)
+                }
+                
 
                 header
 
@@ -118,9 +134,8 @@ private struct AuthFieldStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding()
-            .background(Color.primary.opacity(0.1))
+            .background(Color("FieldBgColor"))
             .cornerRadius(10)
-            .foregroundColor(.primary.opacity(0.8))
             .accentColor(Color("BrandColor"))
     }
 }

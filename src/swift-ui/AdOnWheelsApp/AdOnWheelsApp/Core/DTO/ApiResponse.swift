@@ -6,11 +6,14 @@ struct ApiResponse<T: Decodable>: Decodable {
     let error: ErrorResponse?
 }
 
-struct ErrorResponse: Decodable, LocalizedError {
-    let status: Int
+struct ErrorResponse: Decodable, Error {
+    let internalCode: Int
     let message: String
-
-    var errorDescription: String? {
-        return message
+    let validationErrors: [String: String]?
+    
+    enum CodingKeys: String, CodingKey {
+        case internalCode = "internalCode"
+        case message = "message"
+        case validationErrors = "validationErrors"
     }
 }

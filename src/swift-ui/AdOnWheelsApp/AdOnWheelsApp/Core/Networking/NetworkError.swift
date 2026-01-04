@@ -1,26 +1,24 @@
-// In file AdOnWheelsApp/Core/Networking/NetworkError.swift
-
 import Foundation
 
 enum NetworkError: Error, LocalizedError {
     case invalidURL
-    case serverError(ErrorResponse)
     case transport(Error)
     case decoding(Error)
-    case malformedErrorResponse(statusCode: Int) // New case for fallback
+    case serverError(ErrorResponse)
+    case malformedErrorResponse(statusCode: Int)
 
     var errorDescription: String? {
         switch self {
         case .invalidURL:
             return "Invalid URL"
-        case .serverError(let errorResponse):
-            return errorResponse.message // Use the message from the server!
+        case .serverError(let response):
+            return "Server Error \(response.internalCode): \(response.message)"
         case .transport(let underlying):
             return "Network transport error: \(underlying.localizedDescription)"
         case .decoding(let underlying):
             return "Decoding error: \(underlying.localizedDescription)"
         case .malformedErrorResponse(let statusCode):
-            return "Received an invalid error format from the server (Status: \(statusCode))"
+            return "Server returned invalid error format (Status: \(statusCode))"
         }
     }
 }
