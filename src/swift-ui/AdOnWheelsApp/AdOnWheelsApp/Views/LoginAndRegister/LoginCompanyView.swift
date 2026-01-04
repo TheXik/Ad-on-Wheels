@@ -4,6 +4,8 @@ struct LoginCompanyView: View {
     @StateObject private var viewModel = LoginCompanyViewModel()
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
+    var lockedRole: InitialUserRole? = nil
+    var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
 
     var body: some View {
@@ -20,19 +22,23 @@ struct LoginCompanyView: View {
                     }
                 }
             },
+            onBack: onBack,
             fields: {
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: $viewModel.email, prompt: Text("Email").foregroundColor(Color("BrandColor")))
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .keyboardType(.emailAddress)
                     .textContentType(.emailAddress)
+                    .foregroundColor(.primary)
                     .authFieldStyle()
 
                 HStack {
                     if isPasswordVisible {
-                        TextField("Password", text: $viewModel.password)
+                        TextField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
+                            .foregroundColor(.primary)
                     } else {
-                        SecureField("Password", text: $viewModel.password)
+                        SecureField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
+                            .foregroundColor(.primary)
                     }
                 }
                 .textContentType(.password)
@@ -53,12 +59,6 @@ struct LoginCompanyView: View {
                 }
                 .foregroundColor(.primary)
                 .font(.callout)
-
-                Button("Are you a driver? Login here") {
-                    navViewModel.currentScreen = .loginDriver
-                }
-                .foregroundColor(.primary.opacity(0.7))
-                .font(.callout)
             }
         )
     }
@@ -68,5 +68,5 @@ struct LoginCompanyView: View {
     let auth = AuthenticationService()
     let nav = AuthNavigationViewModel()
     nav.currentScreen = .loginCompany
-    return LoginCompanyView(authService: auth, navViewModel: nav)
+    return LoginCompanyView(authService: auth, navViewModel: nav, lockedRole: nil, onBack: nil)
 }

@@ -2,6 +2,8 @@ import Foundation
 
 enum NetworkError: Error, LocalizedError {
     case invalidURL
+    case transport(Error)
+    case decoding(Error)
     case serverError(ErrorResponse)
     case malformedErrorResponse(statusCode: Int)
 

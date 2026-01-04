@@ -3,17 +3,17 @@ import Foundation
 
 // App error representation and mapping from backend errors
 enum AppError: LocalizedError, Equatable {
- 
+    
     case unauthorized // 1001, 1002, 1004 - Auth errors
     case accountLocked // 1003 Specific alert
     case profileIncomplete // 2003, 2004 - Navigate to profile setup
-
+    
     // messages from the server for dynamic errors
     case serverMessage(String)
- 
+    
     case networking(String)
     case unknown
-
+    
     // Mapping Backend Codes
     init(backendError: ErrorResponse) {
         switch backendError.internalCode {
@@ -27,7 +27,7 @@ enum AppError: LocalizedError, Equatable {
             self = .serverMessage(backendError.message)
         }
     }
-
+    
     // Computed property for the UI
     var errorDescription: String? {
         switch self {
@@ -46,4 +46,5 @@ enum AppError: LocalizedError, Equatable {
             return "Something went wrong."
         }
     }
-
+    
+}
