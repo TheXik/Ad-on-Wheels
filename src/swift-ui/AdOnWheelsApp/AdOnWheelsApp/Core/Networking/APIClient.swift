@@ -3,78 +3,97 @@ import Foundation
 protocol APIClientProtocol {
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T
     func send(_ endpoint: Endpoint) async throws
+    func sendMapped<T: Decodable>(_ endpoint: Endpoint) async throws -> T
+    func sendMapped(_ endpoint: Endpoint) async throws
 }
 
 final class APIClient: APIClientProtocol {
     static let shared = APIClient(baseURL: AppConfig.baseURL)
-
+    
     private let baseURL: URL
     private let session: URLSession
     private let decoder: JSONDecoder
-
-    init(baseURL: URL, session: URLSession = .shared, decoder: JSONDecoder = APIClient.defaultDecoder) {
+    
+    init(baseURL: URL, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
         self.decoder = decoder
     }
-
+    
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
-        let request = try endpoint.makeURLRequest(baseURL: baseURL)
-
-        let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else {
-            throw NetworkError.transport(URLError(.badServerResponse))
-        }
-        let status = http.statusCode
-
-        // try decoding the standard API wrapper the server returns
         do {
-            let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
-
-            if apiResponse.success {
-                if let responseData = apiResponse.data {
-                    return responseData
-                } else if T.self == EmptyResponse.self {
-                    // Allow success with no data for endpoints that don't return a body.
+            // Prepare Request
+            let request = try endpoint.makeURLRequest(baseURL: baseURL)
+            
+            // Network Call 
+            let (data, response) = try await session.data(for: request)
+            
+            // Validate HTTP Response
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.transport(URLError(.badServerResponse))
+            }
+            
+            // Handle Success (200-299)
+            if (200...299).contains(httpResponse.statusCode) {
+                // Handle Empty Response Case
+                if T.self == EmptyResponse.self {
                     return EmptyResponse() as! T
+                }
+                
+                // Decode the Standard ApiResponse Wrapper
+                let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
+                
+                if apiResponse.success, let data = apiResponse.data {
+                    return data
+                } else if let errorDetails = apiResponse.error {
+                    // The server replied 200 OK, but said success=false (Logical Error)
+                    throw NetworkError.serverError(errorDetails)
                 } else {
                     throw NetworkError.decoding(URLError(.cannotParseResponse))
                 }
-            } else if let errorResponse = apiResponse.error {
+            }
+            
+            // Non-2xx: attempt to surface structured error messages
+            if let wrapped = try? decoder.decode(ApiResponse<EmptyResponse>.self, from: data),
+               let details = wrapped.error {
+                throw NetworkError.serverError(details)
+            }
+
+            if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
                 throw NetworkError.serverError(errorResponse)
-            } else if !(200..<300).contains(status) {
-                if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
-                    throw NetworkError.serverError(errorResponse)
-                } else {
-                    throw NetworkError.malformedErrorResponse(statusCode: status)
-                }
-            } else {
-                throw NetworkError.decoding(URLError(.cannotParseResponse))
             }
+
+            throw NetworkError.malformedErrorResponse(statusCode: httpResponse.statusCode)
+            
+        } catch let error as NetworkError {
+            throw error
         } catch {
-            // If wrapper decoding failed and status is non-2xx, try to decode a raw ErrorResponse.
-            if !(200..<300).contains(status) {
-                if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
-                    throw NetworkError.serverError(errorResponse)
-                } else {
-                    throw NetworkError.malformedErrorResponse(statusCode: status)
-                }
-            } else {
-                throw NetworkError.decoding(error)
-            }
+            throw NetworkError.decoding(error)
         }
     }
-    
     
     func send(_ endpoint: Endpoint) async throws {
         let _: EmptyResponse = try await send(endpoint)
     }
 
-    private struct EmptyResponse: Decodable {}
+    // Convenience wrappers that map NetworkError to AppError
+    func sendMapped<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
+        do {
+            return try await send(endpoint)
+        } catch {
+            throw AppErrorMapper.map(error)
+        }
+    }
 
-    private static var defaultDecoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
-    }()
+    func sendMapped(_ endpoint: Endpoint) async throws {
+        do {
+            let _: EmptyResponse = try await send(endpoint)
+        } catch {
+            throw AppErrorMapper.map(error)
+        }
+    }
+    
+    private struct EmptyResponse: Decodable {}
 }

@@ -10,9 +10,11 @@ class RegisterDriverViewModel: ObservableObject {
     @Published var registrationSuccessful = false
 
     private let api: APIClientProtocol
+    private let authService: AuthenticationService
 
-    init(api: APIClientProtocol = APIClient.shared) {
+    init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
+        self.authService = authService
     }
 
     func register() async {
@@ -30,7 +32,9 @@ class RegisterDriverViewModel: ObservableObject {
                              "name": name,
                              "role": UserRole.driver.rawValue.uppercased()])
             )
-            let _: RegistrationResponse = try await api.send(endpoint)
+            let response: RegistrationResponse = try await api.sendMapped(endpoint)
+            
+            // Registration successful, but don't auto-login
             registrationSuccessful = true
         } catch {
             errorMessage = error.localizedDescription

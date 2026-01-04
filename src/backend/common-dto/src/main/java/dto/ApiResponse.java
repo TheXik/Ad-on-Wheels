@@ -1,10 +1,6 @@
 package dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dto.ErrorResponse;
-
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
@@ -14,13 +10,12 @@ public class ApiResponse<T> {
     private ErrorResponse error;
 
     public ApiResponse() {
-        this.success = false;
-    }
+        success = false;
+    } // Empty constructor for Jackson deserialization
 
     private ApiResponse(boolean success) {
         this.success = success;
     }
-
 
     public static <T> ApiResponse<T> success(T data) {
         ApiResponse<T> response = new ApiResponse<>(true);
@@ -28,12 +23,22 @@ public class ApiResponse<T> {
         return response;
     }
 
-    public static <T> ApiResponse<T> error(int status, String message) {
+    public static <T> ApiResponse<T> error(AppErrorCode errorCode) {
+        return error(errorCode, errorCode.getMessage(), null);
+    }
+
+    public static <T> ApiResponse<T> error(AppErrorCode errorCode, String customMessage) {
+        return error(errorCode, customMessage, null);
+    }
+
+    public static <T> ApiResponse<T> error(AppErrorCode errorCode, String customMessage,
+            java.util.Map<String, String> validationErrors) {
         ApiResponse<T> response = new ApiResponse<>(false);
-        response.setError(new ErrorResponse(status, message));
+        response.setError(new ErrorResponse(errorCode.getCode(), customMessage, validationErrors));
         return response;
     }
 
+    // Getters and Setters...
     public boolean isSuccess() {
         return success;
     }
@@ -56,13 +61,5 @@ public class ApiResponse<T> {
 
     public void setError(ErrorResponse error) {
         this.error = error;
-    }
-    @Override
-    public String toString() {
-        try {
-            return new ObjectMapper().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            return "Error converting to JSON: " + e.getMessage();
-        }
     }
 }
