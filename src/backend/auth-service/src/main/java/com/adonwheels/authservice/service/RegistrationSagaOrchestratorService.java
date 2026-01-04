@@ -56,7 +56,12 @@ public class RegistrationSagaOrchestratorService {
 
     private void rollbackProfileCreation(Long profileId, Role role) {
         if (profileId != null) {
-            authService.deleteProfile(profileId, role);
+            try {
+                authService.deleteProfile(profileId, role);
+            } catch (Exception ex) {
+                // Log the rollback failure but don't let it override the original exception
+                logger.error("Rollback failed for profile ID: {}. This may require manual cleanup.", profileId, ex);
+            }
         }
     }
 }
