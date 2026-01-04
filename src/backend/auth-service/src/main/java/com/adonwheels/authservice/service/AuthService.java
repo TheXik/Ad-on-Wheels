@@ -44,6 +44,13 @@ public class AuthService {
         this.JWTService = JWTService;
     }
 
+    /**
+     * Checks if an email already exists in the database.
+     * This is called BEFORE creating a profile to prevent orphaned records.
+     */
+    public boolean emailExists(String email) {
+        return repository.findByEmail(email).isPresent();
+    }
 
     /**
      * This method is called by the RegistrationSagaOrchestrator AFTER the profile has been created.

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Aspect
@@ -25,10 +26,14 @@ public class GlobalExceptionHandlerAspect {
     }
 
     @Around("controllerMethods()")
-    public Object handleControllerExceptions(ProceedingJoinPoint joinPoint) {
+    public Object handleControllerExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().toShortString();
         try {
             return joinPoint.proceed();
+
+        } catch (MethodArgumentNotValidException ex) {
+            // Let ValidationExceptionHandler handle this
+            throw ex;
 
         } catch (BusinessException ex) {
             // Shared business error across services
@@ -42,7 +47,7 @@ public class GlobalExceptionHandlerAspect {
 
             return buildResponse(AppErrorCode.INVALID_CREDENTIALS);
 
-        } catch (WebClientException ex) {
+        } catch (WebClientResponseException ex) {
             // Microservices Communication Failure
             logger.error("Inter-service communication failed in {}: {}", methodName, ex.getMessage());
 
