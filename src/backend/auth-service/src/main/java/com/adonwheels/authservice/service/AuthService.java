@@ -5,6 +5,8 @@ import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import com.adonwheels.authservice.repository.AuthRepository;
 import dto.ApiResponse;
+import dto.AppErrorCode;
+import dto.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +71,7 @@ public class AuthService {
         } else if (role == Role.COMPANY) {
             url = companyServiceUrl + "/companies";
         } else {
-            throw new IllegalArgumentException("Invalid role for profile creation");
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Invalid role provided: " + role);
         }
         logger.info("Creating profile with body {}", requestBody);
         ApiResponse<ProfileResponse> apiResponse = webClientBuilder.build().post()
@@ -85,7 +87,7 @@ public class AuthService {
             return apiResponse.getData().id();
         } else {
             logger.info("Profile creation failed");
-            throw new IllegalStateException("Failed to create profile or received an empty response.");
+            throw new BusinessException(AppErrorCode.SERVICE_UNAVAILABLE, "Profile creation failed in remote service");
         }
     }
 

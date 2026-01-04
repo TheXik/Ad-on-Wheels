@@ -1,10 +1,9 @@
 package com.adonwheels.authservice.service;
 
 import com.adonwheels.authservice.dto.RegistrationRequest;
-import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
-import com.adonwheels.authservice.exception.RegistrationException;
-import com.adonwheels.authservice.exception.RegistrationFailedException;
 import com.adonwheels.authservice.model.Role;
+import dto.AppErrorCode;
+import dto.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +28,14 @@ public class RegistrationSagaOrchestratorService {
             authService.saveUserWithProfile(request, profileId);
 
             // Registration successful - TODO AUTO LOGIN
-            
+
 
         } catch (DataIntegrityViolationException ex) {
             logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.email());
             rollbackProfileCreation(profileId, request.role());
-            throw new EmailAlreadyExistsException(request.email());
+            throw new BusinessException(AppErrorCode.EMAIL_ALREADY_EXISTS);
 
-        }  catch (WebClientResponseException ex) {
+        } catch (WebClientResponseException ex) {
             logger.error(
                     "SAGA ROLLBACK: Communication with profile service failed for email {}. Status: {}, Body: {}",
                     request.email(),
@@ -44,13 +43,15 @@ public class RegistrationSagaOrchestratorService {
                     ex.getResponseBodyAsString()
             );
             // No rollback needed as profile wasn't created
-            throw new RegistrationException("A required service is currently unavailable. Please try again later.");
+            throw new BusinessException(AppErrorCode.SERVICE_UNAVAILABLE,
+                    "A required service is currently unavailable. Please try again later.");
 
         } catch (Throwable ex) {
             logger.error("SAGA ROLLBACK: Unexpected error for {}.", request.email());
             rollbackProfileCreation(profileId, request.role());
-            // Re-throw the original exception to be handled by the GlobalExceptionHandlerAspect
-            throw new RegistrationFailedException("An unexpected error occurred during registration.", ex);
+            // Preserve cause for logs/troubleshooting
+            throw new BusinessException(AppErrorCode.INTERNAL_SERVER_ERROR,
+                    "An unexpected error occurred during registration.");
         }
     }
 
