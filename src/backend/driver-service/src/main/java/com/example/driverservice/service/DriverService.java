@@ -42,6 +42,10 @@ public class DriverService {
     }
 
     public void deleteDriver(Long id) {
-        repository.deleteById(id);
+        try {
+            repository.deleteById(id);
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            // Idempotent delete: if it's already gone, we don't care.
+        }
     }
 }
