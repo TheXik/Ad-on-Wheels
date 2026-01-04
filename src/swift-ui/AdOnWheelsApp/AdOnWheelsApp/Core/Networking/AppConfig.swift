@@ -2,7 +2,7 @@ import Foundation
 
 enum AppConfig {
     //TODO: when going to production remove this
-    private static let defaultBaseURLString: String = "http://192.168.1.27:8084"
+    private static let defaultBaseURLString: String = "http://192.168.1.27:8080"
 
 
     

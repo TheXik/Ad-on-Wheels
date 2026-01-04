@@ -12,11 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.reactive.function.client.WebClientException;
-
-import java.util.stream.Collectors;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Aspect
 @Component
@@ -33,20 +29,6 @@ public class GlobalExceptionHandlerAspect {
         String methodName = joinPoint.getSignature().toShortString();
         try {
             return joinPoint.proceed();
-
-        } catch (MethodArgumentNotValidException ex) {
-            // Spring Validation Errors
-            java.util.Map<String, String> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                    .collect(Collectors.toMap(
-                            FieldError::getField,
-                            e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value",
-                            (existing, replacement) -> existing // Keep first error if duplicates exist
-                    ));
-
-            String errorMessage = "Validation failed for " + validationErrors.size() + " fields";
-            logger.warn("Validation error in {}: {}", methodName, validationErrors);
-
-            return buildResponse(AppErrorCode.VALIDATION_ERROR, errorMessage, validationErrors);
 
         } catch (BusinessException ex) {
             // Shared business error across services
@@ -86,12 +68,5 @@ public class GlobalExceptionHandlerAspect {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ApiResponse.error(errorCode, customMessage));
-    }
-
-    private ResponseEntity<ApiResponse<Void>> buildResponse(AppErrorCode errorCode, String customMessage,
-            java.util.Map<String, String> validationErrors) {
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(ApiResponse.error(errorCode, customMessage, validationErrors));
     }
 }
