@@ -53,12 +53,17 @@ final class APIClient: APIClientProtocol {
                 }
             }
             
-            // Try to decode the error details from the backend
-            if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
-                 throw NetworkError.serverError(errorResponse)
-            } else {
-                 throw NetworkError.malformedErrorResponse(statusCode: httpResponse.statusCode)
+            // Non-2xx: attempt to surface structured error messages
+            if let wrapped = try? decoder.decode(ApiResponse<EmptyResponse>.self, from: data),
+               let details = wrapped.error {
+                throw NetworkError.serverError(details)
             }
+
+            if let errorResponse = try? decoder.decode(ErrorResponse.self, from: data) {
+                throw NetworkError.serverError(errorResponse)
+            }
+
+            throw NetworkError.malformedErrorResponse(statusCode: httpResponse.statusCode)
             
         } catch let error as NetworkError {
             throw error
