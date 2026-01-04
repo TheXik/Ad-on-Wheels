@@ -36,12 +36,17 @@ public class GlobalExceptionHandlerAspect {
 
         } catch (MethodArgumentNotValidException ex) {
             // Spring Validation Errors
-            String errorMessage = ex.getBindingResult().getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
-                    .collect(Collectors.joining(", "));
-            logger.warn("Validation error in {}: {}", methodName, errorMessage);
+            java.util.Map<String, String> validationErrors = ex.getBindingResult().getFieldErrors().stream()
+                    .collect(Collectors.toMap(
+                            FieldError::getField,
+                            e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value",
+                            (existing, replacement) -> existing // Keep first error if duplicates exist
+                    ));
 
-            return buildResponse(AppErrorCode.VALIDATION_ERROR, errorMessage);
+            String errorMessage = "Validation failed for " + validationErrors.size() + " fields";
+            logger.warn("Validation error in {}: {}", methodName, validationErrors);
+
+            return buildResponse(AppErrorCode.VALIDATION_ERROR, errorMessage, validationErrors);
 
         } catch (BusinessException ex) {
             // Shared business error across services
@@ -81,5 +86,12 @@ public class GlobalExceptionHandlerAspect {
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(ApiResponse.error(errorCode, customMessage));
+    }
+
+    private ResponseEntity<ApiResponse<Void>> buildResponse(AppErrorCode errorCode, String customMessage,
+            java.util.Map<String, String> validationErrors) {
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode, customMessage, validationErrors));
     }
 }

@@ -9,7 +9,9 @@ public class ApiResponse<T> {
     private T data;
     private ErrorResponse error;
 
-    public ApiResponse() {success = false;} // Empty constructor for Jackson deserialization
+    public ApiResponse() {
+        success = false;
+    } // Empty constructor for Jackson deserialization
 
     private ApiResponse(boolean success) {
         this.success = success;
@@ -22,20 +24,42 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> error(AppErrorCode errorCode) {
-        return error(errorCode, errorCode.getMessage());
+        return error(errorCode, errorCode.getMessage(), null);
     }
 
     public static <T> ApiResponse<T> error(AppErrorCode errorCode, String customMessage) {
+        return error(errorCode, customMessage, null);
+    }
+
+    public static <T> ApiResponse<T> error(AppErrorCode errorCode, String customMessage,
+            java.util.Map<String, String> validationErrors) {
         ApiResponse<T> response = new ApiResponse<>(false);
-        response.setError(new ErrorResponse(errorCode.getCode(), customMessage));
+        response.setError(new ErrorResponse(errorCode.getCode(), customMessage, validationErrors));
         return response;
     }
 
     // Getters and Setters...
-    public boolean isSuccess() { return success; }
-    public void setSuccess(boolean success) { this.success = success; }
-    public T getData() { return data; }
-    public void setData(T data) { this.data = data; }
-    public ErrorResponse getError() { return error; }
-    public void setError(ErrorResponse error) { this.error = error; }
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    public ErrorResponse getError() {
+        return error;
+    }
+
+    public void setError(ErrorResponse error) {
+        this.error = error;
+    }
 }
