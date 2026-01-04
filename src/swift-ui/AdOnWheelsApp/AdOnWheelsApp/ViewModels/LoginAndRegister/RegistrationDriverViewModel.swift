@@ -32,7 +32,7 @@ class RegisterDriverViewModel: ObservableObject {
                              "name": name,
                              "role": UserRole.driver.rawValue.uppercased()])
             )
-            let response: RegistrationResponse = try await api.send(endpoint)
+            let response: RegistrationResponse = try await api.sendMapped(endpoint)
             
             // Registration successful, but don't auto-login
             registrationSuccessful = true
