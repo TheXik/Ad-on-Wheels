@@ -7,6 +7,6 @@ The purpose of this project is to develop a mobile application that connects car
 
 ## Authors
 
-**Lukáš Helleš**
+**Lukáš Hellesch**
 
 **Thesis supervisor:** Ing. Pavel Koupil, Ph.D. 

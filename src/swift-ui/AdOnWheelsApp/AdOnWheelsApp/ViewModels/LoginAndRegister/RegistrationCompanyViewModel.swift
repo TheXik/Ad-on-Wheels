@@ -22,6 +22,7 @@ class RegisterCompanyViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         fieldErrors = [:]
+        registrationSuccessful = false
         defer { isLoading = false }
 
         do {
