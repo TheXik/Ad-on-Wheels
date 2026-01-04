@@ -32,7 +32,7 @@ class RegisterCompanyViewModel: ObservableObject {
                              "name": name,
                              "role": UserRole.company.rawValue.uppercased()])
             )
-            let response: RegistrationResponse = try await api.send(endpoint)
+            let _: RegistrationResponse = try await api.sendMapped(endpoint)
             
             // Registration successful, but don't auto-login
             registrationSuccessful = true
@@ -42,3 +42,4 @@ class RegisterCompanyViewModel: ObservableObject {
         }
     }
 }
+

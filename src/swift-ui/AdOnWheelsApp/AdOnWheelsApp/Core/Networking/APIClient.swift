@@ -3,6 +3,8 @@ import Foundation
 protocol APIClientProtocol {
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T
     func send(_ endpoint: Endpoint) async throws
+    func sendMapped<T: Decodable>(_ endpoint: Endpoint) async throws -> T
+    func sendMapped(_ endpoint: Endpoint) async throws
 }
 
 final class APIClient: APIClientProtocol {
