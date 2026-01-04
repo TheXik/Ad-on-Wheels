@@ -1,10 +1,6 @@
 package dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dto.ErrorResponse;
-
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
@@ -13,15 +9,11 @@ public class ApiResponse<T> {
     private T data;
     private ErrorResponse error;
 
-    public ApiResponse() {
-        this.success = false;
-    }
+    public ApiResponse() {success = false;} // Empty constructor for Jackson deserialization
 
     private ApiResponse(boolean success) {
-
         this.success = success;
     }
-
 
     public static <T> ApiResponse<T> success(T data) {
         ApiResponse<T> response = new ApiResponse<>(true);
@@ -39,35 +31,11 @@ public class ApiResponse<T> {
         return response;
     }
 
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
-    }
-
-    public ErrorResponse getError() {
-        return error;
-    }
-
-    public void setError(ErrorResponse error) {
-        this.error = error;
-    }
-    @Override
-    public String toString() {
-        try {
-            return new ObjectMapper().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            return "Error converting to JSON: " + e.getMessage();
-        }
-    }
+    // Getters and Setters...
+    public boolean isSuccess() { return success; }
+    public void setSuccess(boolean success) { this.success = success; }
+    public T getData() { return data; }
+    public void setData(T data) { this.data = data; }
+    public ErrorResponse getError() { return error; }
+    public void setError(ErrorResponse error) { this.error = error; }
 }

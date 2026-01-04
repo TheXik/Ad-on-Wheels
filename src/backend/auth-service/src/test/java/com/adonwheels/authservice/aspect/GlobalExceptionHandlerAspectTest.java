@@ -3,13 +3,12 @@ package com.adonwheels.authservice.aspect;
 import com.adonwheels.authservice.config.TestSecurityConfig;
 import com.adonwheels.authservice.dto.LoginRequest;
 import com.adonwheels.authservice.dto.RegistrationRequest;
-import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
-import com.adonwheels.authservice.exception.RegistrationException;
-import com.adonwheels.authservice.exception.RegistrationFailedException;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.service.AuthService;
 import com.adonwheels.authservice.service.RegistrationSagaOrchestratorService;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import dto.AppErrorCode;
+import dto.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+
+import java.io.IOException;
+import java.net.URI;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -62,7 +64,7 @@ class GlobalExceptionHandlerAspectTest {
                 Role.DRIVER
         );
 
-        doThrow(new EmailAlreadyExistsException("test@example.com"))
+        doThrow(new BusinessException(AppErrorCode.EMAIL_ALREADY_EXISTS))
                 .when(registrationSagaOrchestratorService)
                 .register(any(RegistrationRequest.class));
 
@@ -89,7 +91,7 @@ class GlobalExceptionHandlerAspectTest {
                 Role.DRIVER
         );
 
-        doThrow(new RegistrationException("Invalid registration data"))
+        doThrow(new BusinessException(AppErrorCode.VALIDATION_ERROR, "Invalid registration data"))
                 .when(registrationSagaOrchestratorService)
                 .register(any(RegistrationRequest.class));
 
@@ -140,7 +142,12 @@ class GlobalExceptionHandlerAspectTest {
                 Role.DRIVER
         );
 
-        doThrow(new RestClientException("Service unavailable"))
+        doThrow(new WebClientRequestException(
+                new IOException("Service unavailable"),
+                null,
+                URI.create("http://localhost"),
+                org.springframework.http.HttpHeaders.EMPTY
+        ))
                 .when(registrationSagaOrchestratorService)
                 .register(any(RegistrationRequest.class));
 
@@ -167,7 +174,7 @@ class GlobalExceptionHandlerAspectTest {
                 Role.DRIVER
         );
 
-        doThrow(new RegistrationFailedException("Database connection failed", new RuntimeException()))
+        doThrow(new BusinessException(AppErrorCode.INTERNAL_SERVER_ERROR))
                 .when(registrationSagaOrchestratorService)
                 .register(any(RegistrationRequest.class));
 
@@ -218,6 +225,7 @@ class GlobalExceptionHandlerAspectTest {
                 "test@example.com",
                 "wrongpassword"
         );
+
 
         when(authService.verify(any(LoginRequest.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));

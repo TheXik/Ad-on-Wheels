@@ -2,22 +2,19 @@ package com.adonwheels.authservice.aspect;
 
 import dto.ApiResponse;
 import dto.AppErrorCode;
-import com.adonwheels.authservice.exception.EmailAlreadyExistsException;
-import com.adonwheels.authservice.exception.RegistrationException;
-import com.adonwheels.authservice.exception.RegistrationFailedException;
+import dto.exception.BusinessException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.client.RestClientException;
+import org.springframework.web.reactive.function.client.WebClientException;
 
 import java.util.stream.Collectors;
 
@@ -44,57 +41,45 @@ public class GlobalExceptionHandlerAspect {
                     .collect(Collectors.joining(", "));
             logger.warn("Validation error in {}: {}", methodName, errorMessage);
 
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(AppErrorCode.VALIDATION_ERROR, errorMessage));
+            return buildResponse(AppErrorCode.VALIDATION_ERROR, errorMessage);
 
-        } catch (EmailAlreadyExistsException ex) {
-            // Specific Business Rule
-            logger.warn("Registration failed - Email already exists: {}", ex.getMessage());
-
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error(AppErrorCode.EMAIL_ALREADY_EXISTS));
-
-        } catch (RegistrationException ex) {
-            // Generic Business Logic Error
-            logger.warn("Registration logic error in {}: {}", methodName, ex.getMessage());
-
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error(AppErrorCode.VALIDATION_ERROR, ex.getMessage()));
+        } catch (BusinessException ex) {
+            // Shared business error across services
+            AppErrorCode code = ex.getErrorCode();
+            logger.warn("Business error in {}: {} ({})", methodName, ex.getMessage(), code);
+            return buildResponse(code, ex.getMessage());
 
         } catch (BadCredentialsException ex) {
             // Login Failure
             logger.warn("Unsuccessful login {}: Invalid credentials.", methodName);
 
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error(AppErrorCode.INVALID_CREDENTIALS));
+            return buildResponse(AppErrorCode.INVALID_CREDENTIALS);
 
-        } catch (RestClientException ex) {
+        } catch (WebClientException ex) {
             // Microservices Communication Failure
             logger.error("Inter-service communication failed in {}: {}", methodName, ex.getMessage());
 
-            return ResponseEntity
-                    .status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(ApiResponse.error(AppErrorCode.SERVICE_UNAVAILABLE));
-
-        } catch (RegistrationFailedException ex) {
-            // Critical Database/System Failure
-            logger.error("Critical registration failure in {}: {}", methodName, ex.getMessage(), ex.getCause());
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(AppErrorCode.INTERNAL_SERVER_ERROR));
+            return buildResponse(AppErrorCode.SERVICE_UNAVAILABLE);
 
         } catch (Throwable ex) {
             // Catch-All
             logger.error("An unexpected internal error occurred in {}.", methodName, ex);
 
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error(AppErrorCode.INTERNAL_SERVER_ERROR));
+            return buildResponse(AppErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // Helper methods
+
+    private ResponseEntity<ApiResponse<Void>> buildResponse(AppErrorCode errorCode) {
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode));
+    }
+
+    private ResponseEntity<ApiResponse<Void>> buildResponse(AppErrorCode errorCode, String customMessage) {
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(errorCode, customMessage));
     }
 }
