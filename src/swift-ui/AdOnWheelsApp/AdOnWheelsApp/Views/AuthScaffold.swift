@@ -12,9 +12,32 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
     let errorMessage: String?
     let primaryButtonTitle: String
     let primaryAction: () -> Void
+    let onBack: (() -> Void)?
 
-    @ViewBuilder var fields: () -> Fields
-    @ViewBuilder var bottomLinks: () -> BottomLinks
+    let fields: () -> Fields
+    let bottomLinks: () -> BottomLinks
+
+    init(
+        headerMode: AuthHeaderMode,
+        subtitle: String,
+        isLoading: Bool,
+        errorMessage: String?,
+        primaryButtonTitle: String,
+        primaryAction: @escaping () -> Void,
+        onBack: (() -> Void)? = nil,
+        @ViewBuilder fields: @escaping () -> Fields,
+        @ViewBuilder bottomLinks: @escaping () -> BottomLinks
+    ) {
+        self.headerMode = headerMode
+        self.subtitle = subtitle
+        self.isLoading = isLoading
+        self.errorMessage = errorMessage
+        self.primaryButtonTitle = primaryButtonTitle
+        self.primaryAction = primaryAction
+        self.onBack = onBack
+        self.fields = fields
+        self.bottomLinks = bottomLinks
+    }
 
     var body: some View {
         ZStack {
@@ -29,7 +52,22 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
             .edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 20) {
-                Spacer()
+                // Back button at the top
+                if let onBack = onBack {
+                    HStack {
+                        Button(action: onBack) {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(Color("BrandColor"))
+                                .imageScale(.large)
+                                .padding()
+                                .clipShape(Circle())
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 10)
+                }
+                
 
                 header
 
@@ -118,9 +156,8 @@ private struct AuthFieldStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding()
-            .background(Color.primary.opacity(0.1))
+            .background(Color("FieldBgColor"))
             .cornerRadius(10)
-            .foregroundColor(.primary.opacity(0.8))
             .accentColor(Color("BrandColor"))
     }
 }
