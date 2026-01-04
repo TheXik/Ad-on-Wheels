@@ -21,17 +21,29 @@ public class RegistrationSagaOrchestratorService {
     public void register(RegistrationRequest request) {
         Long profileId = null;
         try {
-            // Create Profile
+            // STEP 1: Check if email already exists BEFORE creating profile
+            // This prevents orphaned profiles in remote services
+            if (authService.emailExists(request.email())) {
+                logger.warn("Registration attempt with existing email: {}", request.email());
+                throw new BusinessException(AppErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+
+            // STEP 2: Create Profile in remote service (driver-service or company-service)
             profileId = authService.createProfile(request.name(), request.email(), request.role());
 
-            // Save the User
+            // STEP 3: Save the User with profile reference
             authService.saveUserWithProfile(request, profileId);
 
+            logger.info("Registration successful for email: {}", request.email());
             // Registration successful - TODO AUTO LOGIN
 
+        } catch (BusinessException ex) {
+            // Re-throw business exceptions (like EMAIL_ALREADY_EXISTS)
+            throw ex;
 
         } catch (DataIntegrityViolationException ex) {
-            logger.error("SAGA ROLLBACK: Data integrity violation for email {}.", request.email());
+            // This should rarely happen now since we check email first
+            logger.error("SAGA ROLLBACK: Unexpected data integrity violation for email {}.", request.email());
             rollbackProfileCreation(profileId, request.role());
             throw new BusinessException(AppErrorCode.EMAIL_ALREADY_EXISTS);
 
@@ -42,12 +54,13 @@ public class RegistrationSagaOrchestratorService {
                     ex.getStatusCode(),
                     ex.getResponseBodyAsString()
             );
-            // No rollback needed as profile wasn't created
+            // Rollback profile if it was created
+            rollbackProfileCreation(profileId, request.role());
             throw new BusinessException(AppErrorCode.SERVICE_UNAVAILABLE,
                     "A required service is currently unavailable. Please try again later.");
 
         } catch (Throwable ex) {
-            logger.error("SAGA ROLLBACK: Unexpected error for {}.", request.email());
+            logger.error("SAGA ROLLBACK: Unexpected error for {}.", request.email(), ex);
             rollbackProfileCreation(profileId, request.role());
             // Preserve cause for logs/troubleshooting
             throw new BusinessException(AppErrorCode.INTERNAL_SERVER_ERROR,
