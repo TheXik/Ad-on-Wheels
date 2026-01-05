@@ -35,20 +35,14 @@ struct DriverRootView: View {
             }
             
             // Stats Tab
-            NavigationView {
-                Text("Stats Content Coming Soon")
-            }
+            StatsView()
             .tabItem {
                 Image(systemName: "chart.bar.fill")
                 Text("Stats")
             }
             
             // Profile Tab
-            NavigationView {
-                Button("Logout") {
-                    authService.logout()
-                }
-            }
+            ProfileView(authService: authService)
             .tabItem {
                 Image(systemName: "person.fill")
                 Text("Profile")
