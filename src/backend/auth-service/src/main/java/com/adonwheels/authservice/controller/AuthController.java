@@ -31,8 +31,7 @@ public class AuthController {
     /// valid anotation chcecks if the dto RegistrationRequest have correctFields
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegistrationResponse>> register(@Valid @RequestBody RegistrationRequest request) {
-        registrationSagaOrchestratorService.register(request);
-        RegistrationResponse registrationData = new RegistrationResponse("User registered successfully");
+        RegistrationResponse registrationData = registrationSagaOrchestratorService.register(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
