@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 struct Driver: Identifiable, Codable {
     let id: Int
