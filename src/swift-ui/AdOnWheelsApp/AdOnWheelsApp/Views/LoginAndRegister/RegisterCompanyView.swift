@@ -18,91 +18,69 @@ struct RegisterCompanyView: View {
     }
 
     var body: some View {
-        AuthScaffold(
-            headerMode: .register(role: "Company"),
-            subtitle: "Create your Company Account",
-            isLoading: viewModel.isLoading,
-            errorMessage: viewModel.errorMessage,
-            primaryButtonTitle: "Register",
-            primaryAction: {
-                Task { await viewModel.register() }
-            },
-            onBack: onBack,
-            fields: {
-                TextField("Company name", text: $viewModel.name, prompt: Text("Company name").foregroundColor(Color("BrandColor")))
-                    .textContentType(.organizationName)
-                    .foregroundColor(.primary)
-                    .authFieldStyle()
-                if let error = viewModel.fieldErrors["name"] {
-                    Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
-                }
+        ZStack {
+            AuthScaffold(
+                headerMode: .register(role: "Company"),
+                subtitle: "Create your Company Account",
+                isLoading: viewModel.isLoading,
+                errorMessage: viewModel.errorMessage,
+                primaryButtonTitle: "Register",
+                primaryAction: {
+                    Task { await viewModel.register() }
+                },
+                onBack: onBack,
+                fields: {
+                    TextField("Company name", text: $viewModel.name, prompt: Text("Company name").foregroundColor(Color("BrandColor")))
+                        .textContentType(.organizationName)
+                        .foregroundColor(.primary)
+                        .authFieldStyle()
 
-                TextField("Email", text: $viewModel.email, prompt: Text("Email").foregroundColor(Color("BrandColor")))
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-                    .keyboardType(.emailAddress)
-                    .textContentType(.emailAddress)
-                    .foregroundColor(.primary)
-                    .authFieldStyle()
-                if let error = viewModel.fieldErrors["email"] {
-                    Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
-                }
+                    TextField("Email", text: $viewModel.email, prompt: Text("Email").foregroundColor(Color("BrandColor")))
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .foregroundColor(.primary)
+                        .authFieldStyle()
 
-                HStack {
-                    if isPasswordVisible {
-                        TextField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
-                            .foregroundColor(.primary)
-                    } else {
-                        SecureField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
-                            .foregroundColor(.primary)
+                    HStack {
+                        if isPasswordVisible {
+                            TextField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
+                                .foregroundColor(.primary)
+                        } else {
+                            SecureField("Password", text: $viewModel.password, prompt: Text("Password").foregroundColor(Color("BrandColor")))
+                                .foregroundColor(.primary)
+                        }
                     }
-                }
-                .textContentType(.newPassword)
-                .authFieldStyle()
-                .overlay(alignment: .trailing) {
-                    Button {
-                        isPasswordVisible.toggle()
-                    } label: {
-                        Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                            .foregroundColor(Color("BrandColor"))
+                    .textContentType(.newPassword)
+                    .authFieldStyle()
+                    .overlay(alignment: .trailing) {
+                        Button {
+                            isPasswordVisible.toggle()
+                        } label: {
+                            Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                                .foregroundColor(Color("BrandColor"))
+                        }
+                        .padding(.trailing, 10)
                     }
-                    .padding(.trailing, 10)
-                }
-                if let error = viewModel.fieldErrors["password"] {
-                    Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
-                }
-            },
-            bottomLinks: {
-                if viewModel.registrationSuccessful {
-                    VStack(spacing: 10) {
-                        Text("Registration successful!")
-                            .foregroundColor(.green)
-                            .font(.headline)
-                        
-                        Text("Please log in with your credentials.")
-                            .foregroundColor(.primary.opacity(0.8))
-                            .font(.callout)
-                        
-                        Button("Go to Login") {
+                },
+                bottomLinks: {
+                    if !viewModel.registrationSuccessful {
+                        Button("Already have an account? Log in here") {
                             navViewModel.currentScreen = .loginCompany
                         }
-                        .foregroundColor(.white)
-                        .font(.headline)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color("BrandColor"))
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
+                        .foregroundColor(.primary)
+                        .font(.callout)
                     }
-                } else {
-                    Button("Already have an account? Log in here") {
-                        navViewModel.currentScreen = .loginCompany
-                    }
-                    .foregroundColor(.primary)
-                    .font(.callout)
                 }
+            )
+            
+            // Auto-navigate to home when registration is successful
+            if viewModel.registrationSuccessful && authService.isAuthenticated {
+                CompanyHomePageView()
+                    .transition(.move(edge: .trailing))
             }
-        )
+        }
     }
 }
 
