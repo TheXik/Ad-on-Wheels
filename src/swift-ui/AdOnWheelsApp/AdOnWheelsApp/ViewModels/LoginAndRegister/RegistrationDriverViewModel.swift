@@ -37,7 +37,8 @@ class RegisterDriverViewModel: ObservableObject {
             )
             let response: RegistrationResponse = try await api.sendMapped(endpoint)
             
-            // Registration successful, but don't auto-login
+            // Auto-login with the token received from registration
+            authService.didLogin(token: response.token)
             registrationSuccessful = true
         } catch {
             if let appError = error as? AppError, case .validation(let errors) = appError {
