@@ -14,8 +14,30 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
     let primaryAction: () -> Void
     let onBack: (() -> Void)?
 
-    @ViewBuilder var fields: () -> Fields
-    @ViewBuilder var bottomLinks: () -> BottomLinks
+    let fields: () -> Fields
+    let bottomLinks: () -> BottomLinks
+
+    init(
+        headerMode: AuthHeaderMode,
+        subtitle: String,
+        isLoading: Bool,
+        errorMessage: String?,
+        primaryButtonTitle: String,
+        primaryAction: @escaping () -> Void,
+        onBack: (() -> Void)? = nil,
+        @ViewBuilder fields: @escaping () -> Fields,
+        @ViewBuilder bottomLinks: @escaping () -> BottomLinks
+    ) {
+        self.headerMode = headerMode
+        self.subtitle = subtitle
+        self.isLoading = isLoading
+        self.errorMessage = errorMessage
+        self.primaryButtonTitle = primaryButtonTitle
+        self.primaryAction = primaryAction
+        self.onBack = onBack
+        self.fields = fields
+        self.bottomLinks = bottomLinks
+    }
 
     var body: some View {
         ZStack {
