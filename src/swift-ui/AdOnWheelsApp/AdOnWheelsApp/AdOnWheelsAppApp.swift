@@ -17,7 +17,7 @@ struct AdOnWheelsAppApp: App {
             if authService.isAuthenticated {
                 switch authService.userRole {
                 case .driver:
-                    DriverHomePageView(authService: authService)
+                    DriverRootView(authService: authService)
                 case .company:
                     CompanyHomePageView(authService: authService)
                 case .none:
