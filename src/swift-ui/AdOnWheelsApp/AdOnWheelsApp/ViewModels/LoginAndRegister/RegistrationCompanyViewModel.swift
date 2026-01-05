@@ -32,9 +32,10 @@ class RegisterCompanyViewModel: ObservableObject {
                              "name": name,
                              "role": UserRole.company.rawValue.uppercased()])
             )
-            let _: RegistrationResponse = try await api.sendMapped(endpoint)
+            let response: RegistrationResponse = try await api.sendMapped(endpoint)
             
-            // Registration successful, but don't auto-login
+            // Auto-login with the token received from registration
+            authService.didLogin(token: response.token)
             registrationSuccessful = true
             
         } catch {
