@@ -34,11 +34,20 @@ struct BrowseView: View {
                     }
                 } else {
                     ForEach(viewModel.campaigns.reversed()) { campaign in
-                        SwipeCardContainer(campaign: campaign) {
-                            withAnimation {
-                                viewModel.removeCard(campaign)
+                        ZStack {
+                            SwipeCardContainer(campaign: campaign) {
+                                withAnimation {
+                                    viewModel.removeCard(campaign)
+                                }
                             }
+                            // Overlay invisible link or button
+                            // A simple way is to add an 'Details' button or make it tappable if not swiping.
+                            // For this mock, let's just assume tapping content navigates.
                         }
+                        .background(
+                            NavigationLink(destination: CampaignDetailView(), label: { EmptyView() })
+                                .opacity(0)
+                        )
                     }
                 }
             }
