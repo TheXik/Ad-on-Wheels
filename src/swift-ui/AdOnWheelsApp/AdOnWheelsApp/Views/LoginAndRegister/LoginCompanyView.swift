@@ -31,6 +31,9 @@ struct LoginCompanyView: View {
                     .textContentType(.emailAddress)
                     .foregroundColor(.primary)
                     .authFieldStyle()
+                if let error = viewModel.fieldErrors["email"] {
+                    Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
+                }
 
                 HStack {
                     if isPasswordVisible {
@@ -51,6 +54,9 @@ struct LoginCompanyView: View {
                             .foregroundColor(Color("BrandColor"))
                     }
                     .padding(.trailing, 10)
+                }
+                if let error = viewModel.fieldErrors["password"] {
+                    Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
                 }
             },
             bottomLinks: {

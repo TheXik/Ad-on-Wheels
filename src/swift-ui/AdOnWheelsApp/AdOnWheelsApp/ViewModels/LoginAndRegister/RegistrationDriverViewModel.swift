@@ -8,6 +8,7 @@ class RegisterDriverViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var registrationSuccessful = false
+    @Published var fieldErrors: [String: String] = [:]
 
     private let api: APIClientProtocol
     private let authService: AuthenticationService
@@ -20,6 +21,8 @@ class RegisterDriverViewModel: ObservableObject {
     func register() async {
         isLoading = true
         errorMessage = nil
+        fieldErrors = [:]
+        registrationSuccessful = false
         defer { isLoading = false }
 
         do {
@@ -37,7 +40,12 @@ class RegisterDriverViewModel: ObservableObject {
             // Registration successful, but don't auto-login
             registrationSuccessful = true
         } catch {
-            errorMessage = error.localizedDescription
+            if let appError = error as? AppError, case .validation(let errors) = appError {
+                self.fieldErrors = errors
+                self.errorMessage = "Please fix the errors below."
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 }
