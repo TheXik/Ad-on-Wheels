@@ -6,6 +6,7 @@ import dto.AppErrorCode;
 import dto.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.adonwheels.authservice.dto.RegistrationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class RegistrationSagaOrchestratorService {
     @Autowired
     private AuthService authService;
 
-    public void register(RegistrationRequest request) {
+    public RegistrationResponse register(RegistrationRequest request) {
         Long profileId = null;
         try {
             // STEP 1: Check if email already exists BEFORE creating profile
@@ -35,7 +36,12 @@ public class RegistrationSagaOrchestratorService {
             authService.saveUserWithProfile(request, profileId);
 
             logger.info("Registration successful for email: {}", request.email());
-            // Registration successful - TODO AUTO LOGIN
+
+            // Auto login generate new token for the newly registered user
+            String token = authService.generateTokenForNewUser(request.email());
+
+            logger.info("Auto-login token generated for email: {}", request.email());
+            return new RegistrationResponse(token, "Registration successful");
 
         } catch (BusinessException ex) {
             // Re-throw business exceptions (like EMAIL_ALREADY_EXISTS)
