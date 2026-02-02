@@ -16,7 +16,7 @@ struct DriverRootView: View {
         TabView {
             // Home Tab
             NavigationView {
-                DashboardView()
+                DashboardView(authService: authService)
                     .navigationBarHidden(true) // Hide nav bar to use custom header
             }
             .tabItem {
