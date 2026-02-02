@@ -1,9 +1,14 @@
 import SwiftUI
 
 struct StatsView: View {
+    @StateObject private var viewModel: StatsViewModel
     @State private var selectedPeriod = 0 // 0: Weekly, 1: Monthly
     
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
+    
+    init(authService: AuthenticationService = AuthenticationService.shared) {
+        _viewModel = StateObject(wrappedValue: StatsViewModel(authService: authService))
+    }
     
     var body: some View {
         NavigationView {
@@ -19,57 +24,102 @@ struct StatsView: View {
                     .padding(.horizontal)
                     .padding(.top)
                     
-                    // Main Summary Cards
-                    HStack(spacing: 15) {
-                        StatsSummaryCard(title: "Total Earnings", value: "€420.50", icon: "eurosign.circle.fill", color: .green)
-                        StatsSummaryCard(title: "Total Distance", value: "854 km", icon: "speedometer", color: brandBlue)
-                    }
-                    .padding(.horizontal)
-                    
-                    // Chart Section
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Earnings History")
-                            .font(.headline)
-                            .padding(.horizontal)
+                    if viewModel.isLoading {
+                        ProgressView("Loading statistics...")
+                            .padding()
+                    } else if let error = viewModel.errorMessage {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .padding()
+                    } else {
+                        // Main Summary Cards
+                        HStack(spacing: 15) {
+                            StatsSummaryCard(
+                                title: "Total Earnings",
+                                value: viewModel.formattedEarnings(for: selectedPeriod),
+                                icon: "eurosign.circle.fill",
+                                color: .green
+                            )
+                            StatsSummaryCard(
+                                title: "Total Distance",
+                                value: viewModel.formattedDistance(for: selectedPeriod),
+                                icon: "speedometer",
+                                color: brandBlue
+                            )
+                        }
+                        .padding(.horizontal)
                         
-                        // Mock Bar Chart
-                        HStack(alignment: .bottom, spacing: 12) {
-                            ForEach(0..<7) { index in
-                                VStack {
-                                    Spacer()
-                                    RoundedRectangle(cornerRadius: 4)
-                                        .fill(brandBlue.opacity(index == 6 ? 1.0 : 0.3)) // Highlight today
-                                        .frame(height: CGFloat.random(in: 40...120))
-                                    Text(days[index])
-                                        .font(.caption2)
+                        // Additional stats
+                        HStack(spacing: 15) {
+                            StatsSummaryCard(
+                                title: "Average Speed",
+                                value: String(format: "%.1f km/h", viewModel.averageSpeed),
+                                icon: "gauge",
+                                color: .orange
+                            )
+                            StatsSummaryCard(
+                                title: "Total Rides",
+                                value: "\(viewModel.totalRides)",
+                                icon: "car.fill",
+                                color: .purple
+                            )
+                        }
+                        .padding(.horizontal)
+                        
+                        // Chart Section
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Earnings History (Last 7 Days)")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            EarningsChartView(dailyEarnings: viewModel.dailyEarnings, brandBlue: brandBlue)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Recent Rides List
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("Recent Activity")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(viewModel.totalRides) rides total")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            .padding(.horizontal)
+                            
+                            if viewModel.recentRides.isEmpty {
+                                VStack(spacing: 10) {
+                                    Image(systemName: "car.fill")
+                                        .font(.largeTitle)
                                         .foregroundColor(.gray)
+                                    Text("No rides yet")
+                                        .foregroundColor(.gray)
+                                    Text("Start a ride to see your activity here")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
                                 }
+                                .frame(maxWidth: .infinity)
+                                .padding(40)
+                                .background(Color.white)
+                                .cornerRadius(15)
+                                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                                .padding(.horizontal)
+                            } else {
+                                VStack(spacing: 0) {
+                                    ForEach(viewModel.recentRides) { ride in
+                                        RecentRideRowFromAPI(ride: ride)
+                                        if ride.id != viewModel.recentRides.last?.id {
+                                            Divider()
+                                        }
+                                    }
+                                }
+                                .background(Color.white)
+                                .cornerRadius(15)
+                                .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                                .padding(.horizontal)
                             }
                         }
-                        .frame(height: 150)
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(15)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                        .padding(.horizontal)
-                    }
-                    
-                    // Recent Rides List
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Recent Activity")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            ForEach(0..<5) { _ in
-                                RecentRideRow()
-                                Divider()
-                            }
-                        }
-                        .background(Color.white)
-                        .cornerRadius(15)
-                        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                        .padding(.horizontal)
                     }
                     
                     Spacer(minLength: 50)
@@ -77,10 +127,61 @@ struct StatsView: View {
             }
             .background(Color(UIColor.systemGroupedBackground))
             .navigationBarTitle("Statistics", displayMode: .inline)
+            .task {
+                await viewModel.fetchStats()
+            }
+            .refreshable {
+                await viewModel.fetchStats()
+            }
         }
     }
+}
+
+struct EarningsChartView: View {
+    let dailyEarnings: [Double]
+    let brandBlue: Color
     
-    let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    var maxEarning: Double {
+        max(dailyEarnings.max() ?? 1, 1) // Avoid division by zero
+    }
+    
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            ForEach(0..<7) { index in
+                VStack {
+                    Spacer()
+                    
+                    // Show amount on top if > 0
+                    if dailyEarnings[index] > 0 {
+                        Text(String(format: "€%.0f", dailyEarnings[index]))
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(brandBlue.opacity(index == 6 ? 1.0 : 0.5))
+                        .frame(height: dailyEarnings[index] > 0 ? max(8, CGFloat(dailyEarnings[index] / maxEarning) * 100) : 4)
+                    
+                    Text(currentDayName(for: index))
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+        .frame(height: 150)
+        .padding()
+        .background(Color.white)
+        .cornerRadius(15)
+        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+    
+    func currentDayName(for offset: Int) -> String {
+        let calendar = Calendar.current
+        let date = calendar.date(byAdding: .day, value: -(6 - offset), to: Date())!
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date)
+    }
 }
 
 struct StatsSummaryCard: View {
@@ -114,9 +215,11 @@ struct StatsSummaryCard: View {
     }
 }
 
-struct RecentRideRow: View {
+struct RecentRideRowFromAPI: View {
+    let ride: Ride
+    
     var body: some View {
-        NavigationLink(destination: RideDetailView()) {
+        NavigationLink(destination: RideDetailView(ride: ride)) {
             HStack {
                 Image(systemName: "car.fill")
                     .foregroundColor(.gray)
@@ -125,18 +228,18 @@ struct RecentRideRow: View {
                     .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Ride to Center")
-                        .foregroundColor(.primary) // Reset for link color
+                    Text(ride.displayCampaignName)
+                        .foregroundColor(.primary)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                    Text("Today, 14:30 • 12.5 km")
+                    Text("\(ride.formattedDuration) • \(ride.formattedDistance)")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
                 
                 Spacer()
                 
-                Text("+€4.20")
+                Text(ride.formattedEarnings)
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(.green)
