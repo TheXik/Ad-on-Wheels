@@ -40,7 +40,7 @@ public class DriverController {
 
     // GET /drivers/{id} Returns a single driver by ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Driver>> one(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Driver>> one(@PathVariable("id") Long id) {
         Driver driver = service.getDriver(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -49,7 +49,7 @@ public class DriverController {
 
     // PUT /drivers/{id} Updates an existing driver by ID
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Driver>> replaceDriver(@Valid @RequestBody Driver newDriver, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Driver>> replaceDriver(@Valid @RequestBody Driver newDriver, @PathVariable("id") Long id) {
         Driver updatedDriver = service.updateDriver(id, newDriver);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -58,7 +58,7 @@ public class DriverController {
 
     // DELETE /drivers/{id} Deletes a driver by ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteDriver(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Object>> deleteDriver(@PathVariable("id") Long id) {
         service.deleteDriver(id);
         // For consistency, I am returning ApiResponse always even though it goes against best practices
         return ResponseEntity

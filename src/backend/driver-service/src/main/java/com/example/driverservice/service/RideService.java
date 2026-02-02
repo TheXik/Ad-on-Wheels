@@ -1,5 +1,6 @@
 package com.example.driverservice.service;
 
+import com.example.driverservice.dto.RideStatistics;
 import com.example.driverservice.model.Ride;
 import com.example.driverservice.model.RideStatus;
 import com.example.driverservice.repository.RideRepository;
@@ -86,7 +87,7 @@ public class RideService {
 
         Ride ride = rideRepository.findById(rideId)
                 .orElseThrow(() -> new BusinessException(AppErrorCode.RIDE_NOT_ACTIVE, "Ride not found"));
-        
+
         if (ride.getStatus() != RideStatus.COMPLETED) {
             throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Only completed rides can be verified");
         }
@@ -95,5 +96,42 @@ public class RideService {
         ride.setStatus(RideStatus.VERIFIED);
 
         return rideRepository.save(ride);
+    }
+
+    // Get ride statistics for a driver
+    public RideStatistics getRideStatistics(Long driverId) {
+        if (driverId == null) {
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "driverId is required");
+        }
+
+        List<Ride> allRides = rideRepository.findByDriverIdOrderByStartTimeDesc(driverId);
+
+        long totalRides = allRides.size();
+        long completedRides = allRides.stream()
+                .filter(r -> r.getStatus() == RideStatus.COMPLETED || r.getStatus() == RideStatus.VERIFIED)
+                .count();
+        long verifiedRides = allRides.stream()
+                .filter(r -> r.getStatus() == RideStatus.VERIFIED)
+                .count();
+        long activeRides = allRides.stream()
+                .filter(r -> r.getStatus() == RideStatus.ACTIVE)
+                .count();
+
+        int totalDuration = allRides.stream()
+                .filter(r -> r.getDuration() != null)
+                .mapToInt(Ride::getDuration)
+                .sum();
+
+        int averageDuration = completedRides > 0 ?
+                (int) (totalDuration / (double) completedRides) : 0;
+
+        return new RideStatistics(
+                totalRides,
+                completedRides,
+                verifiedRides,
+                totalDuration,
+                averageDuration,
+                activeRides
+        );
     }
 }
