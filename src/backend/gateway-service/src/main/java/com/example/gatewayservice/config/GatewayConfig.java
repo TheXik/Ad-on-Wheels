@@ -24,6 +24,10 @@ public class GatewayConfig {
                         .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://driver-service"))
 
+                .route("rides-service", r -> r.path("/rides/**")
+                        .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
+                        .uri("lb://driver-service"))
+
                 .route("company-service", r -> r.path("/companies/**")
                         .filters(f -> f.filter(filter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://company-service"))
