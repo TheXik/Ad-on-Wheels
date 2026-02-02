@@ -4,6 +4,7 @@ import Foundation
 class AuthenticationService: ObservableObject {
     @Published var isAuthenticated = false
     @Published var userRole: UserRole?
+    @Published var userId: Int?
 
     init() {
         checkAuthentication()
@@ -35,6 +36,12 @@ class AuthenticationService: ObservableObject {
         if let roleString = payload["role"] as? String,
            let role = parseRole(from: roleString) {
             self.userRole = role
+
+            // Extract profileID from JWT token
+            if let profileId = payload["profileID"] as? Int {
+                self.userId = profileId
+            }
+
             self.isAuthenticated = true
         } else {
             logout()
@@ -54,6 +61,7 @@ class AuthenticationService: ObservableObject {
         TokenManager.shared.deleteToken()
         isAuthenticated = false
         userRole = nil
+        userId = nil
     }
 
     private func decode(jwtToken jwt: String) -> [String: Any]? {

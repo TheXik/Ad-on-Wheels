@@ -83,8 +83,10 @@ struct RidingView: View {
                 
                 // End Ride Button
                 Button(action: {
-                    viewModel.endRide()
-                    onEndRide()
+                    Task {
+                        await viewModel.endRide()
+                        onEndRide()
+                    }
                 }) {
                     Text("End Ride")
                         .font(.headline)
@@ -105,6 +107,6 @@ struct RidingView: View {
 
 struct RidingView_Previews: PreviewProvider {
     static var previews: some View {
-        RidingView(viewModel: RideViewModel()) {}
+        RidingView(viewModel: RideViewModel(authService: AuthenticationService())) {}
     }
 }

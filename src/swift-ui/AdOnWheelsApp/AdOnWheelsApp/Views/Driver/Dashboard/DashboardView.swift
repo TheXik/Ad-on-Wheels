@@ -1,21 +1,28 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @StateObject private var viewModel = DashboardViewModel()
-    @StateObject private var rideViewModel = RideViewModel()
-    
+    @ObservedObject var authService: AuthenticationService
+    @StateObject private var viewModel: DashboardViewModel
+    @StateObject private var rideViewModel: RideViewModel
+
     // UI State
     @State private var scrollOffset: CGFloat = 0
     @State private var isHeaderCollapsed: Bool = false
     @State private var showingRideSheet: Bool = false
     @State private var showingQRSheet: Bool = false
-    
+
     // Verification State
     @State private var showingVerification = false
     @State private var isVerified = false
-    
+
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
-    
+
+    init(authService: AuthenticationService) {
+        self.authService = authService
+        _viewModel = StateObject(wrappedValue: DashboardViewModel(authService: authService))
+        _rideViewModel = StateObject(wrappedValue: RideViewModel(authService: authService))
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all)
@@ -161,17 +168,36 @@ struct DashboardView: View {
                 isVerified = true
             }
         }
+        .task {
+            await viewModel.fetchDashboardData()
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
+        .alert("Ride Error", isPresented: .constant(rideViewModel.errorMessage != nil)) {
+            Button("OK") {
+                rideViewModel.errorMessage = nil
+            }
+        } message: {
+            Text(rideViewModel.errorMessage ?? "")
+        }
     }
-    
+
     func startRideFlow() {
-        rideViewModel.startRide()
-        showingRideSheet = true
+        Task {
+            await rideViewModel.startRide()
+            showingRideSheet = true
+        }
     }
 }
 
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        DashboardView()
+        DashboardView(authService: AuthenticationService())
     }
 }

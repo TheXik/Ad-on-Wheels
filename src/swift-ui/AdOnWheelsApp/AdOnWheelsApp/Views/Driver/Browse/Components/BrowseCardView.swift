@@ -1,7 +1,19 @@
 import SwiftUI
 
 struct BrowseCardView: View {
-    let campaign: AdCampaign
+    let campaign: Campaign
+    
+    // Generate a color based on campaign ID for visual variety
+    private var cardColor: Color {
+        let colors: [Color] = [.blue, .red, .green, .orange, .purple, .pink]
+        return colors[campaign.id % colors.count]
+    }
+    
+    // Generate an icon based on campaign ID
+    private var cardIcon: String {
+        let icons = ["car.fill", "bolt.car.fill", "leaf.fill", "box.truck.fill", "megaphone.fill", "star.fill"]
+        return icons[campaign.id % icons.count]
+    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -13,36 +25,36 @@ struct BrowseCardView: View {
             VStack(spacing: 0) {
                 // Image Area
                 ZStack {
-                    campaign.color.opacity(0.1)
-                    Image(systemName: campaign.imageName)
+                    cardColor.opacity(0.1)
+                    Image(systemName: cardIcon)
                         .resizable()
                         .scaledToFit()
                         .frame(width: 150, height: 150)
-                        .foregroundColor(campaign.color)
+                        .foregroundColor(cardColor)
                 }
                 .frame(height: 300)
                 .cornerRadius(20, corners: [.topLeft, .topRight])
                 
                 // Details Area
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(campaign.companyName)
+                    Text("Company #\(campaign.companyId)")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                     
-                    Text(campaign.campaignTitle)
+                    Text(campaign.name)
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.black)
                     
                     HStack {
-                        Label(campaign.duration, systemImage: "clock")
+                        Label("Active", systemImage: "clock")
                         Spacer()
-                        Label(campaign.reward, systemImage: "eurosign.circle")
+                        Label("Apply Now", systemImage: "hand.raised")
                     }
                     .font(.caption)
                     .foregroundColor(.secondary)
                     
-                    Text("Basic info about company and about duration of the promotion...")
+                    Text(campaign.description)
                         .font(.body)
                         .foregroundColor(.gray)
                         .lineLimit(3)
@@ -60,7 +72,7 @@ struct BrowseCardView: View {
 
 struct BrowseCardView_Previews: PreviewProvider {
     static var previews: some View {
-        BrowseCardView(campaign: AdCampaign(companyName: "Test Company", campaignTitle: "Test Campaign", duration: "Now", reward: "100", imageName: "car", color: .blue))
+        BrowseCardView(campaign: Campaign(id: 1, name: "Test Campaign", description: "This is a test campaign description", companyId: 1))
             .padding()
             .background(Color.gray.opacity(0.2))
     }
