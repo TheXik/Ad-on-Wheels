@@ -2,6 +2,11 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
+    @StateObject private var dashboardVM = DashboardViewModel(authService: AuthenticationService())
+    @State private var goalText = ""
+    @State private var showClearDataAlert = false
+    
+    private let historyService = RideHistoryService.shared
     
     var body: some View {
         List {
@@ -15,19 +20,80 @@ struct SettingsView: View {
                 }
             }
             
+            Section(header: Text("Goals")) {
+                HStack {
+                    Text("Monthly Goal")
+                    Spacer()
+                    TextField("200", text: $goalText)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 80)
+                    Text("km")
+                        .foregroundColor(.gray)
+                }
+                .onAppear {
+                    goalText = String(format: "%.0f", dashboardVM.monthlyGoalTotal)
+                }
+                .onChange(of: goalText) { newValue in
+                    if let goal = Double(newValue), goal > 0 {
+                        dashboardVM.setMonthlyGoal(goal)
+                    }
+                }
+            }
+            
+            Section(header: Text("Data")) {
+                HStack {
+                    Text("Total Rides")
+                    Spacer()
+                    Text("\(historyService.totalRides)")
+                        .foregroundColor(.gray)
+                }
+                
+                HStack {
+                    Text("Total Distance")
+                    Spacer()
+                    Text(historyService.formattedTotalDistance)
+                        .foregroundColor(.gray)
+                }
+                
+                HStack {
+                    Text("Total Earnings")
+                    Spacer()
+                    Text(historyService.formattedTotalEarnings)
+                        .foregroundColor(.gray)
+                }
+                
+                Button(action: { showClearDataAlert = true }) {
+                    HStack {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                        Text("Clear All Ride Data")
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+            
             Section(header: Text("App Info")) {
                 HStack {
                     Text("Version")
                     Spacer()
-                    Text("1.0.0 (Mock)")
+                    Text("1.0.0")
                         .foregroundColor(.gray)
                 }
             }
         }
         .listStyle(InsetGroupedListStyle())
         .navigationBarTitle("Settings")
-        // Note: Real theming would be applied at root level using .preferredColorScheme
-        // For this mock page, we just toggle the state.
+        .alert(isPresented: $showClearDataAlert) {
+            Alert(
+                title: Text("Clear All Data?"),
+                message: Text("This will permanently delete all your ride history and statistics. This action cannot be undone."),
+                primaryButton: .destructive(Text("Clear")) {
+                    historyService.clearAllRides()
+                },
+                secondaryButton: .cancel()
+            )
+        }
     }
 }
 

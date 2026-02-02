@@ -8,12 +8,19 @@ class RideViewModel: ObservableObject {
     @Published var distanceTravelled: Double = 0.0
     @Published var currentSpeed: Double = 0.0
     @Published var currentRide: Ride?
+    @Published var lastCompletedRide: Ride?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    
+    // Active campaign name for tracking
+    var activeCampaignName: String = "Active Campaign"
 
     // Timer
     private var timer: AnyCancellable?
     private var rideStartDate: Date?
+    
+    // Track speeds for average calculation
+    private var speedReadings: [Double] = []
 
     private let api: APIClientProtocol
     private let authService: AuthenticationService
@@ -53,7 +60,8 @@ class RideViewModel: ObservableObject {
             isRiding = true
             elapsedTime = 0
             distanceTravelled = 0.0
-            currentSpeed = 45.0 // Mock speed km/h
+            currentSpeed = 0.0
+            speedReadings = []
 
             startTimer()
 
@@ -74,7 +82,15 @@ class RideViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let requestBody = StopRideRequest()
+            // Calculate average speed from readings
+            let averageSpeed = speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
+            
+            // Send distance and speed to backend
+            let requestBody = StopRideRequest(
+                endLocation: nil,
+                distanceKm: distanceTravelled,
+                averageSpeedKmh: averageSpeed
+            )
             let bodyData = try JSONEncoder().encode(requestBody)
 
             let endpoint = Endpoint(
@@ -85,12 +101,16 @@ class RideViewModel: ObservableObject {
 
             let ride: Ride = try await api.send(endpoint)
             currentRide = ride
-
+            lastCompletedRide = ride
+            
             stopTimer()
             isRiding = false
 
         } catch {
             errorMessage = error.localizedDescription
+            // Stop ride locally even if API fails
+            stopTimer()
+            isRiding = false
         }
 
         isLoading = false
@@ -116,11 +136,13 @@ class RideViewModel: ObservableObject {
             elapsedTime += 1
         }
 
-        // Mock distance calculation: 45km/h = 0.0125 km/s
-        distanceTravelled += 0.0125
-
-        // Vary speed slightly for "realism"
-        currentSpeed = 45.0 + Double.random(in: -2...2)
+        // Simulate realistic city driving speed (30-60 km/h)
+        currentSpeed = Double.random(in: 30...60)
+        speedReadings.append(currentSpeed)
+        
+        // Distance = speed (km/h) / 3600 (to get km/s) * 1 second
+        let distanceThisSecond = currentSpeed / 3600.0
+        distanceTravelled += distanceThisSecond
     }
 
     var timeString: String {
@@ -128,5 +150,9 @@ class RideViewModel: ObservableObject {
         let minutes = Int(elapsedTime) / 60 % 60
         let seconds = Int(elapsedTime) % 60
         return String(format: "%02i:%02i:%02i", hours, minutes, seconds)
+    }
+    
+    var averageSpeedKmh: Double {
+        speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
     }
 }
