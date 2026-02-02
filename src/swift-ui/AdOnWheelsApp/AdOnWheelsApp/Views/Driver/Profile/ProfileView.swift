@@ -2,8 +2,13 @@ import SwiftUI
 
 struct ProfileView: View {
     @ObservedObject var authService: AuthenticationService
-    @StateObject private var viewModel = DashboardViewModel() // Reuse for driver name
-    
+    @StateObject private var viewModel: DashboardViewModel
+
+    init(authService: AuthenticationService) {
+        self.authService = authService
+        _viewModel = StateObject(wrappedValue: DashboardViewModel(authService: authService))
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
