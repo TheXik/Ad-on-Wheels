@@ -127,7 +127,7 @@ struct DashboardHeaderView: View {
 struct DashboardHeaderView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            DashboardHeaderView(viewModel: DashboardViewModel())
+            DashboardHeaderView(viewModel: DashboardViewModel(authService: AuthenticationService()))
             Spacer()
         }
         .background(Color(UIColor.systemGroupedBackground))
