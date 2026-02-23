@@ -1,11 +1,6 @@
 package com.example.driverservice.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 public class StartRideRequest {
-
-    @NotNull(message = "Driver ID is required")
-    private Long driverId;
 
     private Long campaignId; // Optional
 
@@ -14,20 +9,12 @@ public class StartRideRequest {
     public StartRideRequest() {
     }
 
-    public StartRideRequest(Long driverId, Long campaignId) {
-        this.driverId = driverId;
+    public StartRideRequest(Long campaignId, String startLocation) {
         this.campaignId = campaignId;
+        this.startLocation = startLocation;
     }
 
     // Getters and Setters
-    public Long getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
-    }
-
     public Long getCampaignId() {
         return campaignId;
     }

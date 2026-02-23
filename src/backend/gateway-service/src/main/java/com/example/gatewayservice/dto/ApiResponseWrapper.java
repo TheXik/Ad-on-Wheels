@@ -18,6 +18,10 @@ public class ApiResponseWrapper<T> {
         this.error = error;
     }
 
+    public static <T> ApiResponseWrapper<T> success(T data) {
+        return new ApiResponseWrapper<>(true, data, null);
+    }
+
     public boolean isSuccess() {
         return success;
     }
