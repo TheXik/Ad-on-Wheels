@@ -24,19 +24,28 @@ public class RideController {
         this.rideService = rideService;
     }
 
-    // POST /rides/start - Start a new ride
-    @PostMapping("/start")
-    public ResponseEntity<ApiResponse<Ride>> startRide(@Valid @RequestBody StartRideRequest request) {
-        Ride ride = rideService.startRide(request.getDriverId(), request.getCampaignId());
+    // POST /rides/{driverId}/start - Start a new ride
+    @PostMapping("/{driverId}/start")
+    public ResponseEntity<ApiResponse<Ride>> startRide(
+            @PathVariable("driverId") Long driverId,
+            @RequestBody(required = false) StartRideRequest request) {
+        Long campaignId = request != null ? request.getCampaignId() : null;
+        String startLocation = request != null ? request.getStartLocation() : null;
+        Ride ride = rideService.startRide(driverId, campaignId, startLocation);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(ride));
     }
 
-    // POST /rides/stop - Stop an active ride
-    @PostMapping("/stop")
-    public ResponseEntity<ApiResponse<Ride>> stopRide(@Valid @RequestBody StopRideRequest request) {
-        Ride ride = rideService.stopRide(request.getDriverId());
+    // POST /rides/{driverId}/stop - Stop an active ride
+    @PostMapping("/{driverId}/stop")
+    public ResponseEntity<ApiResponse<Ride>> stopRide(
+            @PathVariable("driverId") Long driverId,
+            @RequestBody(required = false) StopRideRequest request) {
+        String endLocation = request != null ? request.getEndLocation() : null;
+        Double distanceKm = request != null ? request.getDistanceKm() : null;
+        Double averageSpeedKmh = request != null ? request.getAverageSpeedKmh() : null;
+        Ride ride = rideService.stopRide(driverId, endLocation, distanceKm, averageSpeedKmh);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(ride));
