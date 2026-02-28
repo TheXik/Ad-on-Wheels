@@ -1,35 +1,46 @@
 package com.example.driverservice.dto;
 
-import jakarta.validation.constraints.NotNull;
-
 public class StopRideRequest {
 
-    @NotNull(message = "Driver ID is required")
-    private Long driverId;
-
     private String endLocation; // Optional
+    private Double distanceKm; // Distance traveled in km
+    private Double averageSpeedKmh; // Average speed in km/h
 
     public StopRideRequest() {
     }
 
-    public StopRideRequest(Long driverId) {
-        this.driverId = driverId;
+    public StopRideRequest(String endLocation) {
+        this.endLocation = endLocation;
+    }
+    
+    public StopRideRequest(String endLocation, Double distanceKm, Double averageSpeedKmh) {
+        this.endLocation = endLocation;
+        this.distanceKm = distanceKm;
+        this.averageSpeedKmh = averageSpeedKmh;
     }
 
     // Getters and Setters
-    public Long getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
-    }
-
     public String getEndLocation() {
         return endLocation;
     }
 
     public void setEndLocation(String endLocation) {
         this.endLocation = endLocation;
+    }
+    
+    public Double getDistanceKm() {
+        return distanceKm;
+    }
+    
+    public void setDistanceKm(Double distanceKm) {
+        this.distanceKm = distanceKm;
+    }
+    
+    public Double getAverageSpeedKmh() {
+        return averageSpeedKmh;
+    }
+    
+    public void setAverageSpeedKmh(Double averageSpeedKmh) {
+        this.averageSpeedKmh = averageSpeedKmh;
     }
 }

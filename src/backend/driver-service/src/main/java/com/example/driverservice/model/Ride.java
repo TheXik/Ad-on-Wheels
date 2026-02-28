@@ -38,6 +38,15 @@ public class Ride {
 
     @Column(nullable = true)
     private Integer duration;
+    
+    @Column(nullable = true)
+    private Double distanceKm;
+    
+    @Column(nullable = true)
+    private Double averageSpeedKmh;
+    
+    @Column(nullable = true)
+    private Double earnings;
 
     @Column(nullable = true)
     private String qrCodeData;
@@ -125,6 +134,30 @@ public class Ride {
 
     public void setStatus(RideStatus status) {
         this.status = status;
+    }
+    
+    public Double getDistanceKm() {
+        return distanceKm;
+    }
+
+    public void setDistanceKm(Double distanceKm) {
+        this.distanceKm = distanceKm;
+    }
+
+    public Double getAverageSpeedKmh() {
+        return averageSpeedKmh;
+    }
+
+    public void setAverageSpeedKmh(Double averageSpeedKmh) {
+        this.averageSpeedKmh = averageSpeedKmh;
+    }
+
+    public Double getEarnings() {
+        return earnings;
+    }
+
+    public void setEarnings(Double earnings) {
+        this.earnings = earnings;
     }
 }
 

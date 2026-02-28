@@ -1,9 +1,23 @@
 package com.example.gatewayservice.dto;
 
+import java.time.LocalDate;
+
 public class Driver {
     private Long id;
     private String name;
     private String email;
+    
+    // Vehicle info
+    private String vehicleMake;
+    private String vehicleModel;
+    private Integer vehicleYear;
+    private String vehiclePlate;
+    private String vehicleColor;
+    private Boolean vehicleVerified;
+    
+    // Driver info
+    private Double rating;
+    private LocalDate memberSince;
 
     public Driver() {
     }
@@ -36,5 +50,70 @@ public class Driver {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+    
+    // Vehicle getters and setters
+    public String getVehicleMake() {
+        return vehicleMake;
+    }
+
+    public void setVehicleMake(String vehicleMake) {
+        this.vehicleMake = vehicleMake;
+    }
+
+    public String getVehicleModel() {
+        return vehicleModel;
+    }
+
+    public void setVehicleModel(String vehicleModel) {
+        this.vehicleModel = vehicleModel;
+    }
+
+    public Integer getVehicleYear() {
+        return vehicleYear;
+    }
+
+    public void setVehicleYear(Integer vehicleYear) {
+        this.vehicleYear = vehicleYear;
+    }
+
+    public String getVehiclePlate() {
+        return vehiclePlate;
+    }
+
+    public void setVehiclePlate(String vehiclePlate) {
+        this.vehiclePlate = vehiclePlate;
+    }
+
+    public String getVehicleColor() {
+        return vehicleColor;
+    }
+
+    public void setVehicleColor(String vehicleColor) {
+        this.vehicleColor = vehicleColor;
+    }
+
+    public Boolean getVehicleVerified() {
+        return vehicleVerified;
+    }
+
+    public void setVehicleVerified(Boolean vehicleVerified) {
+        this.vehicleVerified = vehicleVerified;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public LocalDate getMemberSince() {
+        return memberSince;
+    }
+
+    public void setMemberSince(LocalDate memberSince) {
+        this.memberSince = memberSince;
     }
 } 
