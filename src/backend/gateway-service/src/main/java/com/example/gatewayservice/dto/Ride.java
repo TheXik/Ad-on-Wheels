@@ -13,6 +13,11 @@ public class Ride {
     private Integer duration;
     private String qrCodeData;
     private String status;
+    
+    // New fields
+    private Double distanceKm;
+    private Double averageSpeedKmh;
+    private Double earnings;
 
     public Ride() {
     }
@@ -111,5 +116,30 @@ public class Ride {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    // New getters and setters
+    public Double getDistanceKm() {
+        return distanceKm;
+    }
+
+    public void setDistanceKm(Double distanceKm) {
+        this.distanceKm = distanceKm;
+    }
+
+    public Double getAverageSpeedKmh() {
+        return averageSpeedKmh;
+    }
+
+    public void setAverageSpeedKmh(Double averageSpeedKmh) {
+        this.averageSpeedKmh = averageSpeedKmh;
+    }
+
+    public Double getEarnings() {
+        return earnings;
+    }
+
+    public void setEarnings(Double earnings) {
+        this.earnings = earnings;
     }
 }

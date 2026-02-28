@@ -4,6 +4,8 @@ import com.example.campaignservice.model.Campaign;
 import com.example.campaignservice.model.Application;
 import com.example.campaignservice.service.CampaignService;
 import com.example.campaignservice.service.ApplicationService;
+import dto.ApiResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,42 +25,51 @@ public class CampaignController {
 
     // GET /campaigns - List all campaigns
     @GetMapping
-    public List<Campaign> getAllCampaigns() {
-        return campaignService.findAll();
+    public ResponseEntity<ApiResponse<List<Campaign>>> getAllCampaigns() {
+        List<Campaign> campaigns = campaignService.findAll();
+        return ResponseEntity.ok(ApiResponse.success(campaigns));
+    }
+
+    // GET /campaigns/{id} - Get single campaign by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Campaign>> getCampaignById(@PathVariable Long id) {
+        Campaign campaign = campaignService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(campaign));
     }
 
     // POST /campaigns - Create a new campaign
     @PostMapping
-    public ResponseEntity<Campaign> createCampaign(@RequestBody Campaign campaign) {
+    public ResponseEntity<ApiResponse<Campaign>> createCampaign(@RequestBody Campaign campaign) {
         Campaign saved = campaignService.save(campaign);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved));
     }
 
     // POST /campaigns/{id}/apply - Driver applies to campaign
     @PostMapping("/{id}/apply")
-    public ResponseEntity<Application> applyToCampaign(@PathVariable Long id, @RequestParam Long driverId) {
+    public ResponseEntity<ApiResponse<Application>> applyToCampaign(@PathVariable Long id, @RequestParam Long driverId) {
         campaignService.findById(id); // Throws if not found
         Application app = applicationService.apply(id, driverId);
-        return ResponseEntity.ok(app);
+        return ResponseEntity.ok(ApiResponse.success(app));
     }
 
     // GET /campaigns/{companyId}/applications - Company views applications to their campaigns
     @GetMapping("/{companyId}/applications")
-    public List<Application> getApplicationsForCompany(@PathVariable Long companyId) {
-        return applicationService.findByCompanyCampaigns(campaignService.findByCompanyId(companyId));
+    public ResponseEntity<ApiResponse<List<Application>>> getApplicationsForCompany(@PathVariable Long companyId) {
+        List<Application> applications = applicationService.findByCompanyCampaigns(campaignService.findByCompanyId(companyId));
+        return ResponseEntity.ok(ApiResponse.success(applications));
     }
 
     // POST /applications/{id}/accept - Accept application
     @PostMapping("/applications/{id}/accept")
-    public ResponseEntity<Application> acceptApplication(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Application>> acceptApplication(@PathVariable Long id) {
         Application app = applicationService.accept(id);
-        return ResponseEntity.ok(app);
+        return ResponseEntity.ok(ApiResponse.success(app));
     }
 
     // POST /applications/{id}/decline - Decline application
     @PostMapping("/applications/{id}/decline")
-    public ResponseEntity<Application> declineApplication(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Application>> declineApplication(@PathVariable Long id) {
         Application app = applicationService.decline(id);
-        return ResponseEntity.ok(app);
+        return ResponseEntity.ok(ApiResponse.success(app));
     }
 } 
