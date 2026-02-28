@@ -121,7 +121,7 @@ struct StatRow: View {
 struct WalletView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            WalletView(viewModel: ProfileViewModel())
+            WalletView(viewModel: ProfileViewModel(authService: AuthenticationService()))
         }
     }
 }

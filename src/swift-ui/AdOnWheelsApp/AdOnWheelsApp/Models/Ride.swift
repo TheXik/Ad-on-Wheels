@@ -37,12 +37,16 @@ struct Ride: Identifiable, Codable {
     
     // Computed property for formatted duration
     var formattedDuration: String {
-        guard let duration = duration else { return "0m" }
+        guard let duration = duration else { return "0s" }
         let hours = duration / 3600
         let minutes = (duration % 3600) / 60
+        let seconds = duration % 60
         if hours > 0 {
             return "\(hours)h \(minutes)m"
         }
-        return "\(minutes)m"
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        }
+        return "\(seconds)s"
     }
 }

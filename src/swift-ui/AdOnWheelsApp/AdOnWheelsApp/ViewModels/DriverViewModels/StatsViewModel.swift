@@ -44,7 +44,7 @@ class StatsViewModel: ObservableObject {
     private let api: APIClientProtocol
     private let authService: AuthenticationService
     
-    init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService = AuthenticationService.shared) {
+    init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
         self.authService = authService
     }

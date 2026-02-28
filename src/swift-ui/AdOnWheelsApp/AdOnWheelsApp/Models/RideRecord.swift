@@ -37,10 +37,14 @@ struct RideRecord: Identifiable, Codable {
     var formattedDuration: String {
         let hours = Int(duration) / 3600
         let minutes = Int(duration) / 60 % 60
+        let seconds = Int(duration) % 60
         if hours > 0 {
             return "\(hours)h \(minutes)m"
         }
-        return "\(minutes) min"
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        }
+        return "\(seconds)s"
     }
     
     var isToday: Bool {
