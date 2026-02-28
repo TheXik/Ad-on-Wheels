@@ -35,7 +35,7 @@ struct DriverRootView: View {
             }
             
             // Stats Tab
-            StatsView()
+            StatsView(authService: authService)
             .tabItem {
                 Image(systemName: "chart.bar.fill")
                 Text("Stats")

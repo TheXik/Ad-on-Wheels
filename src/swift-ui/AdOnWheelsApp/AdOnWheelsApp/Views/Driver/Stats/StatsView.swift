@@ -6,7 +6,7 @@ struct StatsView: View {
     
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
     
-    init(authService: AuthenticationService = AuthenticationService.shared) {
+    init(authService: AuthenticationService) {
         _viewModel = StateObject(wrappedValue: StatsViewModel(authService: authService))
     }
     
@@ -251,6 +251,6 @@ struct RecentRideRowFromAPI: View {
 
 struct StatsView_Previews: PreviewProvider {
     static var previews: some View {
-        StatsView()
+        StatsView(authService: AuthenticationService())
     }
 }

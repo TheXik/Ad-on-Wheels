@@ -104,7 +104,7 @@ struct InfoRow: View {
 struct VehicleView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            VehicleView(viewModel: ProfileViewModel())
+            VehicleView(viewModel: ProfileViewModel(authService: AuthenticationService()))
         }
     }
 }

@@ -3,6 +3,7 @@ import Combine
 
 @MainActor
 class RideViewModel: ObservableObject {
+    private let historyService = RideHistoryService.shared
     @Published var isRiding: Bool = false
     @Published var elapsedTime: TimeInterval = 0
     @Published var distanceTravelled: Double = 0.0
@@ -103,6 +104,9 @@ class RideViewModel: ObservableObject {
             currentRide = ride
             lastCompletedRide = ride
             
+            // Save ride to local history
+            saveRideToHistory(ride)
+            
             stopTimer()
             isRiding = false
 
@@ -154,5 +158,31 @@ class RideViewModel: ObservableObject {
     
     var averageSpeedKmh: Double {
         speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
+    }
+    
+    /// Saves completed ride to local history for offline access
+    private func saveRideToHistory(_ ride: Ride) {
+        // Parse dates from ISO8601 strings
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        let startDate = formatter.date(from: ride.startTime) ?? Date()
+        let endDate: Date
+        if let endTimeStr = ride.endTime {
+            endDate = formatter.date(from: endTimeStr) ?? Date()
+        } else {
+            endDate = Date()
+        }
+        
+        let record = RideRecord(
+            startTime: startDate,
+            endTime: endDate,
+            distance: ride.distanceKm ?? distanceTravelled,
+            duration: TimeInterval(ride.duration ?? Int(elapsedTime)),
+            averageSpeed: ride.averageSpeedKmh ?? averageSpeedKmh,
+            campaignName: ride.displayCampaignName
+        )
+        
+        historyService.addRide(record)
     }
 }
