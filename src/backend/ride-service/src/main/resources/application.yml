@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: ride-service
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+eureka:
+  instance:
+    hostname: ${spring.application.name}
+    prefer-ip-address: false
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+
+server:
+  port: 8086
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

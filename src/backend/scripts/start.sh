@@ -31,7 +31,8 @@ if [ ! -f ".env" ]; then
 fi
 
 # Check if JAR files are built
-if [ ! -f "auth-service/target/auth-service-0.0.1-SNAPSHOT.jar" ]; then
+if [ ! -f "auth-service/target/auth-service-0.0.1-SNAPSHOT.jar" ] || \
+   [ ! -f "ride-service/target/ride-service-0.0.1-SNAPSHOT.jar" ]; then
     echo -e "${YELLOW} JAR files not found!${NC}"
     echo "Running build first..."
     ./scripts/build.sh
@@ -43,12 +44,14 @@ echo -e "${BLUE}Starting all services...${NC}"
 echo ""
 echo "Services that will start:"
 echo "  1. MySQL Database        (Port 3306)"
-echo "  2. Eureka Server         (Port 8761)"
-echo "  3. Auth Service          (Port 8085)"
-echo "  4. Driver Service        (Port 8082)"
-echo "  5. Company Service       (Port 8083)"
-echo "  6. Campaign Service      (Port 8084)"
-echo "  7. Gateway Service       (Port 8080) ← Main API Entry"
+echo "  2. Redis                 (Port 6379)"
+echo "  3. Eureka Server         (Port 8761)"
+echo "  4. Auth Service          (Port 8085)"
+echo "  5. Driver Service        (Port 8082)"
+echo "  6. Company Service       (Port 8083)"
+echo "  7. Campaign Service      (Port 8084)"
+echo "  8. Ride Service          (Port 8086)"
+echo "  9. Gateway Service       (Port 8080) ← Main API Entry"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"
 echo ""

@@ -53,12 +53,16 @@ services:
         condition: service_started
       campaign-service:
         condition: service_started
+      ride-service:
+        condition: service_started
 
   auth-service:
     image: auth-service
     build:
       context: auth-service
       dockerfile: Dockerfile
+    ports:
+      - "8081:8081"          # expose auth port for manual requests/testing
     env_file:
       - .env
     depends_on:
@@ -72,6 +76,8 @@ services:
     build:
       context: driver-service
       dockerfile: Dockerfile
+    ports:
+      - "8082:8082"          # expose driver API for debugging
     env_file:
       - .env
     depends_on:
@@ -85,6 +91,8 @@ services:
     build:
       context: company-service
       dockerfile: Dockerfile
+    ports:
+      - "8083:8083"          # expose company API
     env_file:
       - .env
     depends_on:
@@ -98,12 +106,37 @@ services:
     build:
       context: campaign-service
       dockerfile: Dockerfile
+    ports:
+      - "8084:8084"          # expose campaign API
     env_file:
       - .env
     depends_on:
       mysql:
         condition: service_healthy
       eureka-server:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ride-service:
+    image: ride-service
+    build:
+      context: ride-service
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"          # expose ride tracking API (matches server.port)
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:
