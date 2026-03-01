@@ -4,6 +4,7 @@ import com.example.driverservice.model.Driver;
 import com.example.driverservice.exception.DriverNotFoundException;
 import com.example.driverservice.repository.DriverRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,10 +25,12 @@ public class DriverService {
                 .orElseThrow(() -> new DriverNotFoundException(id));
     }
 
+    @Transactional
     public Driver addDriver(Driver driver) {
         return repository.save(driver);
     }
 
+    @Transactional
     public Driver updateDriver(Long id, Driver newDriver) {
         return repository.findById(id)
                 .map(driver -> {
@@ -41,6 +44,20 @@ public class DriverService {
                 });
     }
 
+    @Transactional
+    public Driver addVehicle(Long id, com.example.driverservice.dto.VehicleRequest vehicle) {
+        Driver driver = repository.findById(id)
+                .orElseThrow(() -> new DriverNotFoundException(id));
+        driver.setVehicleMake(vehicle.getMake());
+        driver.setVehicleModel(vehicle.getModel());
+        driver.setVehicleYear(vehicle.getYear());
+        driver.setVehiclePlate(vehicle.getLicensePlate());
+        driver.setVehicleColor(vehicle.getColor());
+        driver.setVehicleVerified(false); // always requires re-verification on update
+        return repository.save(driver);
+    }
+
+    @Transactional
     public void deleteDriver(Long id) {
         try {
             repository.deleteById(id);

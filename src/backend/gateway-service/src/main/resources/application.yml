@@ -3,14 +3,80 @@ spring:
     name: gateway-service
   cloud:
     gateway:
+      routes:
+
+        # -----------------------------------------------------------------------
+        # Auth — public-facing, no /api/ prefix. Open endpoints defined in
+        # RouteValidator (register, login). All others require a valid JWT.
+        # -----------------------------------------------------------------------
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: AuthenticationFilter
+
+        # -----------------------------------------------------------------------
+        # Driver Service  →  GET /api/drivers/profile  (port 8082 internally)
+        # StripPrefix=1 removes the /api segment before forwarding, so the
+        # driver-service receives /drivers/** as it expects.
+        # -----------------------------------------------------------------------
+        - id: driver-service
+          uri: lb://driver-service
+          predicates:
+            - Path=/api/drivers/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationFilter
+
+        # -----------------------------------------------------------------------
+        # Ride Service    →  POST /api/rides/track     (port 8085 internally)
+        # Completely independent from driver-service. If this pod crashes,
+        # /api/drivers/** continues to work.
+        # -----------------------------------------------------------------------
+        - id: ride-service
+          uri: lb://ride-service
+          predicates:
+            - Path=/api/rides/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationFilter
+
+        # -----------------------------------------------------------------------
+        # Company / Campaign Services
+        # -----------------------------------------------------------------------
+        - id: company-service
+          uri: lb://company-service
+          predicates:
+            - Path=/api/companies/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationFilter
+
+        - id: campaign-service
+          uri: lb://campaign-service
+          predicates:
+            - Path=/api/campaigns/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationFilter
 
 jwt:
   secret: ${JWT_SECRET_KEY}
 
 eureka:
+  instance:
+    hostname: ${spring.application.name}
+    prefer-ip-address: false
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
