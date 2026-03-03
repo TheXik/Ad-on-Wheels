@@ -17,6 +17,9 @@ struct RidingView: View {
             Map(coordinateRegion: $region, showsUserLocation: true)
                 .edgesIgnoringSafeArea(.all)
                 .overlay(Color.black.opacity(0.1)) // Dim slightly for overlay contrast
+                .onAppear {
+                    viewModel.requestLocationPermission()
+                }
             
             // Top HUD
             VStack {
