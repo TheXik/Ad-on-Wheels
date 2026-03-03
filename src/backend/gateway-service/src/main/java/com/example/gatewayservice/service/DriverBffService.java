@@ -21,23 +21,24 @@ public class DriverBffService {
 
     private final WebClient driverClient;
     private final WebClient campaignClient;
+    private final WebClient rideClient;
 
     public DriverBffService(@Qualifier("driverClient") WebClient driverClient,
-                            @Qualifier("campaignClient") WebClient campaignClient) {
+                            @Qualifier("campaignClient") WebClient campaignClient,
+                            @Qualifier("rideClient") WebClient rideClient) {
         this.driverClient = driverClient;
         this.campaignClient = campaignClient;
+        this.rideClient = rideClient;
     }
 
     public Mono<DriverHomePageResponse> getDriverHomePage(Long driverId) {
-        // Fetch driver information (required)
         return driverClient.get()
                 .uri("/drivers/{id}", driverId)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Driver>>() {})
                 .map(ApiResponseWrapper::getData)
                 .flatMap(driver -> {
-                    // Fetch active ride (optional - might not exist, 404 is expected)
-                    Mono<Ride> activeRideMono = driverClient.get()
+                    Mono<Ride> activeRideMono = rideClient.get()
                             .uri("/rides/{driverId}/active", driverId)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
@@ -45,8 +46,7 @@ public class DriverBffService {
                             .map(ApiResponseWrapper::getData)
                             .onErrorResume(e -> Mono.empty());
 
-                    // Fetch ride statistics (optional)
-                    Mono<RideStatistics> statisticsMono = driverClient.get()
+                    Mono<RideStatistics> statisticsMono = rideClient.get()
                             .uri("/rides/{driverId}/statistics", driverId)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
@@ -54,7 +54,6 @@ public class DriverBffService {
                             .map(ApiResponseWrapper::getData)
                             .onErrorResume(e -> Mono.empty());
 
-                    // Combine active ride and statistics
                     return Mono.zip(
                             activeRideMono.defaultIfEmpty(createEmptyRide()),
                             statisticsMono.defaultIfEmpty(createEmptyStatistics())
@@ -62,7 +61,6 @@ public class DriverBffService {
                         Ride activeRide = tuple.getT1().getId() != null ? tuple.getT1() : null;
                         RideStatistics statistics = tuple.getT2();
 
-                        // If there's an active ride with a campaign, fetch campaign details
                         if (activeRide != null && activeRide.getCampaignId() != null) {
                             return campaignClient.get()
                                     .uri("/campaigns/{id}", activeRide.getCampaignId())
@@ -79,9 +77,9 @@ public class DriverBffService {
                     });
                 });
     }
-    
+
     public Mono<RideStatistics> getDriverStatistics(Long driverId) {
-        return driverClient.get()
+        return rideClient.get()
                 .uri("/rides/{driverId}/statistics", driverId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
@@ -90,9 +88,9 @@ public class DriverBffService {
                 .onErrorReturn(createEmptyStatistics())
                 .defaultIfEmpty(createEmptyStatistics());
     }
-    
+
     public Mono<List<Ride>> getDriverRideHistory(Long driverId, Integer limit) {
-        return driverClient.get()
+        return rideClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/rides/{driverId}/history")
                         .queryParam("limit", limit)
@@ -106,7 +104,7 @@ public class DriverBffService {
     }
 
     private Ride createEmptyRide() {
-        return new Ride(); // Marker for "no active ride"
+        return new Ride();
     }
 
     private RideStatistics createEmptyStatistics() {
