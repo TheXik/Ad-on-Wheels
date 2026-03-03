@@ -11,8 +11,6 @@ class RideHistoryService: ObservableObject {
         loadRides()
     }
     
-    // MARK: - Computed Stats
-    
     var totalDistance: Double {
         rides.reduce(0) { $0 + $1.distance }
     }
@@ -103,8 +101,6 @@ class RideHistoryService: ObservableObject {
         return dailyDistance
     }
     
-    // MARK: - CRUD Operations
-    
     func addRide(_ ride: RideRecord) {
         rides.insert(ride, at: 0) // Newest first
         saveRides()
@@ -120,8 +116,6 @@ class RideHistoryService: ObservableObject {
         saveRides()
     }
     
-    // MARK: - Persistence
-    
     private func saveRides() {
         if let encoded = try? JSONEncoder().encode(rides) {
             UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
@@ -134,8 +128,6 @@ class RideHistoryService: ObservableObject {
             rides = decoded
         }
     }
-    
-    // MARK: - Formatted Stats
     
     var formattedTotalEarnings: String {
         if totalEarnings >= 1000 {

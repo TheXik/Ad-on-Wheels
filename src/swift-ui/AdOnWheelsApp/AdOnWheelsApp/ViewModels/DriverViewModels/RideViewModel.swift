@@ -7,21 +7,17 @@ class RideViewModel: NSObject, ObservableObject {
 
     private let historyService = RideHistoryService.shared
 
-    // MARK: - Published state
-
     @Published var isRiding: Bool = false
     @Published var elapsedTime: TimeInterval = 0
     @Published var distanceTravelled: Double = 0.0
     @Published var currentSpeed: Double = 0.0
     @Published var currentRideId: String?
-    @Published var currentRide: Ride?           // retained for view compatibility
-    @Published var lastCompletedRide: Ride?     // retained for view compatibility
+    @Published var currentRide: Ride?
+    @Published var lastCompletedRide: Ride?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
     var activeCampaignName: String = "Active Campaign"
-
-    // MARK: - Private state
 
     private var elapsedTimer: AnyCancellable?
     private var trackTimer: AnyCancellable?
@@ -34,8 +30,6 @@ class RideViewModel: NSObject, ObservableObject {
     private let api: APIClientProtocol
     private let authService: AuthenticationService
 
-    // MARK: - Init
-
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
         self.authService = authService
@@ -44,13 +38,9 @@ class RideViewModel: NSObject, ObservableObject {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
 
-    // MARK: - Permission
-
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
     }
-
-    // MARK: - Ride lifecycle
 
     func startRide(campaignId: Int? = nil) async {
         guard let driverId = authService.userId else {
@@ -121,8 +111,6 @@ class RideViewModel: NSObject, ObservableObject {
         isLoading = false
     }
 
-    // MARK: - GPS tracking (fire-and-forget)
-
     func trackPoint(lat: Double, lon: Double) {
         guard let rideId = currentRideId else { return }
         let api = self.api
@@ -137,8 +125,6 @@ class RideViewModel: NSObject, ObservableObject {
         }
     }
 
-    // MARK: - Timers
-
     private func startElapsedTimer() {
         elapsedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
@@ -152,8 +138,6 @@ class RideViewModel: NSObject, ObservableObject {
         elapsedTimer?.cancel()
         elapsedTimer = nil
     }
-
-    // MARK: - Location tracking
 
     private func startLocationTracking() {
         locationManager.startUpdatingLocation()
@@ -174,8 +158,6 @@ class RideViewModel: NSObject, ObservableObject {
         locationManager.stopUpdatingLocation()
     }
 
-    // MARK: - Computed helpers
-
     var timeString: String {
         let hours = Int(elapsedTime) / 3600
         let minutes = Int(elapsedTime) / 60 % 60
@@ -186,8 +168,6 @@ class RideViewModel: NSObject, ObservableObject {
     var averageSpeedKmh: Double {
         speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
     }
-
-    // MARK: - History
 
     private func saveRideToHistory(from response: EndRideResponse) {
         let endDate = Date()
@@ -205,8 +185,6 @@ class RideViewModel: NSObject, ObservableObject {
         historyService.addRide(record)
     }
 }
-
-// MARK: - CLLocationManagerDelegate
 
 extension RideViewModel: CLLocationManagerDelegate {
 
@@ -230,8 +208,6 @@ extension RideViewModel: CLLocationManagerDelegate {
         // Location errors during a ride are non-fatal; tracking continues on next update
     }
 }
-
-// MARK: - Notification names
 
 extension Notification.Name {
     static let rideCompleted = Notification.Name("rideCompleted")

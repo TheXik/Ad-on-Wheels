@@ -1,10 +1,16 @@
 package com.adonwheels.rideservice.service;
 
 import com.adonwheels.rideservice.dto.EndRideResponse;
+import com.adonwheels.rideservice.dto.RideHistoryResponse;
+import com.adonwheels.rideservice.dto.RideStatisticsResponse;
 import com.adonwheels.rideservice.dto.StartRideResponse;
+import com.adonwheels.rideservice.model.CompletedRide;
 import com.adonwheels.rideservice.model.LocationPoint;
 import com.adonwheels.rideservice.model.RideSession;
+import com.adonwheels.rideservice.repository.RideHistoryRepository;
 import com.adonwheels.rideservice.repository.RideRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,21 +19,22 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class RideService {
 
-    private final RideRepository repository;
+    // TODO: replace with campaign-based pricing
+    private static final double EARNINGS_RATE_PER_KM = 0.10;
 
-    public RideService(RideRepository repository) {
+    private final RideRepository repository;
+    private final RideHistoryRepository historyRepository;
+
+    public RideService(RideRepository repository, RideHistoryRepository historyRepository) {
         this.repository = repository;
+        this.historyRepository = historyRepository;
     }
 
-    /**
-     * Creates a new ride session for the given driver.
-     *
-     * @return response containing the generated rideId
-     */
     public StartRideResponse startRide(String driverId) {
         String rideId = UUID.randomUUID().toString();
         RideSession session = new RideSession(rideId, driverId, LocalDateTime.now());
@@ -35,35 +42,92 @@ public class RideService {
         return new StartRideResponse(rideId);
     }
 
-    /**
-     * Appends a GPS point to the session's route history.
-     * Designed for fast, fire-and-forget tracking.
-     */
     public void trackPoint(String rideId, double lat, double lon) {
         RideSession session = requireSession(rideId);
         session.addPoint(new LocationPoint(lat, lon, LocalDateTime.now()));
+        repository.save(session);
     }
 
-    /**
-     * Finalises the ride: calculates total distance via Haversine over all
-     * recorded {@link LocationPoint}s, then removes the session from the store.
-     *
-     * @return summary with total distance (km) and duration (seconds)
-     */
     public EndRideResponse endRide(String rideId) {
         RideSession session = requireSession(rideId);
 
+        LocalDateTime endTime = LocalDateTime.now();
         double totalDistanceKm = calculateTotalDistance(session.getRouteHistory());
-        long durationSeconds = Duration.between(session.getStartTime(), LocalDateTime.now()).getSeconds();
+        long durationSeconds = Duration.between(session.getStartTime(), endTime).getSeconds();
+        double averageSpeedKmh = durationSeconds > 0
+                ? totalDistanceKm / (durationSeconds / 3600.0)
+                : 0.0;
+
+        CompletedRide ride = new CompletedRide();
+        ride.setDriverId(Long.parseLong(session.getDriverId()));
+        ride.setStartTime(session.getStartTime());
+        ride.setEndTime(endTime);
+        ride.setDuration((int) durationSeconds);
+        ride.setDistanceKm(totalDistanceKm);
+        ride.setAverageSpeedKmh(averageSpeedKmh);
+        ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
+        ride.setStatus("COMPLETED");
+        historyRepository.save(ride);
 
         repository.deleteById(rideId);
 
         return new EndRideResponse(totalDistanceKm, durationSeconds);
     }
 
-    // -------------------------------------------------------------------------
-    // Internal helpers
-    // -------------------------------------------------------------------------
+    public List<RideHistoryResponse> getHistory(Long driverId, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<CompletedRide> rides = historyRepository.findByDriverIdOrderByStartTimeDesc(driverId, pageable);
+        return rides.stream().map(this::toHistoryResponse).collect(Collectors.toList());
+    }
+
+    public RideStatisticsResponse getStatistics(Long driverId) {
+        List<CompletedRide> allRides = historyRepository.findByDriverId(driverId);
+
+        LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
+        LocalDateTime monthAgo = LocalDateTime.now().minusDays(30);
+
+        long totalRides = allRides.size();
+        int totalDuration = allRides.stream().mapToInt(CompletedRide::getDuration).sum();
+        int avgDuration = totalRides > 0 ? (int) (totalDuration / totalRides) : 0;
+
+        double totalDistance = allRides.stream().mapToDouble(CompletedRide::getDistanceKm).sum();
+        double weeklyDistance = allRides.stream()
+                .filter(r -> r.getStartTime().isAfter(weekAgo))
+                .mapToDouble(CompletedRide::getDistanceKm).sum();
+        double monthlyDistance = allRides.stream()
+                .filter(r -> r.getStartTime().isAfter(monthAgo))
+                .mapToDouble(CompletedRide::getDistanceKm).sum();
+
+        double totalEarnings = allRides.stream().mapToDouble(CompletedRide::getEarnings).sum();
+        double weeklyEarnings = allRides.stream()
+                .filter(r -> r.getStartTime().isAfter(weekAgo))
+                .mapToDouble(CompletedRide::getEarnings).sum();
+        double monthlyEarnings = allRides.stream()
+                .filter(r -> r.getStartTime().isAfter(monthAgo))
+                .mapToDouble(CompletedRide::getEarnings).sum();
+
+        double avgSpeed = allRides.stream()
+                .mapToDouble(CompletedRide::getAverageSpeedKmh).average().orElse(0.0);
+
+        return new RideStatisticsResponse(
+                totalRides, totalRides, 0L,
+                totalDuration, avgDuration, 0L,
+                totalDistance, weeklyDistance, monthlyDistance,
+                totalEarnings, weeklyEarnings, monthlyEarnings,
+                avgSpeed, null
+        );
+    }
+
+    private RideHistoryResponse toHistoryResponse(CompletedRide ride) {
+        return new RideHistoryResponse(
+                ride.getId(), ride.getDriverId(), null,
+                ride.getStartTime(), ride.getEndTime(),
+                null, null,
+                ride.getDuration(), null,
+                ride.getStatus(), ride.getDistanceKm(),
+                ride.getAverageSpeedKmh(), ride.getEarnings()
+        );
+    }
 
     private RideSession requireSession(String rideId) {
         return repository.findById(rideId)
@@ -71,10 +135,6 @@ public class RideService {
                         HttpStatus.NOT_FOUND, "No active ride found for id: " + rideId));
     }
 
-    /**
-     * Sums Haversine distances between consecutive points in the route.
-     * Returns 0.0 if fewer than 2 points have been recorded.
-     */
     private double calculateTotalDistance(List<LocationPoint> route) {
         double total = 0.0;
         for (int i = 1; i < route.size(); i++) {
@@ -83,13 +143,8 @@ public class RideService {
         return total;
     }
 
-    /**
-     * Haversine formula — great-circle distance between two GPS coordinates.
-     *
-     * @return distance in kilometres
-     */
     private double haversineKm(LocationPoint a, LocationPoint b) {
-        final double R = 6371.0; // Earth's mean radius in km
+        final double R = 6371.0;
         double dLat = Math.toRadians(b.getLat() - a.getLat());
         double dLon = Math.toRadians(b.getLon() - a.getLon());
         double sinDLat = Math.sin(dLat / 2);
