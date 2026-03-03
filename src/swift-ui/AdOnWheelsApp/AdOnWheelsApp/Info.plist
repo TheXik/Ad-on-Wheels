@@ -17,5 +17,7 @@
 	<string></string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ad on Wheels uses your location to track your active ride and send GPS data to the ride service.</string>
 </dict>
 </plist>

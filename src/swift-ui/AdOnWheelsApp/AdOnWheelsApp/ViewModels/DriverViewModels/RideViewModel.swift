@@ -1,35 +1,56 @@
 import SwiftUI
 import Combine
+import CoreLocation
 
 @MainActor
-class RideViewModel: ObservableObject {
+class RideViewModel: NSObject, ObservableObject {
+
     private let historyService = RideHistoryService.shared
+
+    // MARK: - Published state
+
     @Published var isRiding: Bool = false
     @Published var elapsedTime: TimeInterval = 0
     @Published var distanceTravelled: Double = 0.0
     @Published var currentSpeed: Double = 0.0
-    @Published var currentRide: Ride?
-    @Published var lastCompletedRide: Ride?
+    @Published var currentRideId: String?
+    @Published var currentRide: Ride?           // retained for view compatibility
+    @Published var lastCompletedRide: Ride?     // retained for view compatibility
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-    
-    // Active campaign name for tracking
+
     var activeCampaignName: String = "Active Campaign"
 
-    // Timer
-    private var timer: AnyCancellable?
+    // MARK: - Private state
+
+    private var elapsedTimer: AnyCancellable?
+    private var trackTimer: AnyCancellable?
     private var rideStartDate: Date?
-    
-    // Track speeds for average calculation
     private var speedReadings: [Double] = []
+
+    private let locationManager = CLLocationManager()
+    private var lastLocation: CLLocation?
 
     private let api: APIClientProtocol
     private let authService: AuthenticationService
 
+    // MARK: - Init
+
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
         self.authService = authService
+        super.init()
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
+
+    // MARK: - Permission
+
+    func requestLocationPermission() {
+        locationManager.requestWhenInUseAuthorization()
+    }
+
+    // MARK: - Ride lifecycle
 
     func startRide(campaignId: Int? = nil) async {
         guard let driverId = authService.userId else {
@@ -41,30 +62,20 @@ class RideViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let requestBody = StartRideRequest(campaignId: campaignId)
-            let bodyData = try JSONEncoder().encode(requestBody)
+            let body = try JSONEncoder().encode(StartRideRequest(driverId: String(driverId)))
+            let endpoint = Endpoint(path: "api/rides/start", method: .post, body: body)
+            let response: StartRideResponse = try await api.send(endpoint)
 
-            let endpoint = Endpoint(
-                path: "rides/\(driverId)/start",
-                method: .post,
-                body: bodyData
-            )
-
-            let ride: Ride = try await api.send(endpoint)
-            currentRide = ride
-            
-            // Parse ISO8601 date, handling the format from Java LocalDateTime
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            rideStartDate = formatter.date(from: ride.startTime) ?? Date()
-
+            currentRideId = response.rideId
+            rideStartDate = Date()
             isRiding = true
             elapsedTime = 0
             distanceTravelled = 0.0
             currentSpeed = 0.0
             speedReadings = []
 
-            startTimer()
+            startElapsedTimer()
+            startLocationTracking()
 
         } catch {
             errorMessage = error.localizedDescription
@@ -74,80 +85,96 @@ class RideViewModel: ObservableObject {
     }
 
     func endRide() async {
-        guard let driverId = authService.userId else {
-            errorMessage = "Driver ID not found"
+        guard let rideId = currentRideId else {
+            errorMessage = "No active ride"
             return
         }
 
         isLoading = true
         errorMessage = nil
 
+        stopLocationTracking()
+        stopElapsedTimer()
+
         do {
-            // Calculate average speed from readings
-            let averageSpeed = speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
-            
-            // Send distance and speed to backend
-            let requestBody = StopRideRequest(
-                endLocation: nil,
-                distanceKm: distanceTravelled,
-                averageSpeedKmh: averageSpeed
-            )
-            let bodyData = try JSONEncoder().encode(requestBody)
+            let body = try JSONEncoder().encode(EndRideRequest(rideId: rideId))
+            let endpoint = Endpoint(path: "api/rides/end", method: .post, body: body)
+            let response: EndRideResponse = try await api.send(endpoint)
 
-            let endpoint = Endpoint(
-                path: "rides/\(driverId)/stop",
-                method: .post,
-                body: bodyData
-            )
+            distanceTravelled = response.totalDistanceKm
+            elapsedTime = TimeInterval(response.durationSeconds)
 
-            let ride: Ride = try await api.send(endpoint)
-            currentRide = ride
-            lastCompletedRide = ride
-            
-            // Save ride to local history
-            saveRideToHistory(ride)
-            
-            stopTimer()
+            saveRideToHistory(from: response)
+
             isRiding = false
+            currentRideId = nil
+
+            // Notify StatsViewModel to refresh after ride is saved
+            NotificationCenter.default.post(name: .rideCompleted, object: nil)
 
         } catch {
             errorMessage = error.localizedDescription
-            // Stop ride locally even if API fails
-            stopTimer()
             isRiding = false
+            currentRideId = nil
         }
 
         isLoading = false
     }
 
-    private func startTimer() {
-        timer = Timer.publish(every: 1.0, on: .main, in: .common)
+    // MARK: - GPS tracking (fire-and-forget)
+
+    func trackPoint(lat: Double, lon: Double) {
+        guard let rideId = currentRideId else { return }
+        let api = self.api
+        Task.detached {
+            do {
+                let body = try JSONEncoder().encode(TrackRequest(rideId: rideId, lat: lat, lon: lon))
+                let endpoint = Endpoint(path: "api/rides/track", method: .post, body: body)
+                try await api.send(endpoint)
+            } catch {
+                // fire-and-forget: errors are intentionally swallowed
+            }
+        }
+    }
+
+    // MARK: - Timers
+
+    private func startElapsedTimer() {
+        elapsedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] currentTime in
-                self?.updateRideMetrics(currentTime: currentTime)
+                guard let self, let start = self.rideStartDate else { return }
+                self.elapsedTime = currentTime.timeIntervalSince(start)
             }
     }
 
-    private func stopTimer() {
-        timer?.cancel()
-        timer = nil
+    private func stopElapsedTimer() {
+        elapsedTimer?.cancel()
+        elapsedTimer = nil
     }
 
-    private func updateRideMetrics(currentTime: Date) {
-        if let startDate = rideStartDate {
-            elapsedTime = currentTime.timeIntervalSince(startDate)
-        } else {
-            elapsedTime += 1
-        }
+    // MARK: - Location tracking
 
-        // Simulate realistic city driving speed (30-60 km/h)
-        currentSpeed = Double.random(in: 30...60)
-        speedReadings.append(currentSpeed)
-        
-        // Distance = speed (km/h) / 3600 (to get km/s) * 1 second
-        let distanceThisSecond = currentSpeed / 3600.0
-        distanceTravelled += distanceThisSecond
+    private func startLocationTracking() {
+        locationManager.startUpdatingLocation()
+        trackTimer = Timer.publish(every: 5.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self, let location = self.lastLocation else { return }
+                self.trackPoint(
+                    lat: location.coordinate.latitude,
+                    lon: location.coordinate.longitude
+                )
+            }
     }
+
+    private func stopLocationTracking() {
+        trackTimer?.cancel()
+        trackTimer = nil
+        locationManager.stopUpdatingLocation()
+    }
+
+    // MARK: - Computed helpers
 
     var timeString: String {
         let hours = Int(elapsedTime) / 3600
@@ -155,34 +182,57 @@ class RideViewModel: ObservableObject {
         let seconds = Int(elapsedTime) % 60
         return String(format: "%02i:%02i:%02i", hours, minutes, seconds)
     }
-    
+
     var averageSpeedKmh: Double {
         speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
     }
-    
-    /// Saves completed ride to local history for offline access
-    private func saveRideToHistory(_ ride: Ride) {
-        // Parse dates from ISO8601 strings
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
-        let startDate = formatter.date(from: ride.startTime) ?? Date()
-        let endDate: Date
-        if let endTimeStr = ride.endTime {
-            endDate = formatter.date(from: endTimeStr) ?? Date()
-        } else {
-            endDate = Date()
-        }
-        
+
+    // MARK: - History
+
+    private func saveRideToHistory(from response: EndRideResponse) {
+        let endDate = Date()
+        let startDate = rideStartDate ?? endDate.addingTimeInterval(-Double(response.durationSeconds))
+
         let record = RideRecord(
             startTime: startDate,
             endTime: endDate,
-            distance: ride.distanceKm ?? distanceTravelled,
-            duration: TimeInterval(ride.duration ?? Int(elapsedTime)),
-            averageSpeed: ride.averageSpeedKmh ?? averageSpeedKmh,
-            campaignName: ride.displayCampaignName
+            distance: response.totalDistanceKm,
+            duration: TimeInterval(response.durationSeconds),
+            averageSpeed: averageSpeedKmh,
+            campaignName: activeCampaignName
         )
-        
+
         historyService.addRide(record)
     }
+}
+
+// MARK: - CLLocationManagerDelegate
+
+extension RideViewModel: CLLocationManagerDelegate {
+
+    nonisolated func locationManager(
+        _ manager: CLLocationManager,
+        didUpdateLocations locations: [CLLocation]
+    ) {
+        guard let location = locations.last else { return }
+        let speedKmh = max(0, location.speed * 3.6)
+        Task { @MainActor [weak self] in
+            self?.lastLocation = location
+            self?.currentSpeed = speedKmh
+            self?.speedReadings.append(speedKmh)
+        }
+    }
+
+    nonisolated func locationManager(
+        _ manager: CLLocationManager,
+        didFailWithError error: Error
+    ) {
+        // Location errors during a ride are non-fatal; tracking continues on next update
+    }
+}
+
+// MARK: - Notification names
+
+extension Notification.Name {
+    static let rideCompleted = Notification.Name("rideCompleted")
 }

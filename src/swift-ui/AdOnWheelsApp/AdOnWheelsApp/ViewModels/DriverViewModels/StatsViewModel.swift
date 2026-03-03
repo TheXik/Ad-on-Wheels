@@ -43,10 +43,25 @@ class StatsViewModel: ObservableObject {
     
     private let api: APIClientProtocol
     private let authService: AuthenticationService
-    
+    private var rideCompletedObserver: Any?
+
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
         self.authService = authService
+        // Auto-refresh stats whenever a ride finishes
+        rideCompletedObserver = NotificationCenter.default.addObserver(
+            forName: .rideCompleted,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { await self?.fetchStats() }
+        }
+    }
+
+    deinit {
+        if let observer = rideCompletedObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
     
     func fetchStats() async {
