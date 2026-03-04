@@ -1,6 +1,7 @@
 package com.example.gatewayservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Map;
 
 public class ApiResponseWrapper<T> {
     private boolean success;
@@ -20,6 +21,13 @@ public class ApiResponseWrapper<T> {
 
     public static <T> ApiResponseWrapper<T> success(T data) {
         return new ApiResponseWrapper<>(true, data, null);
+    }
+
+    public static <T> ApiResponseWrapper<T> error(int internalCode, String message) {
+        ApiResponseWrapper<T> wrapper = new ApiResponseWrapper<>();
+        wrapper.setSuccess(false);
+        wrapper.setError(Map.of("internalCode", internalCode, "message", message));
+        return wrapper;
     }
 
     public boolean isSuccess() {
