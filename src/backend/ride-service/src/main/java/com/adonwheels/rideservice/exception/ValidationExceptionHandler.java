@@ -43,4 +43,12 @@ public class ValidationExceptionHandler {
                 .status(ex.getStatusCode())
                 .body(ApiResponse.error(AppErrorCode.VALIDATION_ERROR, ex.getReason(), null));
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+        logger.error("Unhandled exception in ride-service", ex);
+        return ResponseEntity
+                .status(AppErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(ApiResponse.error(AppErrorCode.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage()));
+    }
 }

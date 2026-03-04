@@ -28,12 +28,7 @@ final class APIClient: APIClientProtocol {
             let request = try endpoint.makeURLRequest(baseURL: baseURL)
             
             // Network Call
-            let (data, response): (Data, URLResponse)
-            do {
-                (data, response) = try await session.data(for: request)
-            } catch {
-                throw NetworkError.transport(error)
-            }
+            let (data, response) = try await session.data(for: request)
 
             // Validate HTTP Response
             guard let httpResponse = response as? HTTPURLResponse else {
@@ -74,6 +69,8 @@ final class APIClient: APIClientProtocol {
             
         } catch let error as NetworkError {
             throw error
+        } catch let urlError as URLError {
+            throw NetworkError.transport(urlError)
         } catch {
             throw NetworkError.decoding(error)
         }
