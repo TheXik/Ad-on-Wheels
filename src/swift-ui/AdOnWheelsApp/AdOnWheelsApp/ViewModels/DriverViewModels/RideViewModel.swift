@@ -16,6 +16,8 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var lastCompletedRide: Ride?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published var currentLocation: CLLocationCoordinate2D?
+    @Published var locationVersion: Int = 0
 
     var activeCampaignName: String = "Active Campaign"
 
@@ -30,6 +32,11 @@ class RideViewModel: NSObject, ObservableObject {
     private let api: APIClientProtocol
     private let authService: AuthenticationService
 
+    #if DEBUG
+    var simulationTimer: AnyCancellable?
+    var simulationIndex: Int = 0
+    #endif
+
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
         self.authService = authService
@@ -40,6 +47,7 @@ class RideViewModel: NSObject, ObservableObject {
 
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
     }
 
     func startRide(campaignId: Int? = nil) async {
@@ -63,9 +71,10 @@ class RideViewModel: NSObject, ObservableObject {
             distanceTravelled = 0.0
             currentSpeed = 0.0
             speedReadings = []
+            lastLocation = nil
 
             startElapsedTimer()
-            startLocationTracking()
+            startTrackTimer()
 
         } catch {
             errorMessage = error.localizedDescription
@@ -83,8 +92,12 @@ class RideViewModel: NSObject, ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        stopLocationTracking()
+        stopTrackTimer()
         stopElapsedTimer()
+
+        #if DEBUG
+        stopSimulatedMovement()
+        #endif
 
         do {
             let body = try JSONEncoder().encode(EndRideRequest(rideId: rideId))
@@ -99,7 +112,6 @@ class RideViewModel: NSObject, ObservableObject {
             isRiding = false
             currentRideId = nil
 
-            // Notify StatsViewModel to refresh after ride is saved
             NotificationCenter.default.post(name: .rideCompleted, object: nil)
 
         } catch {
@@ -139,8 +151,7 @@ class RideViewModel: NSObject, ObservableObject {
         elapsedTimer = nil
     }
 
-    private func startLocationTracking() {
-        locationManager.startUpdatingLocation()
+    private func startTrackTimer() {
         trackTimer = Timer.publish(every: 5.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
@@ -152,10 +163,9 @@ class RideViewModel: NSObject, ObservableObject {
             }
     }
 
-    private func stopLocationTracking() {
+    private func stopTrackTimer() {
         trackTimer?.cancel()
         trackTimer = nil
-        locationManager.stopUpdatingLocation()
     }
 
     var timeString: String {
@@ -195,9 +205,15 @@ extension RideViewModel: CLLocationManagerDelegate {
         guard let location = locations.last else { return }
         let speedKmh = max(0, location.speed * 3.6)
         Task { @MainActor [weak self] in
-            self?.lastLocation = location
-            self?.currentSpeed = speedKmh
-            self?.speedReadings.append(speedKmh)
+            guard let self else { return }
+            if self.isRiding, let last = self.lastLocation {
+                self.distanceTravelled += location.distance(from: last) / 1000.0
+            }
+            self.lastLocation = location
+            self.currentLocation = location.coordinate
+            self.currentSpeed = speedKmh
+            self.speedReadings.append(speedKmh)
+            self.locationVersion += 1
         }
     }
 
@@ -208,6 +224,75 @@ extension RideViewModel: CLLocationManagerDelegate {
         // Location errors during a ride are non-fatal; tracking continues on next update
     }
 }
+
+#if DEBUG
+extension RideViewModel {
+
+    // Route through Bratislava city centre for testing
+    static let simulatedRoute: [CLLocationCoordinate2D] = [
+        CLLocationCoordinate2D(latitude: 48.14389, longitude: 17.10969),
+        CLLocationCoordinate2D(latitude: 48.14492, longitude: 17.11123),
+        CLLocationCoordinate2D(latitude: 48.14618, longitude: 17.11290),
+        CLLocationCoordinate2D(latitude: 48.14731, longitude: 17.11422),
+        CLLocationCoordinate2D(latitude: 48.14862, longitude: 17.11551),
+        CLLocationCoordinate2D(latitude: 48.14995, longitude: 17.11678),
+        CLLocationCoordinate2D(latitude: 48.15121, longitude: 17.11812),
+        CLLocationCoordinate2D(latitude: 48.15253, longitude: 17.11942),
+        CLLocationCoordinate2D(latitude: 48.15382, longitude: 17.12078),
+        CLLocationCoordinate2D(latitude: 48.15501, longitude: 17.12207),
+        CLLocationCoordinate2D(latitude: 48.15612, longitude: 17.12335),
+        CLLocationCoordinate2D(latitude: 48.15731, longitude: 17.12461),
+        CLLocationCoordinate2D(latitude: 48.15858, longitude: 17.12590),
+        CLLocationCoordinate2D(latitude: 48.15963, longitude: 17.12715),
+        CLLocationCoordinate2D(latitude: 48.16072, longitude: 17.12841),
+        CLLocationCoordinate2D(latitude: 48.16181, longitude: 17.12965),
+    ]
+
+    func startSimulatedMovement() {
+        locationManager.stopUpdatingLocation() // Pause real GPS so it doesn't conflict
+        simulationIndex = 0
+        simulationTimer = Timer.publish(every: 2.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                let route = RideViewModel.simulatedRoute
+                let coord = route[self.simulationIndex % route.count]
+
+                let simLocation = CLLocation(
+                    coordinate: coord,
+                    altitude: 200,
+                    horizontalAccuracy: 5,
+                    verticalAccuracy: 5,
+                    speed: 11.0,
+                    course: 45,
+                    timestamp: Date()
+                )
+
+                if self.isRiding, let last = self.lastLocation {
+                    self.distanceTravelled += simLocation.distance(from: last) / 1000.0
+                }
+
+                self.lastLocation = simLocation
+                self.currentLocation = coord
+                self.currentSpeed = 40.0
+                self.speedReadings.append(40.0)
+                self.locationVersion += 1
+
+                if self.isRiding {
+                    self.trackPoint(lat: coord.latitude, lon: coord.longitude)
+                }
+
+                self.simulationIndex += 1
+            }
+    }
+
+    func stopSimulatedMovement() {
+        simulationTimer?.cancel()
+        simulationTimer = nil
+        locationManager.startUpdatingLocation() // Resume real GPS
+    }
+}
+#endif
 
 extension Notification.Name {
     static let rideCompleted = Notification.Name("rideCompleted")
