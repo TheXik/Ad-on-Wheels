@@ -263,8 +263,8 @@ extension RideViewModel {
                     altitude: 200,
                     horizontalAccuracy: 5,
                     verticalAccuracy: 5,
-                    speed: 11.0,
                     course: 45,
+                    speed: 11.0,
                     timestamp: Date()
                 )
 
