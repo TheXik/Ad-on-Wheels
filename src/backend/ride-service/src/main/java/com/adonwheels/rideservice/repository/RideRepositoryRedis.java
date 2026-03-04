@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class RideRepositoryRedis implements RideRepository {
 
     private static final String KEY_PREFIX = "ride:";
+    private static final String DRIVER_INDEX_PREFIX = "driver-ride:";
     private static final long TTL_HOURS = 24;
 
     private final RedisTemplate<String, String> redis;
@@ -43,6 +44,7 @@ public class RideRepositoryRedis implements RideRepository {
         String key = key(session.getRideId());
         String json = serialize(session);
         redis.opsForValue().set(key, json, TTL_HOURS, TimeUnit.HOURS);
+        redis.opsForValue().set(driverIndex(session.getDriverId()), session.getRideId(), TTL_HOURS, TimeUnit.HOURS);
     }
 
     @Override
@@ -55,7 +57,18 @@ public class RideRepositoryRedis implements RideRepository {
     }
 
     @Override
+    public Optional<RideSession> findByDriverId(String driverId) {
+        String rideId = redis.opsForValue().get(driverIndex(driverId));
+        if (rideId == null) {
+            return Optional.empty();
+        }
+        return findById(rideId);
+    }
+
+    @Override
     public void deleteById(String rideId) {
+        Optional<RideSession> session = findById(rideId);
+        session.ifPresent(s -> redis.delete(driverIndex(s.getDriverId())));
         redis.delete(key(rideId));
     }
 
@@ -63,6 +76,10 @@ public class RideRepositoryRedis implements RideRepository {
 
     private String key(String rideId) {
         return KEY_PREFIX + rideId;
+    }
+
+    private String driverIndex(String driverId) {
+        return DRIVER_INDEX_PREFIX + driverId;
     }
 
     private String serialize(RideSession session) {
