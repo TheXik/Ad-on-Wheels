@@ -16,5 +16,7 @@ public interface RideRepository {
 
     Optional<RideSession> findById(String rideId);
 
+    Optional<RideSession> findByDriverId(String driverId);
+
     void deleteById(String rideId);
 }

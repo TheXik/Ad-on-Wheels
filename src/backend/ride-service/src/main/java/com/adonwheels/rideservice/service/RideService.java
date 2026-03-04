@@ -1,5 +1,6 @@
 package com.adonwheels.rideservice.service;
 
+import com.adonwheels.rideservice.dto.ActiveRideResponse;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
 import com.adonwheels.rideservice.dto.RideStatisticsResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +35,11 @@ public class RideService {
     public RideService(RideRepository repository, RideHistoryRepository historyRepository) {
         this.repository = repository;
         this.historyRepository = historyRepository;
+    }
+
+    public Optional<ActiveRideResponse> getActiveRide(Long driverId) {
+        return repository.findByDriverId(String.valueOf(driverId))
+                .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
     }
 
     public StartRideResponse startRide(String driverId) {

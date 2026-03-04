@@ -1,5 +1,6 @@
 package com.adonwheels.rideservice.controller;
 
+import com.adonwheels.rideservice.dto.ActiveRideResponse;
 import com.adonwheels.rideservice.dto.EndRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
@@ -44,6 +45,15 @@ public class RideController {
             @Valid @RequestBody EndRideRequest request) {
         EndRideResponse response = rideService.endRide(request.getRideId());
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{driverId}/active")
+    public ResponseEntity<ApiResponse<ActiveRideResponse>> getActiveRide(
+            @PathVariable("driverId") Long driverId) {
+        return rideService.getActiveRide(driverId)
+                .map(ride -> ResponseEntity.ok(ApiResponse.success(ride)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.error(dto.AppErrorCode.RIDE_NOT_ACTIVE)));
     }
 
     @GetMapping("/{driverId}/history")
