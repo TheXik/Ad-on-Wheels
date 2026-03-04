@@ -251,6 +251,10 @@ extension RideViewModel {
     func startSimulatedMovement() {
         locationManager.stopUpdatingLocation() // Pause real GPS so it doesn't conflict
         simulationIndex = 0
+        // Seed lastLocation to the route start so the first tick doesn't calculate
+        // distance from the real GPS position (which could be thousands of km away)
+        let start = RideViewModel.simulatedRoute[0]
+        lastLocation = CLLocation(latitude: start.latitude, longitude: start.longitude)
         simulationTimer = Timer.publish(every: 2.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
