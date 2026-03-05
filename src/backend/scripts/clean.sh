@@ -7,7 +7,6 @@
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
 NC='\033[0m'
 
 echo -e "${BLUE}========================================${NC}"
@@ -40,7 +39,7 @@ docker compose down -v 2>/dev/null || true
 
 # Remove Docker images
 echo "2. Removing Docker images..."
-docker rmi -f eureka-server gateway-service auth-service driver-service company-service campaign-service 2>/dev/null || true
+docker rmi -f eureka-server gateway-service auth-service driver-service company-service campaign-service ride-service 2>/dev/null || true
 
 # Clean Maven target directories
 echo "3. Cleaning Maven build artifacts..."
