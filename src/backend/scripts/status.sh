@@ -71,7 +71,8 @@ check_internal_service() {
 
     if check_container "$service_name"; then
         # Convert service name to uppercase for Eureka check (e.g., auth-service -> AUTH-SERVICE)
-        local eureka_name=$(echo "$service_name" | tr '[:lower:]' '[:upper:]' | tr '-' '-')
+        local eureka_name
+        eureka_name=$(echo "$service_name" | tr '[:lower:]' '[:upper:]' | tr '-' '-')
 
         # Check if service is registered with Eureka (better health indicator)
         if curl -s "http://localhost:8761/eureka/apps/$eureka_name" 2>/dev/null | grep -q "UP"; then
@@ -88,6 +89,7 @@ check_internal_service "Auth Service        " "auth-service"
 check_internal_service "Driver Service      " "driver-service"
 check_internal_service "Company Service     " "company-service"
 check_internal_service "Campaign Service    " "campaign-service"
+check_internal_service "Ride Service        " "ride-service"
 
 echo ""
 echo -e "${CYAN}ℹ  Internal services are only accessible through the Gateway${NC}"
