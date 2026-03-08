@@ -70,7 +70,7 @@ struct DashboardCardView: View {
                 .padding(.top, 4)
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 4)
     }

@@ -8,8 +8,6 @@ struct DriverRootView: View {
     
     init(authService: AuthenticationService) {
         self.authService = authService
-        // Customize TabBar appearance if needed
-        UITabBar.appearance().backgroundColor = .white
     }
 
     var body: some View {

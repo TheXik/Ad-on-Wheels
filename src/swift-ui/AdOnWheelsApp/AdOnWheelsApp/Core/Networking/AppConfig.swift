@@ -1,8 +1,8 @@
 import Foundation
 
 enum AppConfig {
-    //TODO: when going to production remove this "http://192.168.1.27:8080" // desktop   // "http://192.168.0.120:8080" // laptop
-    private static let defaultBaseURLString: String = "http://100.122.33.104:8080"
+    //TODO: when going to production remove this "http://192.168.1.27:8080" // desktop   // "http://192.168.0.120:8080" // laptop // "http://100.122.33.104:8080" // tailscale
+    private static let defaultBaseURLString: String = "http://10.128.65.67:8080"
     
 
     

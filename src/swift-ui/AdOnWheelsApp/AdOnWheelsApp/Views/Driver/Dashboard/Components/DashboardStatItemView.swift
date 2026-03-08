@@ -14,11 +14,11 @@ struct DashboardStatItemView: View {
             Text(value)
                 .font(.title3)
                 .fontWeight(.bold)
-                .foregroundColor(.black)
+                .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 15)
-        .background(Color.white)
+        .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(20)
         .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
     }
