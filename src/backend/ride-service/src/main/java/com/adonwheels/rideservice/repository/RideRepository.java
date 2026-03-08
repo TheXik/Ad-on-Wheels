@@ -6,9 +6,7 @@ import java.util.Optional;
 
 /**
  * Storage contract for active ride sessions.
- *
- * <p>Currently backed by {@link RideRepositoryMem} (in-memory).
- * Swap the bean for {@code RideRepositoryRedis} when ready — zero other changes required.</p>
+ * Backed by Cassandra via {@link RideRepositoryCassandra}.
  */
 public interface RideRepository {
 

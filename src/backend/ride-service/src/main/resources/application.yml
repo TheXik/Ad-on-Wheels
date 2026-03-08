@@ -12,10 +12,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
-  data:
-    redis:
-      host: ${REDIS_HOST:redis}
-      port: ${REDIS_PORT:6379}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+cassandra:
+  contact-points: ${CASSANDRA_HOST:cassandra}
+  port: ${CASSANDRA_PORT:9042}
+  keyspace: ride_service
+  datacenter: datacenter1
 
 eureka:
   instance:
