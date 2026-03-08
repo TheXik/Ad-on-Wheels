@@ -116,15 +116,23 @@ services:
       eureka-server:
         condition: service_healthy
 
-  redis:
-    image: redis:7-alpine
+  cassandra:
+    image: cassandra:4.1
     ports:
-      - "6379:6379"
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=adonwheels
+      - CASSANDRA_DC=datacenter1
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=128M
+    volumes:
+      - cassandra-data:/var/lib/cassandra
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   ride-service:
     image: ride-service
@@ -132,7 +140,7 @@ services:
       context: ride-service
       dockerfile: Dockerfile
     ports:
-      - "8085:8085"          # expose ride tracking API (matches server.port)
+      - "8085:8085"
     env_file:
       - .env
     depends_on:
@@ -140,8 +148,9 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-      redis:
+      cassandra:
         condition: service_healthy
 
 volumes:
   mysql-data:
+  cassandra-data:
