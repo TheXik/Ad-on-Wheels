@@ -5,7 +5,7 @@ struct RideDetailView: View {
     let ride: Ride
     
     @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 48.1486, longitude: 17.1077),
+        center: CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     
@@ -33,7 +33,7 @@ struct RideDetailView: View {
                         Spacer()
                         Text(ride.formattedEarnings)
                             .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                     }
                     .padding(.top, 20)
                     

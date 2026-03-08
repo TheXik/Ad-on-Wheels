@@ -47,10 +47,6 @@ struct BrowseView: View {
                                 }
                             }
                         }
-                        .background(
-                            NavigationLink(destination: CampaignDetailView(), label: { EmptyView() })
-                                .opacity(0)
-                        )
                     }
                 }
             }
