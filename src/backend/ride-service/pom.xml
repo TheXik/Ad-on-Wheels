@@ -13,7 +13,7 @@
 
     <artifactId>ride-service</artifactId>
     <name>ride-service</name>
-    <description>Active ride session tracking microservice (in-memory). Redis-ready interface.</description>
+    <description>Active ride session tracking microservice with Cassandra persistence.</description>
 
     <dependencies>
         <dependency>
@@ -44,7 +44,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <artifactId>spring-boot-starter-data-cassandra</artifactId>
         </dependency>
 
         <dependency>
@@ -79,6 +79,19 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.36</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
