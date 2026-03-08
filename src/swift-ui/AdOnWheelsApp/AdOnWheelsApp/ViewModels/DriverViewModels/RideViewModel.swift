@@ -35,6 +35,7 @@ class RideViewModel: NSObject, ObservableObject {
     #if DEBUG
     var simulationTimer: AnyCancellable?
     var simulationIndex: Int = 0
+    var isSimulatingMovement: Bool = false
     #endif
 
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
@@ -206,6 +207,9 @@ extension RideViewModel: CLLocationManagerDelegate {
         let speedKmh = max(0, location.speed * 3.6)
         Task { @MainActor [weak self] in
             guard let self else { return }
+            #if DEBUG
+            if self.isSimulatingMovement { return }
+            #endif
             if self.isRiding, let last = self.lastLocation {
                 self.distanceTravelled += location.distance(from: last) / 1000.0
             }
@@ -228,38 +232,51 @@ extension RideViewModel: CLLocationManagerDelegate {
 #if DEBUG
 extension RideViewModel {
 
-    // Route through Bratislava city centre for testing
-    static let simulatedRoute: [CLLocationCoordinate2D] = [
-        CLLocationCoordinate2D(latitude: 48.14389, longitude: 17.10969),
-        CLLocationCoordinate2D(latitude: 48.14492, longitude: 17.11123),
-        CLLocationCoordinate2D(latitude: 48.14618, longitude: 17.11290),
-        CLLocationCoordinate2D(latitude: 48.14731, longitude: 17.11422),
-        CLLocationCoordinate2D(latitude: 48.14862, longitude: 17.11551),
-        CLLocationCoordinate2D(latitude: 48.14995, longitude: 17.11678),
-        CLLocationCoordinate2D(latitude: 48.15121, longitude: 17.11812),
-        CLLocationCoordinate2D(latitude: 48.15253, longitude: 17.11942),
-        CLLocationCoordinate2D(latitude: 48.15382, longitude: 17.12078),
-        CLLocationCoordinate2D(latitude: 48.15501, longitude: 17.12207),
-        CLLocationCoordinate2D(latitude: 48.15612, longitude: 17.12335),
-        CLLocationCoordinate2D(latitude: 48.15731, longitude: 17.12461),
-        CLLocationCoordinate2D(latitude: 48.15858, longitude: 17.12590),
-        CLLocationCoordinate2D(latitude: 48.15963, longitude: 17.12715),
-        CLLocationCoordinate2D(latitude: 48.16072, longitude: 17.12841),
-        CLLocationCoordinate2D(latitude: 48.16181, longitude: 17.12965),
+    // Relative offsets (~150m steps) applied to the user's current position
+    private static let routeOffsets: [(dlat: Double, dlon: Double)] = [
+        (0.00000, 0.00000),
+        (0.00103, 0.00154),
+        (0.00229, 0.00321),
+        (0.00342, 0.00453),
+        (0.00473, 0.00582),
+        (0.00606, 0.00709),
+        (0.00732, 0.00843),
+        (0.00864, 0.00973),
+        (0.00993, 0.01109),
+        (0.01112, 0.01238),
+        (0.01223, 0.01366),
+        (0.01342, 0.01492),
+        (0.01469, 0.01621),
+        (0.01574, 0.01746),
+        (0.01683, 0.01872),
+        (0.01792, 0.01996),
     ]
 
+    private func buildRoute(from origin: CLLocationCoordinate2D) -> [CLLocationCoordinate2D] {
+        Self.routeOffsets.map {
+            CLLocationCoordinate2D(latitude: origin.latitude + $0.dlat,
+                                   longitude: origin.longitude + $0.dlon)
+        }
+    }
+
     func startSimulatedMovement() {
-        locationManager.stopUpdatingLocation() // Pause real GPS so it doesn't conflict
+        isSimulatingMovement = true
+        locationManager.stopUpdatingLocation()
         simulationIndex = 0
-        // Seed lastLocation to the route start so the first tick doesn't calculate
-        // distance from the real GPS position (which could be thousands of km away)
-        let start = RideViewModel.simulatedRoute[0]
-        lastLocation = CLLocation(latitude: start.latitude, longitude: start.longitude)
+        distanceTravelled = 0.0
+
+        let origin = currentLocation ?? locationManager.location?.coordinate
+            ?? CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378) // Prague fallback
+        let route = buildRoute(from: origin)
+
+        lastLocation = CLLocation(latitude: route[0].latitude, longitude: route[0].longitude)
+        currentLocation = route[0]
+        locationVersion += 1
+
         simulationTimer = Timer.publish(every: 2.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self else { return }
-                let route = RideViewModel.simulatedRoute
                 let coord = route[self.simulationIndex % route.count]
 
                 let simLocation = CLLocation(
@@ -293,7 +310,8 @@ extension RideViewModel {
     func stopSimulatedMovement() {
         simulationTimer?.cancel()
         simulationTimer = nil
-        locationManager.startUpdatingLocation() // Resume real GPS
+        isSimulatingMovement = false
+        locationManager.startUpdatingLocation()
     }
 }
 #endif

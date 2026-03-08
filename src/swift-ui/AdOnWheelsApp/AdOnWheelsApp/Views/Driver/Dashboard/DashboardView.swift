@@ -28,14 +28,10 @@ struct DashboardView: View {
             Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
-                // Scrollable Content
+                DashboardHeaderView(viewModel: viewModel)
+
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // Header
-                        DashboardHeaderView(viewModel: viewModel)
-                            .padding(.bottom, 20)
-                        
-                        VStack(spacing: 20) {
+                    VStack(spacing: 20) {
                         Spacer().frame(height: 10)
                         
                         // Action Required (Verification)
@@ -72,7 +68,7 @@ struct DashboardView: View {
                                 }
                             }
                             .padding()
-                            .background(Color.white)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
                             .cornerRadius(20)
                             .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                         }
@@ -123,7 +119,6 @@ struct DashboardView: View {
                     }
                     .padding(20)
                 }
-                }
             }
             
             // Floating Start Ride Button
@@ -145,7 +140,7 @@ struct DashboardView: View {
                     .clipShape(Capsule())
                     .shadow(color: brandBlue.opacity(0.4), radius: 10, x: 0, y: 5)
                 }
-                .padding(.bottom, 30) // Lift up from bottom
+                .padding(.bottom, 10)
             }
         }
         .fullScreenCover(isPresented: $showingRideSheet) {
@@ -171,6 +166,9 @@ struct DashboardView: View {
         .task {
             await viewModel.fetchDashboardData()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .rideCompleted)) { _ in
+            Task { await viewModel.fetchDashboardData() }
+        }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {
                 viewModel.errorMessage = nil
@@ -190,7 +188,9 @@ struct DashboardView: View {
     func startRideFlow() {
         Task {
             await rideViewModel.startRide()
-            showingRideSheet = true
+            if rideViewModel.errorMessage == nil {
+                showingRideSheet = true
+            }
         }
     }
 }
