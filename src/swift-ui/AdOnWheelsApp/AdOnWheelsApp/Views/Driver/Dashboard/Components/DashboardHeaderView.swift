@@ -116,7 +116,7 @@ struct DashboardHeaderView: View {
             }
         }
         // Fixed height
-        .frame(height: 340)
+        .frame(height: 310)
         .cornerRadius(30, corners: [.bottomLeft, .bottomRight])
         .shadow(color: brandBlue.opacity(0.3), radius: 10, x: 0, y: 10)
     }

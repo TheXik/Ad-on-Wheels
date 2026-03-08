@@ -2,51 +2,122 @@ import SwiftUI
 
 struct DriverRootView: View {
     @ObservedObject var authService: AuthenticationService
-    
-    // Custom Blue Color from design
+    @StateObject private var rideViewModel: RideViewModel
+    @State private var selectedTab: Int = 0
+    @State private var showingRideSheet = false
+    @State private var showingQRSheet = false
+
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
-    
+
     init(authService: AuthenticationService) {
         self.authService = authService
+        _rideViewModel = StateObject(wrappedValue: RideViewModel(authService: authService))
     }
 
     var body: some View {
-        TabView {
-            // Home Tab
-            NavigationView {
-                DashboardView(authService: authService)
-                    .navigationBarHidden(true) // Hide nav bar to use custom header
+        ZStack(alignment: .bottom) {
+            Group {
+                switch selectedTab {
+                case 0:
+                    NavigationView {
+                        DashboardView(authService: authService, rideViewModel: rideViewModel)
+                            .navigationBarHidden(true)
+                    }
+                case 1:
+                    NavigationView {
+                        BrowseView()
+                            .navigationBarHidden(true)
+                    }
+                case 2:
+                    StatsView(authService: authService)
+                case 3:
+                    ProfileView(authService: authService)
+                default:
+                    EmptyView()
+                }
             }
-            .tabItem {
-                Image(systemName: "house.fill")
-                Text("Home")
-            }
-            
-            // Browse Tab
-            NavigationView {
-                BrowseView()
-                    .navigationBarHidden(true)
-            }
-            .tabItem {
-                Image(systemName: "car.fill")
-                Text("Browse")
-            }
-            
-            // Stats Tab
-            StatsView(authService: authService)
-            .tabItem {
-                Image(systemName: "chart.bar.fill")
-                Text("Stats")
-            }
-            
-            // Profile Tab
-            ProfileView(authService: authService)
-            .tabItem {
-                Image(systemName: "person.fill")
-                Text("Profile")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            customTabBar
+        }
+        .edgesIgnoringSafeArea(.bottom)
+        .fullScreenCover(isPresented: $showingRideSheet) {
+            RidingView(viewModel: rideViewModel) {
+                showingRideSheet = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showingQRSheet = true
+                }
             }
         }
-        .accentColor(brandBlue)
+        .fullScreenCover(isPresented: $showingQRSheet) {
+            QRScanView {
+                showingQRSheet = false
+            }
+        }
+        .alert("Ride Error", isPresented: .constant(rideViewModel.errorMessage != nil)) {
+            Button("OK") {
+                rideViewModel.errorMessage = nil
+            }
+        } message: {
+            Text(rideViewModel.errorMessage ?? "")
+        }
+    }
+
+    var customTabBar: some View {
+        ZStack {
+            HStack {
+                tabBarButton(icon: "house.fill", label: "Home", index: 0)
+                tabBarButton(icon: "car.fill", label: "Browse", index: 1)
+
+                Spacer().frame(width: 70)
+
+                tabBarButton(icon: "chart.bar.fill", label: "Stats", index: 2)
+                tabBarButton(icon: "person.fill", label: "Profile", index: 3)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+            .padding(.bottom, 24)
+            .background(
+                Color(UIColor.systemBackground)
+                    .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: -4)
+            )
+
+            Button(action: startRideFlow) {
+                ZStack {
+                    Circle()
+                        .fill(brandBlue)
+                        .frame(width: 60, height: 60)
+                        .shadow(color: brandBlue.opacity(0.4), radius: 8, x: 0, y: 4)
+
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(.white)
+                }
+            }
+            .offset(y: -20)
+        }
+    }
+
+    func tabBarButton(icon: String, label: String, index: Int) -> some View {
+        Button(action: { selectedTab = index }) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                Text(label)
+                    .font(.caption2)
+            }
+            .foregroundColor(selectedTab == index ? brandBlue : .gray)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    func startRideFlow() {
+        Task {
+            await rideViewModel.startRide()
+            if rideViewModel.errorMessage == nil {
+                showingRideSheet = true
+            }
+        }
     }
 }
 

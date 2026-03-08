@@ -2,12 +2,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
-    @StateObject private var dashboardVM = DashboardViewModel(authService: AuthenticationService())
+    @AppStorage("monthlyGoalKm") private var monthlyGoalKm: Double = 200
     @State private var goalText = ""
     @State private var showClearDataAlert = false
-    
+
     private let historyService = RideHistoryService.shared
-    
+
     var body: some View {
         List {
             Section(header: Text("Appearance")) {
@@ -19,7 +19,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            
+
             Section(header: Text("Goals")) {
                 HStack {
                     Text("Monthly Goal")
@@ -32,15 +32,15 @@ struct SettingsView: View {
                         .foregroundColor(.gray)
                 }
                 .onAppear {
-                    goalText = String(format: "%.0f", dashboardVM.monthlyGoalTotal)
+                    goalText = String(format: "%.0f", monthlyGoalKm)
                 }
                 .onChange(of: goalText) { newValue in
                     if let goal = Double(newValue), goal > 0 {
-                        dashboardVM.setMonthlyGoal(goal)
+                        monthlyGoalKm = goal
                     }
                 }
             }
-            
+
             Section(header: Text("Data")) {
                 HStack {
                     Text("Total Rides")
@@ -48,21 +48,21 @@ struct SettingsView: View {
                     Text("\(historyService.totalRides)")
                         .foregroundColor(.gray)
                 }
-                
+
                 HStack {
                     Text("Total Distance")
                     Spacer()
                     Text(historyService.formattedTotalDistance)
                         .foregroundColor(.gray)
                 }
-                
+
                 HStack {
                     Text("Total Earnings")
                     Spacer()
                     Text(historyService.formattedTotalEarnings)
                         .foregroundColor(.gray)
                 }
-                
+
                 Button(action: { showClearDataAlert = true }) {
                     HStack {
                         Image(systemName: "trash")
@@ -72,7 +72,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            
+
             Section(header: Text("App Info")) {
                 HStack {
                     Text("Version")

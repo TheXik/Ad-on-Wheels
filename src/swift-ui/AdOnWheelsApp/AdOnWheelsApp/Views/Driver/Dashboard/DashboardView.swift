@@ -3,24 +3,20 @@ import SwiftUI
 struct DashboardView: View {
     @ObservedObject var authService: AuthenticationService
     @StateObject private var viewModel: DashboardViewModel
-    @StateObject private var rideViewModel: RideViewModel
+    @ObservedObject var rideViewModel: RideViewModel
 
-    // UI State
     @State private var scrollOffset: CGFloat = 0
     @State private var isHeaderCollapsed: Bool = false
-    @State private var showingRideSheet: Bool = false
-    @State private var showingQRSheet: Bool = false
 
-    // Verification State
     @State private var showingVerification = false
     @State private var isVerified = false
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
 
-    init(authService: AuthenticationService) {
+    init(authService: AuthenticationService, rideViewModel: RideViewModel) {
         self.authService = authService
+        self.rideViewModel = rideViewModel
         _viewModel = StateObject(wrappedValue: DashboardViewModel(authService: authService))
-        _rideViewModel = StateObject(wrappedValue: RideViewModel(authService: authService))
     }
 
     var body: some View {
@@ -112,50 +108,12 @@ struct DashboardView: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        
 
-                        
-                        Spacer().frame(height: 120) // Bottom padding for FAB
+
+                        Spacer().frame(height: 80)
                     }
                     .padding(20)
                 }
-            }
-            
-            // Floating Start Ride Button
-            VStack {
-                Spacer()
-                Button(action: {
-                    startRideFlow()
-                }) {
-                    HStack {
-                        Image(systemName: "play.fill")
-                        Text("Start Ride")
-                            .fontWeight(.bold)
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 40)
-                    .background(brandBlue)
-                    .clipShape(Capsule())
-                    .shadow(color: brandBlue.opacity(0.4), radius: 10, x: 0, y: 5)
-                }
-                .padding(.bottom, 10)
-            }
-        }
-        .fullScreenCover(isPresented: $showingRideSheet) {
-            RidingView(viewModel: rideViewModel) {
-                // On End Ride -> Switch to QR
-                showingRideSheet = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    showingQRSheet = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showingQRSheet) {
-            QRScanView {
-                // On Finish -> Back to Dashboard
-                showingQRSheet = false
             }
         }
         .fullScreenCover(isPresented: $showingVerification) {
@@ -176,28 +134,12 @@ struct DashboardView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .alert("Ride Error", isPresented: .constant(rideViewModel.errorMessage != nil)) {
-            Button("OK") {
-                rideViewModel.errorMessage = nil
-            }
-        } message: {
-            Text(rideViewModel.errorMessage ?? "")
-        }
-    }
-
-    func startRideFlow() {
-        Task {
-            await rideViewModel.startRide()
-            if rideViewModel.errorMessage == nil {
-                showingRideSheet = true
-            }
-        }
     }
 }
 
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        DashboardView(authService: AuthenticationService())
+        DashboardView(authService: AuthenticationService(), rideViewModel: RideViewModel(authService: AuthenticationService()))
     }
 }

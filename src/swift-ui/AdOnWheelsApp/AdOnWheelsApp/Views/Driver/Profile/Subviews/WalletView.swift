@@ -2,7 +2,8 @@ import SwiftUI
 
 struct WalletView: View {
     @ObservedObject var viewModel: ProfileViewModel
-    
+    @State private var showCashOutAlert = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 25) {
@@ -15,7 +16,7 @@ struct WalletView: View {
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Button(action: {}) {
+                    Button(action: { showCashOutAlert = true }) {
                         Text("Cash Out")
                             .font(.headline)
                             .foregroundColor(.blue)
@@ -77,6 +78,13 @@ struct WalletView: View {
         }
         .background(Color(UIColor.systemGroupedBackground))
         .navigationBarTitle("Wallet")
+        .alert(isPresented: $showCashOutAlert) {
+            Alert(
+                title: Text("Coming Soon"),
+                message: Text("Cash out functionality will be available in a future update."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 }
 
