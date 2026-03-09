@@ -143,6 +143,9 @@ public class RideService {
     }
 
     private double calculateTotalDistance(List<LocationPoint> route) {
+        if (route == null || route.size() < 2) {
+            return 0.0;
+        }
         double total = 0.0;
         for (int i = 1; i < route.size(); i++) {
             total += haversineKm(route.get(i - 1), route.get(i));
