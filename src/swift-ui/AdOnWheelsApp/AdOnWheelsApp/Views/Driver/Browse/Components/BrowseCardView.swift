@@ -19,7 +19,7 @@ struct BrowseCardView: View {
         ZStack(alignment: .bottom) {
             // Background Image / Color
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
                 .shadow(radius: 5)
             
             VStack(spacing: 0) {
@@ -44,7 +44,7 @@ struct BrowseCardView: View {
                     Text(campaign.name)
                         .font(.title)
                         .fontWeight(.bold)
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                     
                     HStack {
                         Label("Active", systemImage: "clock")
@@ -61,7 +61,7 @@ struct BrowseCardView: View {
                         .padding(.top, 5)
                 }
                 .padding()
-                .background(Color.white)
+                .background(Color(UIColor.secondarySystemGroupedBackground))
                 .cornerRadius(20, corners: [.bottomLeft, .bottomRight])
             }
         }

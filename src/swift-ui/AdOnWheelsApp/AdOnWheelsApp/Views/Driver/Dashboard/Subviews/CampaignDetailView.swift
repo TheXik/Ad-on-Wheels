@@ -87,7 +87,7 @@ struct CampaignDetailView: View {
                     }
                 }
                 .padding(25)
-                .background(Color.white)
+                .background(Color(UIColor.secondarySystemGroupedBackground))
                 .cornerRadius(30, corners: [.topLeft, .topRight])
                 .offset(y: -30)
             }
@@ -126,7 +126,7 @@ struct DetailInfoBox: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color.gray.opacity(0.05))
+        .background(Color(UIColor.tertiarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }
