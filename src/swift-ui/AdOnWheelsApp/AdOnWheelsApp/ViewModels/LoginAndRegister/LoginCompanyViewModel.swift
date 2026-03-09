@@ -1,5 +1,4 @@
 import Foundation
-import GoogleSignIn
 
 @MainActor
 class LoginCompanyViewModel: ObservableObject {
@@ -10,7 +9,6 @@ class LoginCompanyViewModel: ObservableObject {
     @Published var fieldErrors: [String: String] = [:]
 
     private let api: APIClientProtocol
-    private let googleClientID = "1009636850818-ju60fnmur0s7dvlr0qrp0cujl7u1l3e2.apps.googleusercontent.com"
 
     init(api: APIClientProtocol = APIClient.shared) {
         self.api = api
@@ -37,42 +35,6 @@ class LoginCompanyViewModel: ObservableObject {
             } else {
                 errorMessage = error.localizedDescription
             }
-            return nil
-        }
-    }
-
-    func loginWithGoogle() async -> String? {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
-
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let presenter = windowScene.windows.first?.rootViewController else {
-            errorMessage = "Unable to present Google Sign-In."
-            return nil
-        }
-
-        do {
-            let config = GIDConfiguration(clientID: googleClientID)
-            GIDSignIn.sharedInstance.configuration = config
-
-            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
-            guard let idToken = result.user.idToken?.tokenString else {
-                errorMessage = "Google Sign-In did not return an ID token."
-                return nil
-            }
-
-            let endpoint = Endpoint(
-                path: "auth/google",
-                method: .post,
-                body: try JSONEncoder().encode(["idToken": idToken])
-            )
-            let response: LoginResponse = try await api.sendMapped(endpoint)
-            return response.token
-        } catch let error as GIDSignInError where error.code == .canceled {
-            return nil
-        } catch {
-            errorMessage = error.localizedDescription
             return nil
         }
     }

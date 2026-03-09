@@ -1,30 +1,25 @@
-
 import Foundation
 
-
 @MainActor
-class LoginDriverViewModel: ObservableObject{
-    
-    @Published var email : String = ""
-    @Published var password : String = ""
-    @Published var isLoading : Bool = false
-    @Published var errorMessage : String?
+class LoginDriverViewModel: ObservableObject {
+    @Published var email = ""
+    @Published var password = ""
+    @Published var isLoading = false
+    @Published var errorMessage: String?
     @Published var fieldErrors: [String: String] = [:]
-    
+
     private let api: APIClientProtocol
-    
-    init(api: APIClientProtocol = APIClient.shared)
-    {
+
+    init(api: APIClientProtocol = APIClient.shared) {
         self.api = api
     }
-    
-    
+
     func login() async -> String? {
         isLoading = true
         errorMessage = nil
         fieldErrors = [:]
         defer { isLoading = false }
-        
+
         do {
             let endpoint = Endpoint(
                 path: "auth/login",
@@ -44,4 +39,3 @@ class LoginDriverViewModel: ObservableObject{
         }
     }
 }
-

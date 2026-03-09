@@ -75,6 +75,8 @@ struct RegisterDriverView: View {
                 },
                 bottomLinks: {
                     if !viewModel.registrationSuccessful {
+                        GoogleSignInSection(authService: authService, role: "DRIVER")
+
                         Button("Already have an account? Log in here") {
                             navViewModel.currentScreen = .loginDriver
                         }

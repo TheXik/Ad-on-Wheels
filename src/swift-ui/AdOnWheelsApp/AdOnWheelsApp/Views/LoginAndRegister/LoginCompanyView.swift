@@ -60,7 +60,7 @@ struct LoginCompanyView: View {
                 }
             },
             bottomLinks: {
-                googleSignInButton
+                GoogleSignInSection(authService: authService, role: "COMPANY")
 
                 Button("Don't have an account? Register here") {
                     navViewModel.currentScreen = .registerCompany
@@ -69,31 +69,6 @@ struct LoginCompanyView: View {
                 .font(.callout)
             }
         )
-    }
-}
-
-    private var googleSignInButton: some View {
-        Button {
-            Task {
-                if let token = await viewModel.loginWithGoogle() {
-                    authService.didLogin(token: token)
-                }
-            }
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "g.circle.fill")
-                    .font(.title2)
-                Text("Sign in with Google")
-                    .font(.headline)
-            }
-            .foregroundColor(.primary)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color("FieldBgColor"))
-            .cornerRadius(10)
-        }
-        .padding(.horizontal)
-        .disabled(viewModel.isLoading)
     }
 }
 

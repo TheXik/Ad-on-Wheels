@@ -60,6 +60,8 @@ struct LoginDriverView: View {
                 }
             },
             bottomLinks: {
+                GoogleSignInSection(authService: authService, role: "DRIVER")
+
                 Button("Don't have an account? Register here") {
                     navViewModel.currentScreen = .registerDriver
                 }

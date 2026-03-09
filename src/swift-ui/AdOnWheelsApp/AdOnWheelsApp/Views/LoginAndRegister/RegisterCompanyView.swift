@@ -75,6 +75,8 @@ struct RegisterCompanyView: View {
                 },
                 bottomLinks: {
                     if !viewModel.registrationSuccessful {
+                        GoogleSignInSection(authService: authService, role: "COMPANY")
+
                         Button("Already have an account? Log in here") {
                             navViewModel.currentScreen = .loginCompany
                         }
