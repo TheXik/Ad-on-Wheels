@@ -39,6 +39,9 @@ public class RideSession {
     }
 
     public void addPoint(LocationPoint point) {
+        if (routeHistory == null) {
+            routeHistory = new ArrayList<>();
+        }
         routeHistory.add(point);
     }
 }
