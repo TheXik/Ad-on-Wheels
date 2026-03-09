@@ -38,7 +38,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login") // Updated paths
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/google")
                         .permitAll()
                         .anyRequest()
                         .authenticated()

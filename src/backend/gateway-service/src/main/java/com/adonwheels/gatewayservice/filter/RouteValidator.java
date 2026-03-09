@@ -12,6 +12,7 @@ public class RouteValidator {
     public static final List<String> openApiEndpoints = List.of(
             "/auth/register",
             "/auth/login",
+            "/auth/google",
             "/eureka" //TODO MAKE sure that this is okay to have it here  im not sure i know i need it for eureka discovery
             //TODO but i dont know if it wont make issues with security
     );

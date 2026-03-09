@@ -1,9 +1,6 @@
 package com.adonwheels.authservice.controller;
 
-import com.adonwheels.authservice.dto.LoginRequest;
-import com.adonwheels.authservice.dto.LoginResponse;
-import com.adonwheels.authservice.dto.RegistrationRequest;
-import com.adonwheels.authservice.dto.RegistrationResponse;
+import com.adonwheels.authservice.dto.*;
 import com.adonwheels.authservice.service.AuthService;
 import com.adonwheels.authservice.service.RegistrationSagaOrchestratorService;
 import dto.ApiResponse;
@@ -46,5 +43,12 @@ public class AuthController {
                 .body(ApiResponse.success(loginResponseData));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<LoginResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        LoginResponse loginData = authService.loginWithGoogle(request);
 
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(loginData));
+    }
 }

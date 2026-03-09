@@ -28,6 +28,9 @@ jwt:
   secret: ${JWT_SECRET_KEY}
   expiration-ms: 3600000 # 1 hour
 
+google:
+  client-id: "1009636850818-ju60fnmur0s7dvlr0qrp0cujl7u1l3e2.apps.googleusercontent.com"
+
 services:
   driver-service:
     url: "http://driver-service"

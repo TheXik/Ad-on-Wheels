@@ -4,6 +4,10 @@ import com.adonwheels.authservice.dto.*;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import com.adonwheels.authservice.repository.AuthRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import dto.ApiResponse;
 import dto.AppErrorCode;
 import dto.exception.BusinessException;
@@ -17,6 +21,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -34,6 +42,8 @@ public class AuthService {
     @Value("${services.company-service.url}")
     private String companyServiceUrl;
 
+    @Value("${google.client-id}")
+    private String googleClientId;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final  JWTService JWTService;
@@ -140,5 +150,68 @@ public class AuthService {
      */
     public String generateTokenForNewUser(String email) {
         return JWTService.generateToken(email);
+    }
+
+    public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
+        GoogleIdToken.Payload payload = verifyGoogleIdToken(request.idToken());
+        String email = payload.getEmail();
+
+        Optional<User> existing = repository.findByEmail(email);
+        if (existing.isPresent()) {
+            User user = existing.get();
+            if (user.getRole() != request.role()) {
+                throw new BusinessException(
+                        AppErrorCode.VALIDATION_ERROR,
+                        "This Google account is already registered as a " + user.getRole()
+                                + ". Please use the " + user.getRole() + " login instead."
+                );
+            }
+            String token = JWTService.generateToken(email);
+            return new LoginResponse(token, "Google sign-in successful");
+        }
+
+        String name = (String) payload.get("name");
+        if (name == null || name.isBlank()) name = email;
+        Role role = request.role();
+
+        Long profileId = null;
+        try {
+            profileId = createProfile(name, email, role);
+
+            User user = new User();
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            user.setRole(role);
+            user.setProfileId(profileId);
+            repository.save(user);
+
+            String token = JWTService.generateToken(email);
+            return new LoginResponse(token, "Google sign-in successful");
+        } catch (Exception e) {
+            if (profileId != null) {
+                try { deleteProfile(profileId, role); } catch (Exception ignored) {}
+            }
+            throw e;
+        }
+    }
+
+    private GoogleIdToken.Payload verifyGoogleIdToken(String idTokenString) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Invalid Google ID token");
+            }
+            return idToken.getPayload();
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Google token verification failed", e);
+            throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Google token verification failed");
+        }
     }
 }
