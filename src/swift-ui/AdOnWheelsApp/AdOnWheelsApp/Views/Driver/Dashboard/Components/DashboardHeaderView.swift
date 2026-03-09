@@ -17,24 +17,18 @@ struct DashboardHeaderView: View {
                 // Expanded View
                 VStack(spacing: 25) {
                     // Greeting / Title
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("👋 Hello \(viewModel.driverName)")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                            Text("Ready for the road?")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-                        Spacer()
-                        Image(systemName: "person.circle.fill")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .foregroundColor(.white.opacity(0.9))
+                    VStack(alignment: .leading) {
+                        Text("👋 Hello \(viewModel.driverName)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        Text("Ready for the road?")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.8))
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
-                    .padding(.top, 40) 
+                    .padding(.top, 40)
                     
                     // Main Stats Circle
                     HStack(alignment: .center, spacing: 30) {

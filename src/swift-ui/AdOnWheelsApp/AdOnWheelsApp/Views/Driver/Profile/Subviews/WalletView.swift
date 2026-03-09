@@ -68,11 +68,11 @@ struct WalletView: View {
                         Divider()
                         StatRow(label: "Average Speed", value: viewModel.statistics?.formattedAverageSpeed ?? "0 km/h")
                     }
-                    .background(Color.white)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
                     .cornerRadius(15)
                     .padding(.horizontal)
                 }
-                
+
                 Spacer(minLength: 50)
             }
         }
@@ -105,7 +105,7 @@ struct SummaryCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color.white)
+        .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(15)
     }
 }

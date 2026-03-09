@@ -194,7 +194,7 @@ struct RidingView: View {
                 }
             }
             .padding(30)
-            .background(Color.white)
+            .background(Color(UIColor.systemBackground))
             .cornerRadius(30, corners: [.topLeft, .topRight])
             .shadow(radius: 10)
         }

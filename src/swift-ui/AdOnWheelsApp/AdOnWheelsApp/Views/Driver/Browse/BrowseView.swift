@@ -66,7 +66,7 @@ struct BrowseView: View {
                         .font(.title)
                         .foregroundColor(.red)
                         .frame(width: 60, height: 60)
-                        .background(Color.white)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
@@ -81,7 +81,7 @@ struct BrowseView: View {
                         .font(.title)
                         .foregroundColor(.yellow)
                         .frame(width: 50, height: 50)
-                        .background(Color.white)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
@@ -99,7 +99,7 @@ struct BrowseView: View {
                         .font(.title)
                         .foregroundColor(.green)
                         .frame(width: 60, height: 60)
-                        .background(Color.white)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }

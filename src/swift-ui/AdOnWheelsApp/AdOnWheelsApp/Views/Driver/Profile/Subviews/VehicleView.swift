@@ -29,10 +29,10 @@ struct VehicleView: View {
                         Divider()
                         InfoRow(label: "Color", value: viewModel.vehicleColor)
                     }
-                    .background(Color.white)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
                     .cornerRadius(15)
                     .padding()
-                    
+
                     // Status Badge
                     if viewModel.isVehicleVerified {
                         HStack {
@@ -73,11 +73,11 @@ struct VehicleView: View {
                             .multilineTextAlignment(.center)
                     }
                     .padding()
-                    .background(Color.white)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
                     .cornerRadius(15)
                     .padding()
                 }
-                
+
                 Spacer()
             }
             .padding(.top)
