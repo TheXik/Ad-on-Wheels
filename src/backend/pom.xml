@@ -10,12 +10,13 @@
 
     <modules>
         <module>eureka-server</module>
+        <module>common-dto</module>
         <module>driver-service</module>
         <module>campaign-service</module>
         <module>company-service</module>
         <module>gateway-service</module>
         <module>auth-service</module>
-        <module>common-dto</module>
+        <module>ride-service</module>
     </modules>
 
     <properties>
@@ -107,6 +108,9 @@
                     <version>3.14.1</version>
                     <configuration>
                         <release>${java.version}</release>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
                     </configuration>
                 </plugin>
             </plugins>

@@ -18,17 +18,23 @@ struct BrowseView: View {
             
             // Card Stack
             ZStack {
-                if viewModel.campaigns.isEmpty {
+                if viewModel.isLoading {
+                    ProgressView("Loading campaigns...")
+                } else if viewModel.campaigns.isEmpty {
                     VStack {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: viewModel.errorMessage != nil ? "exclamationmark.triangle" : "checkmark.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.green)
+                            .foregroundColor(viewModel.errorMessage != nil ? .orange : .green)
                             .padding()
-                        Text("No more ads to show")
+                        Text(viewModel.errorMessage ?? "No campaigns available")
                             .font(.headline)
                             .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                         Button("Refresh") {
-                            viewModel.loadCampaigns()
+                            Task {
+                                await viewModel.loadCampaigns()
+                            }
                         }
                         .padding(.top)
                     }
@@ -40,14 +46,7 @@ struct BrowseView: View {
                                     viewModel.removeCard(campaign)
                                 }
                             }
-                            // Overlay invisible link or button
-                            // A simple way is to add an 'Details' button or make it tappable if not swiping.
-                            // For this mock, let's just assume tapping content navigates.
                         }
-                        .background(
-                            NavigationLink(destination: CampaignDetailView(), label: { EmptyView() })
-                                .opacity(0)
-                        )
                     }
                 }
             }
@@ -67,29 +66,31 @@ struct BrowseView: View {
                         .font(.title)
                         .foregroundColor(.red)
                         .frame(width: 60, height: 60)
-                        .background(Color.white)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
                 
                 // Rewind Button
                 Button(action: {
-                    viewModel.loadCampaigns() // Simple logic for now
+                    Task {
+                        await viewModel.loadCampaigns()
+                    }
                 }) {
                     Image(systemName: "arrow.counterclockwise")
                         .font(.title)
                         .foregroundColor(.yellow)
                         .frame(width: 50, height: 50)
-                        .background(Color.white)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
                 
-                // Like Button
+                // Like Button (Apply)
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
                          withAnimation {
-                             // Here you would add logic to 'Apply' for the job
+                             // TODO: Call apply to campaign API
                              viewModel.removeCard(topCard)
                          }
                     }
@@ -98,7 +99,7 @@ struct BrowseView: View {
                         .font(.title)
                         .foregroundColor(.green)
                         .frame(width: 60, height: 60)
-                        .background(Color.white)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
@@ -107,12 +108,15 @@ struct BrowseView: View {
             .opacity(viewModel.campaigns.isEmpty ? 0 : 1)
         }
         .background(Color(UIColor.systemGroupedBackground))
+        .task {
+            await viewModel.loadCampaigns()
+        }
     }
 }
 
 // Wrapper to handle individual card gestures
 struct SwipeCardContainer: View {
-    let campaign: AdCampaign
+    let campaign: Campaign
     let onRemove: () -> Void
     
     @State private var offset: CGSize = .zero

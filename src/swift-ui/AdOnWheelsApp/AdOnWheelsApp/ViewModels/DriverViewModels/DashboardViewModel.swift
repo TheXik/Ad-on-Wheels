@@ -1,35 +1,143 @@
 import SwiftUI
+import Combine
 
+@MainActor
 class DashboardViewModel: ObservableObject {
     // Header Stats
-    @Published var distanceDriven: Double = 45.2
-    @Published var distanceRemaining: Double = 44.8
-    @Published var monthlyGoalProgress: Double = 0.51 // 0.0 to 1.0
-    @Published var monthlyGoalTotal: Double = 90.0 // Derived or explicit total
-    
+    @Published var distanceDriven: Double = 0
+    @Published var distanceRemaining: Double = 0
+    @Published var monthlyGoalProgress: Double = 0 // 0.0 to 1.0
+    @Published var monthlyGoalTotal: Double = 200.0
+
     // Quick Stats
-    @Published var daysLeft: Int = 12
-    @Published var totalEarnings: Double = 345.50
-    @Published var driverRating: Double = 4.9
-    
+    @Published var daysLeft: Int = 0
+    @Published var totalEarnings: Double = 0
+    @Published var weeklyEarnings: Double = 0
+    @Published var monthlyEarnings: Double = 0
+    @Published var driverRating: Double = 0
+    @Published var totalRides: Int = 0
+    @Published var monthlyRides: Int = 0
+    @Published var averageSpeed: Double = 0
+
     // Greeting
-    @Published var driverName: String = "Lukas"
+    @Published var driverName: String = ""
+
+    // Home page data
+    @Published var homePageData: DriverHomePageResponse?
+    @Published var isLoading = false
+    @Published var errorMessage: String?
     
-    init() {
-        // Simulating data loading or randomizing for "mock" feel
-        loadMockData()
+    private var cancellables = Set<AnyCancellable>()
+
+    private let api: APIClientProtocol
+    private let authService: AuthenticationService
+    
+    private let goalDefaultsKey = "monthlyGoalKm"
+
+    init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
+        self.api = api
+        self.authService = authService
+        
+        loadSavedGoal()
+        calculateDaysLeft()
+    }
+
+    func fetchDashboardData() async {
+        guard let driverId = authService.userId else {
+            errorMessage = "Driver ID not found"
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+
+        defer { isLoading = false }
+
+        do {
+            let endpoint = Endpoint(path: "api/drivers/\(driverId)/home")
+            let response: DriverHomePageResponse = try await api.send(endpoint)
+            self.homePageData = response
+
+            // Update UI properties from BFF response
+            updateUIFromResponse(response)
+
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func updateUIFromResponse(_ response: DriverHomePageResponse) {
+        // Update driver name
+        driverName = response.driver.name
+
+        // Update stats from statistics - ALL DATA FROM BACKEND
+        if let stats = response.statistics {
+            // Distance from backend
+            let monthlyDistance = stats.monthlyDistanceKm ?? 0
+            distanceDriven = monthlyDistance
+            distanceRemaining = max(0, monthlyGoalTotal - distanceDriven)
+            monthlyGoalProgress = monthlyGoalTotal > 0 ? min(distanceDriven / monthlyGoalTotal, 1.0) : 0
+
+            // Days left in month
+            calculateDaysLeft()
+
+            // Earnings from backend
+            totalEarnings = stats.totalEarnings ?? 0
+            weeklyEarnings = stats.weeklyEarnings ?? 0
+            monthlyEarnings = stats.monthlyEarnings ?? 0
+            
+            // Rides from backend
+            totalRides = stats.totalRides
+            monthlyRides = stats.completedRides
+            
+            // Speed and rating from backend
+            averageSpeed = stats.averageSpeedKmh ?? 0
+            driverRating = stats.rating ?? 0
+        }
     }
     
-    func loadMockData() {
-        // In a real app, this would fetch from an API
-        // For now, we can just keep the initial values or randomize them if desired
-        distanceDriven = 124.5
-        distanceRemaining = 75.5
-        monthlyGoalTotal = 200.0
-        monthlyGoalProgress = distanceDriven / monthlyGoalTotal
+    private func calculateDaysLeft() {
+        let calendar = Calendar.current
+        let today = Date()
+        if let range = calendar.range(of: .day, in: .month, for: today) {
+            let currentDay = calendar.component(.day, from: today)
+            daysLeft = range.count - currentDay
+        }
+    }
+    
+    func setMonthlyGoal(_ goal: Double) {
+        monthlyGoalTotal = goal
+        UserDefaults.standard.set(goal, forKey: goalDefaultsKey)
         
-        daysLeft = 18
-        totalEarnings = 420.00
-        driverRating = 5.0
+        // Recalculate progress with new goal
+        distanceRemaining = max(0, monthlyGoalTotal - distanceDriven)
+        monthlyGoalProgress = monthlyGoalTotal > 0 ? min(distanceDriven / monthlyGoalTotal, 1.0) : 0
+    }
+    
+    private func loadSavedGoal() {
+        let savedGoal = UserDefaults.standard.double(forKey: goalDefaultsKey)
+        if savedGoal > 0 {
+            monthlyGoalTotal = savedGoal
+        }
+    }
+    
+    var formattedTotalEarnings: String {
+        String(format: "€%.2f", totalEarnings)
+    }
+    
+    var formattedWeeklyEarnings: String {
+        String(format: "€%.2f", weeklyEarnings)
+    }
+    
+    var formattedMonthlyEarnings: String {
+        String(format: "€%.2f", monthlyEarnings)
+    }
+    
+    var formattedAverageSpeed: String {
+        String(format: "%.1f km/h", averageSpeed)
+    }
+    
+    var formattedDistanceDriven: String {
+        String(format: "%.1f km", distanceDriven)
     }
 }

@@ -1,7 +1,11 @@
 package com.example.driverservice.exception;
 
-public class DriverNotFoundException extends RuntimeException {
+import dto.AppErrorCode;
+import dto.exception.BusinessException;
+
+public class DriverNotFoundException extends BusinessException {
+
     public DriverNotFoundException(Long id) {
-        super("Could not find driver " + id);
+        super(AppErrorCode.USER_NOT_FOUND, "Driver with ID " + id + " not found");
     }
 } 

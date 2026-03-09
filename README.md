@@ -31,8 +31,6 @@ The purpose of this project is to develop a mobile application that connects car
 - **Secure Authentication** - JWT-based authentication with auto-login
 - **Native iOS Experience** - SwiftUI app with modern UX
 
-
-
 ### Technology Stack
 
 #### Backend

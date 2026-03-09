@@ -4,7 +4,8 @@ struct CampaignDetailView: View {
     // Mock Data (Ideally passed in)
     var companyName: String = "Firma XYZ"
     var campaignTitle: String = "Brand Awareness Spg 24"
-    
+    @State private var showApplyAlert = false
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -72,9 +73,8 @@ struct CampaignDetailView: View {
                     
                     Spacer().frame(height: 20)
                     
-                    // Action Button
                     Button(action: {
-                        // Action
+                        showApplyAlert = true
                     }) {
                         Text("Apply Now")
                             .font(.headline)
@@ -87,13 +87,20 @@ struct CampaignDetailView: View {
                     }
                 }
                 .padding(25)
-                .background(Color.white)
+                .background(Color(UIColor.secondarySystemGroupedBackground))
                 .cornerRadius(30, corners: [.topLeft, .topRight])
                 .offset(y: -30)
             }
         }
         .edgesIgnoringSafeArea(.top)
         .background(Color(UIColor.systemGroupedBackground))
+        .alert(isPresented: $showApplyAlert) {
+            Alert(
+                title: Text("Coming Soon"),
+                message: Text("Campaign applications will be available in a future update."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 }
 
@@ -119,7 +126,7 @@ struct DetailInfoBox: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(Color.gray.opacity(0.05))
+        .background(Color(UIColor.tertiarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }

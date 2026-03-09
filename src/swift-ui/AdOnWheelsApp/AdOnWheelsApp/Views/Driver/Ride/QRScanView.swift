@@ -12,7 +12,7 @@ struct QRScanView: View {
             
             if isScanning {
                 VStack(spacing: 20) {
-                    Text("San QR Code on Car")
+                    Text("Scan QR Code on Car")
                         .font(.headline)
                         .foregroundColor(.white)
                     

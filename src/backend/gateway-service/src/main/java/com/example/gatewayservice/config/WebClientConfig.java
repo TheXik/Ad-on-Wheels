@@ -24,4 +24,9 @@ public class WebClientConfig {
     public WebClient driverClient(WebClient.Builder webClientBuilder) {
         return webClientBuilder.baseUrl("http://DRIVER-SERVICE").build();
     }
+
+    @Bean
+    public WebClient rideClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder.baseUrl("http://RIDE-SERVICE").build();
+    }
 } 

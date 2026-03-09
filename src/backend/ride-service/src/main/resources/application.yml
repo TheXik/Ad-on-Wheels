@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: ride-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/ride-service?createDatabaseIfNotExist=false&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:ad_on_wheels_user}
+    password: ${MYSQL_PASSWORD:test}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+cassandra:
+  contact-points: ${CASSANDRA_HOST:cassandra}
+  port: ${CASSANDRA_PORT:9042}
+  keyspace: ride_service
+  datacenter: datacenter1
+
+eureka:
+  instance:
+    hostname: ${spring.application.name}
+    prefer-ip-address: false
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+
+server:
+  port: 8085
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

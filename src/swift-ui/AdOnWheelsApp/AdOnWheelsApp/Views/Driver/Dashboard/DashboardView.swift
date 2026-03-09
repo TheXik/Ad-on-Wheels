@@ -1,34 +1,33 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @StateObject private var viewModel = DashboardViewModel()
-    @StateObject private var rideViewModel = RideViewModel()
-    
-    // UI State
+    @ObservedObject var authService: AuthenticationService
+    @StateObject private var viewModel: DashboardViewModel
+    @ObservedObject var rideViewModel: RideViewModel
+
     @State private var scrollOffset: CGFloat = 0
     @State private var isHeaderCollapsed: Bool = false
-    @State private var showingRideSheet: Bool = false
-    @State private var showingQRSheet: Bool = false
-    
-    // Verification State
+
     @State private var showingVerification = false
     @State private var isVerified = false
-    
+
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
-    
+
+    init(authService: AuthenticationService, rideViewModel: RideViewModel) {
+        self.authService = authService
+        self.rideViewModel = rideViewModel
+        _viewModel = StateObject(wrappedValue: DashboardViewModel(authService: authService))
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 0) {
-                // Scrollable Content
+                DashboardHeaderView(viewModel: viewModel)
+
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // Header
-                        DashboardHeaderView(viewModel: viewModel)
-                            .padding(.bottom, 20)
-                        
-                        VStack(spacing: 20) {
+                    VStack(spacing: 20) {
                         Spacer().frame(height: 10)
                         
                         // Action Required (Verification)
@@ -65,7 +64,7 @@ struct DashboardView: View {
                                 }
                             }
                             .padding()
-                            .background(Color.white)
+                            .background(Color(UIColor.secondarySystemGroupedBackground))
                             .cornerRadius(20)
                             .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                         }
@@ -109,51 +108,12 @@ struct DashboardView: View {
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
-                        
 
-                        
-                        Spacer().frame(height: 120) // Bottom padding for FAB
+
+                        Spacer().frame(height: 80)
                     }
                     .padding(20)
                 }
-                }
-            }
-            
-            // Floating Start Ride Button
-            VStack {
-                Spacer()
-                Button(action: {
-                    startRideFlow()
-                }) {
-                    HStack {
-                        Image(systemName: "play.fill")
-                        Text("Start Ride")
-                            .fontWeight(.bold)
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 40)
-                    .background(brandBlue)
-                    .clipShape(Capsule())
-                    .shadow(color: brandBlue.opacity(0.4), radius: 10, x: 0, y: 5)
-                }
-                .padding(.bottom, 30) // Lift up from bottom
-            }
-        }
-        .fullScreenCover(isPresented: $showingRideSheet) {
-            RidingView(viewModel: rideViewModel) {
-                // On End Ride -> Switch to QR
-                showingRideSheet = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    showingQRSheet = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showingQRSheet) {
-            QRScanView {
-                // On Finish -> Back to Dashboard
-                showingQRSheet = false
             }
         }
         .fullScreenCover(isPresented: $showingVerification) {
@@ -161,17 +121,25 @@ struct DashboardView: View {
                 isVerified = true
             }
         }
-    }
-    
-    func startRideFlow() {
-        rideViewModel.startRide()
-        showingRideSheet = true
+        .task {
+            await viewModel.fetchDashboardData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .rideCompleted)) { _ in
+            Task { await viewModel.fetchDashboardData() }
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 }
 
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        DashboardView()
+        DashboardView(authService: AuthenticationService(), rideViewModel: RideViewModel(authService: AuthenticationService()))
     }
 }

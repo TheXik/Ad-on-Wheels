@@ -10,36 +10,39 @@ enum InitialUserRole {
 struct AdOnWheelsAppApp: App {
     @StateObject private var authService = AuthenticationService()
     @State private var selectedRole: InitialUserRole = .none
+    @AppStorage("isDarkMode") private var isDarkMode = false
 
     var body: some Scene {
         WindowGroup {
-            // if the user is authenticated 
-            if authService.isAuthenticated {
-                switch authService.userRole {
-                case .driver:
-                    DriverRootView(authService: authService)
-                case .company:
-                    CompanyHomePageView(authService: authService)
-                case .none:
-                    AuthRouterView(authService: authService, initialScreen: nil, lockedRole: nil)
-                }
-            } else {
-                if selectedRole == .none {
-                    RoleSelectionView { chosenRole in
-                        selectedRole = chosenRole
+            Group {
+                if authService.isAuthenticated {
+                    switch authService.userRole {
+                    case .driver:
+                        DriverRootView(authService: authService)
+                    case .company:
+                        CompanyHomePageView(authService: authService)
+                    case .none:
+                        AuthRouterView(authService: authService, initialScreen: nil, lockedRole: nil)
                     }
                 } else {
-                    let initialScreen: AuthScreen = (selectedRole == .driver) ? .registerDriver : .registerCompany
-                    AuthRouterView(
-                        authService: authService,
-                        initialScreen: initialScreen,
-                        lockedRole: selectedRole,
-                        onBack: {
-                            selectedRole = .none
+                    if selectedRole == .none {
+                        RoleSelectionView { chosenRole in
+                            selectedRole = chosenRole
                         }
-                    )
+                    } else {
+                        let initialScreen: AuthScreen = (selectedRole == .driver) ? .registerDriver : .registerCompany
+                        AuthRouterView(
+                            authService: authService,
+                            initialScreen: initialScreen,
+                            lockedRole: selectedRole,
+                            onBack: {
+                                selectedRole = .none
+                            }
+                        )
+                    }
                 }
             }
+            .preferredColorScheme(isDarkMode ? .dark : .light)
         }
     }
 }
