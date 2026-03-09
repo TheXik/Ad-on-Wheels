@@ -34,6 +34,9 @@ struct RegisterDriverView: View {
                         .textContentType(.name)
                         .foregroundColor(.primary)
                         .authFieldStyle()
+                    if let error = viewModel.fieldErrors["name"] {
+                        Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
+                    }
 
                     TextField("Email", text: $viewModel.email, prompt: Text("Email").foregroundColor(Color("BrandColor")))
                         .textInputAutocapitalization(.never)
@@ -42,6 +45,9 @@ struct RegisterDriverView: View {
                         .textContentType(.emailAddress)
                         .foregroundColor(.primary)
                         .authFieldStyle()
+                    if let error = viewModel.fieldErrors["email"] {
+                        Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
+                    }
 
                     HStack {
                         if isPasswordVisible {
@@ -62,6 +68,9 @@ struct RegisterDriverView: View {
                                 .foregroundColor(Color("BrandColor"))
                         }
                         .padding(.trailing, 10)
+                    }
+                    if let error = viewModel.fieldErrors["password"] {
+                        Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
                     }
                 },
                 bottomLinks: {
