@@ -8,7 +8,6 @@ import com.adonwheels.authservice.service.AuthService;
 import com.adonwheels.authservice.service.RegistrationSagaOrchestratorService;
 import dto.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,15 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+    private final RegistrationSagaOrchestratorService registrationSagaOrchestratorService;
 
-    @Autowired
-    private RegistrationSagaOrchestratorService registrationSagaOrchestratorService;
+    public AuthController(AuthService authService, RegistrationSagaOrchestratorService registrationSagaOrchestratorService) {
+        this.authService = authService;
+        this.registrationSagaOrchestratorService = registrationSagaOrchestratorService;
+    }
 
-
-    /// This method calls the SAGA orchestrator which takes care of creating UserProfile
-    /// valid anotation chcecks if the dto RegistrationRequest have correctFields
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegistrationResponse>> register(@Valid @RequestBody RegistrationRequest request) {
         RegistrationResponse registrationData = registrationSagaOrchestratorService.register(request);
@@ -38,7 +36,6 @@ public class AuthController {
                 .body(ApiResponse.success(registrationData));
     }
 
-    /// valid anotation chcecks if the dto LoginRequests have correctFields
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         LoginResponse loginData = authService.verify(loginRequest);

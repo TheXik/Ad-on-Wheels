@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
@@ -42,6 +43,7 @@ public class RideService {
                 .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
     }
 
+    @Transactional
     public StartRideResponse startRide(String driverId) {
         String rideId = UUID.randomUUID().toString();
         RideSession session = new RideSession(rideId, driverId, LocalDateTime.now());
@@ -49,12 +51,14 @@ public class RideService {
         return new StartRideResponse(rideId);
     }
 
+    @Transactional
     public void trackPoint(String rideId, double lat, double lon) {
         RideSession session = requireSession(rideId);
         session.addPoint(new LocationPoint(lat, lon, LocalDateTime.now()));
         repository.save(session);
     }
 
+    @Transactional
     public EndRideResponse endRide(String rideId) {
         RideSession session = requireSession(rideId);
 

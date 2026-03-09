@@ -21,6 +21,7 @@ public enum AppErrorCode {
     DRIVER_PROFILE_INCOMPLETE(2003, "Driver profile is incomplete (missing car details)", HttpStatus.BAD_REQUEST),
     COMPANY_PROFILE_INCOMPLETE(2004, "Company profile is incomplete", HttpStatus.BAD_REQUEST),
     IMAGE_UPLOAD_FAILED(2005, "Failed to upload profile/car image", HttpStatus.INTERNAL_SERVER_ERROR),
+    COMPANY_NOT_FOUND(2006, "Company not found", HttpStatus.NOT_FOUND),
 
     // Campaign Management (404, 400)
     CAMPAIGN_NOT_FOUND(3001, "Campaign not found", HttpStatus.NOT_FOUND),
@@ -28,6 +29,7 @@ public enum AppErrorCode {
     CAMPAIGN_EXPIRED(3003, "Campaign has ended", HttpStatus.BAD_REQUEST),
     INVALID_CAMPAIGN_DATES(3004, "Start date must be before end date", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_BUDGET(3005, "Company has insufficient budget for this campaign", HttpStatus.BAD_REQUEST),
+    APPLICATION_NOT_FOUND(3006, "Application not found", HttpStatus.NOT_FOUND),
 
     // Ride & QR Logic (400, 404, 409)
     INVALID_QR_CODE(5001, "The scanned QR code is invalid or unknown", HttpStatus.NOT_FOUND),

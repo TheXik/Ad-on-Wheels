@@ -1,10 +1,14 @@
 package com.adonwheels.rideservice.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public class StartRideResponse {
+
     private final String rideId;
+
+    public StartRideResponse(String rideId) {
+        this.rideId = rideId;
+    }
+
+    public String getRideId() {
+        return rideId;
+    }
 }
