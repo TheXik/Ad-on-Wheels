@@ -25,7 +25,7 @@ struct DriverRootView: View {
                     }
                 case 1:
                     NavigationView {
-                        BrowseView()
+                        BrowseView(driverId: authService.userId ?? 0)
                             .navigationBarHidden(true)
                     }
                 case 2:

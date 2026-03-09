@@ -78,7 +78,10 @@ struct DashboardView: View {
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 4)
                             
-                            NavigationLink(destination: CampaignDetailView()) {
+                            NavigationLink(destination: CampaignDetailView(
+                            campaign: Campaign(id: 0, name: "Firma XYZ", description: "Current Ad", companyId: 0),
+                            onApply: {}
+                        )) {
                                 DashboardCardView(
                                     iconName: "megaphone.fill",
                                     title: "Firma XYZ",

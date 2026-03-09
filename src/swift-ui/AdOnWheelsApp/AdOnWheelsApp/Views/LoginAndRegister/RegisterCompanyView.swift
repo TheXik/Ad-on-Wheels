@@ -86,7 +86,7 @@ struct RegisterCompanyView: View {
             
             // Auto-navigate to home when registration is successful
             if viewModel.registrationSuccessful && authService.isAuthenticated {
-                CompanyHomePageView(authService: authService)
+                CompanyRootView(authService: authService)
                     .transition(.move(edge: .trailing))
             }
         }

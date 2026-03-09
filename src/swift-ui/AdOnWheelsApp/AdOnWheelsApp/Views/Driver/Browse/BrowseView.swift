@@ -1,11 +1,15 @@
 import SwiftUI
 
 struct BrowseView: View {
-    @StateObject private var viewModel = BrowseViewModel()
-    
+    @StateObject private var viewModel: BrowseViewModel
+    @State private var selectedCampaign: Campaign?
+
+    init(driverId: Int) {
+        _viewModel = StateObject(wrappedValue: BrowseViewModel(driverId: driverId))
+    }
+
     var body: some View {
         VStack {
-            // Header
             HStack {
                 Spacer()
                 Text("Swipe Ads")
@@ -15,8 +19,7 @@ struct BrowseView: View {
                 Spacer()
             }
             .padding()
-            
-            // Card Stack
+
             ZStack {
                 if viewModel.isLoading {
                     ProgressView("Loading campaigns...")
@@ -32,34 +35,42 @@ struct BrowseView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         Button("Refresh") {
-                            Task {
-                                await viewModel.loadCampaigns()
-                            }
+                            Task { await viewModel.loadCampaigns() }
                         }
                         .padding(.top)
                     }
                 } else {
                     ForEach(viewModel.campaigns.reversed()) { campaign in
-                        ZStack {
-                            SwipeCardContainer(campaign: campaign) {
-                                withAnimation {
-                                    viewModel.removeCard(campaign)
-                                }
+                        SwipeCardContainer(
+                            campaign: campaign,
+                            onRemove: {
+                                withAnimation { viewModel.removeCard(campaign) }
+                            },
+                            onTap: {
+                                selectedCampaign = campaign
                             }
-                        }
+                        )
                     }
+                }
+
+                if viewModel.applySuccess {
+                    VStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.green)
+                        Text("Applied!")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                    }
+                    .transition(.scale.combined(with: .opacity))
                 }
             }
             .frame(maxHeight: .infinity)
-            
-            // Bottom Controls
+
             HStack(spacing: 40) {
-                // Reject Button
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
-                         withAnimation {
-                             viewModel.removeCard(topCard)
-                         }
+                        withAnimation { viewModel.removeCard(topCard) }
                     }
                 }) {
                     Image(systemName: "xmark")
@@ -70,12 +81,9 @@ struct BrowseView: View {
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
-                
-                // Rewind Button
+
                 Button(action: {
-                    Task {
-                        await viewModel.loadCampaigns()
-                    }
+                    Task { await viewModel.loadCampaigns() }
                 }) {
                     Image(systemName: "arrow.counterclockwise")
                         .font(.title)
@@ -85,14 +93,10 @@ struct BrowseView: View {
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
-                
-                // Like Button (Apply)
+
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
-                         withAnimation {
-                             // TODO: Call apply to campaign API
-                             viewModel.removeCard(topCard)
-                         }
+                        Task { await viewModel.applyToCampaign(topCard) }
                     }
                 }) {
                     Image(systemName: "heart.fill")
@@ -111,28 +115,31 @@ struct BrowseView: View {
         .task {
             await viewModel.loadCampaigns()
         }
+        .sheet(item: $selectedCampaign) { campaign in
+            CampaignDetailView(campaign: campaign) {
+                Task { await viewModel.applyToCampaign(campaign) }
+                selectedCampaign = nil
+            }
+        }
     }
 }
 
-// Wrapper to handle individual card gestures
 struct SwipeCardContainer: View {
     let campaign: Campaign
     let onRemove: () -> Void
-    
+    let onTap: () -> Void
+
     @State private var offset: CGSize = .zero
-    @State private var color: Color = .black
-    
+
     var body: some View {
         BrowseCardView(campaign: campaign)
             .offset(x: offset.width, y: offset.height * 0.4)
             .rotationEffect(.degrees(Double(offset.width / 40)))
+            .onTapGesture { onTap() }
             .gesture(
                 DragGesture()
                     .onChanged { gesture in
                         offset = gesture.translation
-                        withAnimation {
-                           // Example: Change color based on swipe direction logic could go here
-                        }
                     }
                     .onEnded { _ in
                         withAnimation {
@@ -153,6 +160,6 @@ struct SwipeCardContainer: View {
 
 struct BrowseView_Previews: PreviewProvider {
     static var previews: some View {
-        BrowseView()
+        BrowseView(driverId: 1)
     }
 }

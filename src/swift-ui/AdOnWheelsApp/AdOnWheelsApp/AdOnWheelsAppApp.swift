@@ -20,7 +20,7 @@ struct AdOnWheelsAppApp: App {
                     case .driver:
                         DriverRootView(authService: authService)
                     case .company:
-                        CompanyHomePageView(authService: authService)
+                        CompanyRootView(authService: authService)
                     case .none:
                         AuthRouterView(authService: authService, initialScreen: nil, lockedRole: nil)
                     }
