@@ -1,4 +1,5 @@
 import SwiftUI
+import GoogleSignIn
 
 enum InitialUserRole {
     case driver
@@ -41,6 +42,9 @@ struct AdOnWheelsAppApp: App {
                         )
                     }
                 }
+            }
+            .onOpenURL { url in
+                GIDSignIn.sharedInstance.handle(url)
             }
             .preferredColorScheme(isDarkMode ? .dark : .light)
         }
