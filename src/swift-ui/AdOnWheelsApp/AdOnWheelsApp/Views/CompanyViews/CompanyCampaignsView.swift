@@ -4,6 +4,7 @@ struct CompanyCampaignsView: View {
     @ObservedObject var authService: AuthenticationService
     @StateObject private var viewModel: CompanyHomePageViewModel
     @State private var showCreateSheet = false
+    @State private var selectedFilter = 0
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
 
@@ -12,74 +13,100 @@ struct CompanyCampaignsView: View {
         _viewModel = StateObject(wrappedValue: CompanyHomePageViewModel(companyId: authService.userId ?? 0))
     }
 
+    var filteredCampaigns: [Campaign] {
+        viewModel.campaigns.filter { campaign in
+            selectedFilter == 0 ? campaign.isActive : !campaign.isActive
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text("My Campaigns")
-                    .font(.title2)
+            HStack(alignment: .center) {
+                Text("Campaigns")
+                    .font(.title)
                     .fontWeight(.bold)
                 Spacer()
                 Button(action: { showCreateSheet = true }) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title2)
+                    Image(systemName: "plus")
+                        .font(.title3)
+                        .fontWeight(.semibold)
                         .foregroundColor(brandBlue)
+                        .frame(width: 36, height: 36)
+                        .background(brandBlue.opacity(0.12))
+                        .clipShape(Circle())
                 }
             }
             .padding(.horizontal)
             .padding(.top)
 
+            Picker("Filter", selection: $selectedFilter) {
+                Text("Active").tag(0)
+                Text("Past").tag(1)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+
             if viewModel.isLoading {
                 Spacer()
-                ProgressView("Loading campaigns...")
+                ProgressView()
                 Spacer()
             } else if let error = viewModel.errorMessage {
                 Spacer()
                 VStack(spacing: 12) {
                     Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 40))
+                        .font(.system(size: 36))
                         .foregroundColor(.orange)
                     Text(error)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                     Button("Retry") {
                         Task { await viewModel.fetchCampaigns() }
                     }
+                    .font(.subheadline)
+                    .foregroundColor(brandBlue)
                 }
                 .padding()
                 Spacer()
-            } else if viewModel.campaigns.isEmpty {
+            } else if filteredCampaigns.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
+                VStack(spacing: 14) {
                     Image(systemName: "megaphone")
-                        .font(.system(size: 50))
-                        .foregroundColor(.gray.opacity(0.5))
-                    Text("No campaigns yet")
+                        .font(.system(size: 44))
+                        .foregroundColor(.gray.opacity(0.4))
+                    Text(selectedFilter == 0 ? "No active campaigns" : "No past campaigns")
                         .font(.headline)
-                        .foregroundColor(.gray)
-                    Text("Create your first campaign to start\nattracting drivers.")
-                        .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                    Button(action: { showCreateSheet = true }) {
-                        Text("Create Campaign")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(brandBlue)
-                            .cornerRadius(12)
+                    if selectedFilter == 0 {
+                        Text("Create your first campaign to\nstart attracting drivers.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary.opacity(0.8))
+                            .multilineTextAlignment(.center)
+                        Button(action: { showCreateSheet = true }) {
+                            Text("Create Campaign")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 10)
+                                .background(brandBlue)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 4)
                     }
-                    .padding(.top, 8)
                 }
                 Spacer()
             } else {
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     LazyVStack(spacing: 12) {
-                        ForEach(viewModel.campaigns) { campaign in
-                            CampaignRowView(campaign: campaign)
+                        ForEach(filteredCampaigns) { campaign in
+                            CampaignCardView(campaign: campaign)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .padding(.bottom, 70)
                 }
             }
         }
@@ -96,37 +123,53 @@ struct CompanyCampaignsView: View {
     }
 }
 
-struct CampaignRowView: View {
+struct CampaignCardView: View {
     let campaign: Campaign
+    let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
 
-    private var cardColor: Color {
-        let colors: [Color] = [.blue, .purple, .orange, .green, .pink, .red]
-        return colors[campaign.id % colors.count]
+    var statusColor: Color {
+        switch campaign.status {
+        case "RECRUITING": return .blue
+        case "ACTIVE": return .green
+        case "PAUSED": return .orange
+        default: return .gray
+        }
     }
 
     var body: some View {
-        HStack(spacing: 14) {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(cardColor.opacity(0.15))
-                .frame(width: 50, height: 50)
-                .overlay(
-                    Image(systemName: "megaphone.fill")
-                        .foregroundColor(cardColor)
-                )
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(campaign.name)
+                        .font(.headline)
+                    Text(campaign.formattedDateRange)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(campaign.name)
-                    .font(.headline)
-                Text(campaign.description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                Spacer()
+
+                Text(campaign.status.capitalized)
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(statusColor.opacity(0.1))
+                    .cornerRadius(8)
             }
 
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
+            HStack {
+                Label("\(campaign.maxDrivers)", systemImage: "person.2")
+                Spacer()
+                Label(campaign.formattedReach, systemImage: "eye")
+                Spacer()
+                Text(campaign.formattedBudget)
+                    .fontWeight(.semibold)
+                    .foregroundColor(brandBlue)
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
         }
         .padding()
         .background(Color(UIColor.secondarySystemGroupedBackground))

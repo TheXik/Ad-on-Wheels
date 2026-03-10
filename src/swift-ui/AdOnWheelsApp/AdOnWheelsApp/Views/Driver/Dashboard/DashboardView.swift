@@ -79,7 +79,9 @@ struct DashboardView: View {
                                 .padding(.horizontal, 4)
                             
                             NavigationLink(destination: CampaignDetailView(
-                            campaign: Campaign(id: 0, name: "Firma XYZ", description: "Current Ad", companyId: 0),
+                            campaign: Campaign(id: 0, name: "Firma XYZ", description: "Current Ad",
+                                               companyId: 0, startDate: "2025-03-14", endDate: "2025-04-12",
+                                               budget: 100, maxDrivers: 1, estimatedReach: nil, status: "ACTIVE"),
                             onApply: {}
                         )) {
                                 DashboardCardView(

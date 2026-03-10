@@ -44,6 +44,13 @@ struct CampaignDetailView: View {
 
                         Divider()
 
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            DetailInfoBox(label: "Duration", value: campaign.formattedDateRange, icon: "calendar")
+                            DetailInfoBox(label: "Budget", value: campaign.formattedBudget, icon: "dollarsign.circle")
+                            DetailInfoBox(label: "Drivers", value: "\(campaign.maxDrivers)", icon: "person.2")
+                            DetailInfoBox(label: "Est. Reach", value: campaign.formattedReach, icon: "eye")
+                        }
+
                         VStack(alignment: .leading, spacing: 10) {
                             Text("About Campaign")
                                 .font(.headline)
@@ -120,7 +127,10 @@ struct DetailInfoBox: View {
 struct CampaignDetailView_Previews: PreviewProvider {
     static var previews: some View {
         CampaignDetailView(
-            campaign: Campaign(id: 1, name: "Test Campaign", description: "This is a test campaign with a longer description.", companyId: 1),
+            campaign: Campaign(
+                id: 1, name: "Test Campaign", description: "This is a test campaign with a longer description.",
+                companyId: 1, startDate: "2025-03-01", endDate: "2025-06-30",
+                budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING"),
             onApply: {}
         )
     }

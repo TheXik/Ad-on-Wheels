@@ -21,7 +21,9 @@ class BrowseViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let endpoint = Endpoint(path: "api/campaigns")
+            let endpoint = Endpoint(path: "api/campaigns", queryItems: [
+                URLQueryItem(name: "status", value: "RECRUITING")
+            ])
             let fetchedCampaigns: [Campaign] = try await api.send(endpoint)
             self.campaigns = fetchedCampaigns
         } catch {

@@ -20,9 +20,9 @@ class CompanyHomePageViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let endpoint = Endpoint(path: "api/campaigns")
-            let allCampaigns: [Campaign] = try await api.send(endpoint)
-            self.campaigns = allCampaigns.filter { $0.companyId == companyId }
+            let endpoint = Endpoint(path: "api/campaigns/company/\(companyId)")
+            let fetched: [Campaign] = try await api.send(endpoint)
+            self.campaigns = fetched
         } catch {
             self.errorMessage = error.localizedDescription
         }

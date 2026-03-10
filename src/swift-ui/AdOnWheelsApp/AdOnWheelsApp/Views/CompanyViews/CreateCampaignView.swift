@@ -29,6 +29,34 @@ struct CreateCampaignView: View {
                     }
                 }
 
+                Section(header: Text("Schedule")) {
+                    DatePicker("Start Date", selection: $viewModel.startDate, displayedComponents: .date)
+                    DatePicker("End Date", selection: $viewModel.endDate, displayedComponents: .date)
+                }
+
+                Section(header: Text("Budget & Drivers")) {
+                    HStack {
+                        Text("€")
+                            .foregroundColor(.secondary)
+                        TextField("Total Budget", text: $viewModel.budget)
+                            .keyboardType(.decimalPad)
+                    }
+
+                    HStack {
+                        Image(systemName: "person.2")
+                            .foregroundColor(.secondary)
+                        TextField("Max Drivers", text: $viewModel.maxDrivers)
+                            .keyboardType(.numberPad)
+                    }
+
+                    HStack {
+                        Image(systemName: "eye")
+                            .foregroundColor(.secondary)
+                        TextField("Estimated Reach (optional)", text: $viewModel.estimatedReach)
+                            .keyboardType(.numberPad)
+                    }
+                }
+
                 if let error = viewModel.errorMessage {
                     Section {
                         Text(error)
@@ -39,9 +67,7 @@ struct CreateCampaignView: View {
 
                 Section {
                     Button(action: {
-                        Task {
-                            await viewModel.createCampaign()
-                        }
+                        Task { await viewModel.createCampaign() }
                     }) {
                         HStack {
                             Spacer()

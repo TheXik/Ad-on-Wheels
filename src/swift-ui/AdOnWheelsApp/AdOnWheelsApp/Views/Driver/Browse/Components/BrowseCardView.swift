@@ -47,13 +47,14 @@ struct BrowseCardView: View {
                         .foregroundColor(.primary)
                     
                     HStack {
-                        Label("Active", systemImage: "clock")
+                        Label(campaign.formattedDateRange, systemImage: "calendar")
                         Spacer()
-                        Label("Apply Now", systemImage: "hand.raised")
+                        Text(campaign.formattedBudget)
+                            .fontWeight(.semibold)
                     }
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    
+
                     Text(campaign.description)
                         .font(.body)
                         .foregroundColor(.gray)
@@ -72,7 +73,10 @@ struct BrowseCardView: View {
 
 struct BrowseCardView_Previews: PreviewProvider {
     static var previews: some View {
-        BrowseCardView(campaign: Campaign(id: 1, name: "Test Campaign", description: "This is a test campaign description", companyId: 1))
+        BrowseCardView(campaign: Campaign(
+            id: 1, name: "Test Campaign", description: "This is a test campaign description",
+            companyId: 1, startDate: "2025-03-01", endDate: "2025-06-30",
+            budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING"))
             .padding()
             .background(Color.gray.opacity(0.2))
     }
