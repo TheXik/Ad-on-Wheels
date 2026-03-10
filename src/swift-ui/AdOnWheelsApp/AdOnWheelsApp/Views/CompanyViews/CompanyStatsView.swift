@@ -1,239 +1,317 @@
 import SwiftUI
 
 struct CompanyStatsView: View {
-    @ObservedObject var authService: AuthenticationService
-    @StateObject private var viewModel: CompanyHomePageViewModel
-    @State private var selectedCampaignIndex = 0
-
-    let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
-
-    init(authService: AuthenticationService) {
-        self.authService = authService
-        _viewModel = StateObject(wrappedValue: CompanyHomePageViewModel(companyId: authService.userId ?? 0))
-    }
+    @ObservedObject var dashboard: CompanyDashboardViewModel
+    @State private var selectedCampaignIndex = -1
 
     var selectedCampaign: Campaign? {
-        guard !viewModel.campaigns.isEmpty else { return nil }
-        if selectedCampaignIndex < 0 { return nil }
-        let index = min(selectedCampaignIndex, viewModel.campaigns.count - 1)
-        return viewModel.campaigns[index]
+        guard !dashboard.campaigns.isEmpty, selectedCampaignIndex >= 0 else { return nil }
+        let index = min(selectedCampaignIndex, dashboard.campaigns.count - 1)
+        return dashboard.campaigns[index]
     }
 
     var statsSource: [Campaign] {
+        if let campaign = selectedCampaign { return [campaign] }
+        return dashboard.campaigns
+    }
+
+    var filteredApplications: [ApplicationWithDriver] {
         if let campaign = selectedCampaign {
-            return [campaign]
+            return dashboard.applications.filter { $0.campaignId == campaign.id }
         }
-        return viewModel.campaigns
+        return dashboard.applications
     }
 
     var totalReach: Int {
         statsSource.compactMap { $0.estimatedReach }.reduce(0, +)
     }
 
-    var totalSpent: Double {
+    var totalBudget: Double {
         statsSource.reduce(0) { $0 + $1.budget }
     }
 
-    var totalDrivers: Int {
+    var driversHired: Int {
+        filteredApplications.filter { $0.status.uppercased() == "ACCEPTED" }.count
+    }
+
+    var totalDriverSlots: Int {
         statsSource.reduce(0) { $0 + $1.maxDrivers }
     }
 
-    var avgDriverDistance: Int {
-        totalDrivers > 0 ? 156 : 0
+    var driverFillRate: Double {
+        guard totalDriverSlots > 0 else { return 0 }
+        return Double(driversHired) / Double(totalDriverSlots)
     }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 22) {
                 Text("Statistics")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .padding(.top, 8)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .padding(.top, 12)
 
                 campaignPicker
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    statBox(title: "Total Reach", value: formattedNumber(totalReach), subtitle: "views", color: .purple)
-                    statBox(title: "Avg. Distance", value: "\(avgDriverDistance)", subtitle: "km/month", color: .green)
-                    statBox(title: "Total Spent", value: String(format: "€%.0f", totalSpent), subtitle: nil, color: .orange)
-                    statBox(title: "Drivers Hired", value: "\(totalDrivers)", subtitle: nil, color: brandBlue)
+                if dashboard.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                } else if dashboard.campaigns.isEmpty {
+                    emptyState
+                } else {
+                    overviewCards
+                    chartsRow
+                    topDriversSection
                 }
-
-                HStack(spacing: 12) {
-                    weeklyBarChart
-                    budgetConsumptionChart
-                }
-                .frame(height: 170)
-
-                driverPerformanceSnapshot
             }
-            .padding(.horizontal)
-            .padding(.bottom, 80)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 100)
         }
-        .background(Color(UIColor.systemGroupedBackground))
-        .task {
-            await viewModel.fetchCampaigns()
+        .background(Color.pageBackground)
+        .refreshable {
+            await dashboard.loadAll()
         }
     }
 
     var campaignPicker: some View {
         Menu {
-            Button("All Campaigns") { selectedCampaignIndex = -1 }
-            ForEach(Array(viewModel.campaigns.enumerated()), id: \.element.id) { index, campaign in
-                Button(campaign.name) { selectedCampaignIndex = index }
-            }
-        } label: {
-            HStack {
-                Image(systemName: "line.3.horizontal.decrease.circle")
-                    .foregroundColor(brandBlue)
-                Text(selectedCampaignIndex < 0 ? "All Campaigns" : (selectedCampaign?.name ?? "Select Campaign"))
-                    .foregroundColor(.primary)
-                    .font(.subheadline)
-                Spacer()
-                Image(systemName: "chevron.down")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding(14)
-            .background(Color(UIColor.secondarySystemGroupedBackground))
-            .cornerRadius(12)
-        }
-    }
-
-    func statBox(title: String, value: String, subtitle: String?, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Circle()
-                .fill(color.opacity(0.12))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Text(value.prefix(1))
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(color)
-                )
-
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                if let subtitle = subtitle {
-                    Text(subtitle)
-                        .font(.caption2)
-                        .foregroundColor(.secondary.opacity(0.7))
+            Button {
+                selectedCampaignIndex = -1
+            } label: {
+                if selectedCampaignIndex < 0 {
+                    Label("All Campaigns", systemImage: "checkmark")
+                } else {
+                    Text("All Campaigns")
                 }
             }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color(UIColor.secondarySystemGroupedBackground))
-        .cornerRadius(14)
-    }
-
-    var weeklyBarChart: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Weekly Views")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            let days = ["M", "T", "W", "T", "F", "S", "S"]
-            let values: [CGFloat] = [0.4, 0.7, 0.5, 0.85, 0.6, 0.3, 0.5]
-
-            HStack(alignment: .bottom, spacing: 6) {
-                ForEach(Array(zip(days.indices, days)), id: \.0) { index, day in
-                    VStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(brandBlue.opacity(index == 3 ? 1.0 : 0.5))
-                            .frame(width: 14, height: values[index] * 70)
-                        Text(day)
-                            .font(.system(size: 8))
-                            .foregroundColor(.secondary)
+            Divider()
+            ForEach(Array(dashboard.campaigns.enumerated()), id: \.element.id) { index, campaign in
+                Button {
+                    selectedCampaignIndex = index
+                } label: {
+                    if selectedCampaignIndex == index {
+                        Label(campaign.name, systemImage: "checkmark")
+                    } else {
+                        Text(campaign.name)
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                    .foregroundColor(.accentBlue)
+                Text(selectedCampaignIndex < 0 ? "All Campaigns" : (selectedCampaign?.name ?? "Select Campaign"))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(14)
+            .background(Color.cardBackground)
+            .cornerRadius(14)
         }
-        .padding()
-        .background(Color(UIColor.secondarySystemGroupedBackground))
-        .cornerRadius(14)
     }
 
-    var budgetConsumptionChart: some View {
-        VStack(spacing: 10) {
+    var overviewCards: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+            CompanyStatCard(
+                icon: "eye.fill",
+                value: formattedNumber(totalReach),
+                label: "Total Reach",
+                iconColor: .purple
+            )
+            CompanyStatCard(
+                icon: "person.2.fill",
+                value: "\(driversHired) / \(totalDriverSlots)",
+                label: "Drivers Hired",
+                iconColor: .green
+            )
+            CompanyStatCard(
+                icon: "eurosign.circle.fill",
+                value: String(format: "€%.0f", totalBudget),
+                label: "Total Budget",
+                iconColor: .orange
+            )
+            CompanyStatCard(
+                icon: "chart.bar.fill",
+                value: "\(statsSource.count)",
+                label: "Campaigns",
+                iconColor: .accentBlue
+            )
+        }
+    }
+
+    var chartsRow: some View {
+        HStack(spacing: 14) {
+            driverFillChart
+            campaignBreakdownChart
+        }
+        .frame(height: 180)
+    }
+
+    var driverFillChart: some View {
+        VStack(spacing: 12) {
+            Text("Driver Fill Rate")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
             ZStack {
                 Circle()
-                    .stroke(Color.gray.opacity(0.15), lineWidth: 10)
+                    .stroke(Color.gray.opacity(0.12), lineWidth: 10)
                 Circle()
-                    .trim(from: 0, to: 0.84)
-                    .stroke(brandBlue, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .trim(from: 0, to: CGFloat(driverFillRate))
+                    .stroke(
+                        driverFillRate > 0.7 ? Color.green : (driverFillRate > 0.3 ? Color.accentBlue : Color.orange),
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                    )
                     .rotationEffect(.degrees(-90))
+                    .animation(.easeOut(duration: 0.8), value: driverFillRate)
                 VStack(spacing: 2) {
-                    Text("84%")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                    Text("used")
-                        .font(.caption2)
+                    Text("\(Int(driverFillRate * 100))%")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text("filled")
+                        .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 }
             }
             .frame(width: 80, height: 80)
-
-            Text("Budget")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
-        .background(Color(UIColor.secondarySystemGroupedBackground))
-        .cornerRadius(14)
+        .background(Color.cardBackground)
+        .cornerRadius(16)
     }
 
-    var driverPerformanceSnapshot: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Top Drivers")
-                .font(.headline)
+    var campaignBreakdownChart: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Campaign Status")
+                .font(.caption)
+                .foregroundColor(.secondary)
 
-            ForEach(Array(sampleDrivers.enumerated()), id: \.element.name) { index, driver in
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(driverColor(index).opacity(0.12))
-                            .frame(width: 36, height: 36)
-                        Text(String(driver.name.prefix(1)))
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(driverColor(index))
+            if dashboard.campaignStatusBreakdown.isEmpty {
+                Spacer()
+                Text("No data")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                Spacer()
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(dashboard.campaignStatusBreakdown, id: \.label) { item in
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(colorFor(item.color))
+                                .frame(width: 8, height: 8)
+                            Text(item.label)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("\(item.count)")
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                        }
                     }
+                }
+                Spacer()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .background(Color.cardBackground)
+        .cornerRadius(16)
+    }
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(driver.name)
+    var topDriversSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Hired Drivers")
+                .font(.title3)
+                .fontWeight(.bold)
+
+            if dashboard.topDrivers.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: "person.2.slash")
+                            .font(.title2)
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text("No hired drivers yet")
                             .font(.subheadline)
-                            .fontWeight(.medium)
-                        Text(driver.car)
-                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
-
+                    .padding(.vertical, 20)
                     Spacer()
+                }
+            } else {
+                ForEach(Array(dashboard.topDrivers.enumerated()), id: \.offset) { index, item in
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(driverAvatarColor(index).opacity(0.12))
+                                .frame(width: 40, height: 40)
+                            Text(String(item.driver.name.prefix(1)).uppercased())
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(driverAvatarColor(index))
+                        }
 
-                    Text("\(driver.km) km")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(item.driver.name)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            Text(item.campaignName)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        if let rating = item.driver.rating, rating > 0 {
+                            HStack(spacing: 3) {
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.orange)
+                                Text(String(format: "%.1f", rating))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Text(item.driver.vehicleDisplayName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    if index < dashboard.topDrivers.count - 1 {
+                        Divider()
+                    }
                 }
             }
         }
-        .padding()
-        .background(Color(UIColor.secondarySystemGroupedBackground))
-        .cornerRadius(14)
+        .padding(16)
+        .background(Color.cardBackground)
+        .cornerRadius(16)
     }
 
-    func driverColor(_ index: Int) -> Color {
-        let colors: [Color] = [.blue, .green, .orange]
-        return colors[index % colors.count]
+    var emptyState: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "chart.bar.xaxis")
+                .font(.system(size: 44))
+                .foregroundColor(.secondary.opacity(0.4))
+            Text("No statistics yet")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            Text("Create your first campaign to\nstart seeing statistics here.")
+                .font(.subheadline)
+                .foregroundColor(.secondary.opacity(0.8))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 60)
     }
 
     func formattedNumber(_ n: Int) -> String {
@@ -242,11 +320,18 @@ struct CompanyStatsView: View {
         return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
     }
 
-    var sampleDrivers: [(name: String, car: String, km: Int)] {
-        [
-            ("M. Horváth", "Škoda Octavia", 178),
-            ("P. Tóth", "VW Golf", 162),
-            ("L. Szalai", "Ford Focus", 154)
-        ]
+    func colorFor(_ name: String) -> Color {
+        switch name {
+        case "blue": return .blue
+        case "green": return .green
+        case "orange": return .orange
+        case "gray": return .gray
+        default: return .secondary
+        }
+    }
+
+    func driverAvatarColor(_ index: Int) -> Color {
+        let colors: [Color] = [.blue, .green, .purple, .orange, .pink]
+        return colors[index % colors.count]
     }
 }
