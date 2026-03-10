@@ -1,6 +1,7 @@
 package com.adonwheels.campaignservice.service;
 
 import com.adonwheels.campaignservice.model.Campaign;
+import com.adonwheels.campaignservice.model.CampaignStatus;
 import com.adonwheels.campaignservice.repository.CampaignRepository;
 import com.adonwheels.campaignservice.exception.CampaignNotFoundException;
 import org.springframework.stereotype.Service;
@@ -31,5 +32,13 @@ public class CampaignService {
 
     public List<Campaign> findByCompanyId(Long companyId) {
         return repository.findByCompanyId(companyId);
+    }
+
+    public List<Campaign> findByCompanyIdAndStatus(Long companyId, CampaignStatus status) {
+        return repository.findByCompanyIdAndStatus(companyId, status);
+    }
+
+    public List<Campaign> findByStatus(CampaignStatus status) {
+        return repository.findByStatus(status);
     }
 } 
