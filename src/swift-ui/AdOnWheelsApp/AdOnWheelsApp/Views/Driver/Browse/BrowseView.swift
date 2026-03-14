@@ -43,8 +43,11 @@ struct BrowseView: View {
                     ForEach(viewModel.campaigns.reversed()) { campaign in
                         SwipeCardContainer(
                             campaign: campaign,
-                            onRemove: {
-                                withAnimation { viewModel.removeCard(campaign) }
+                            onSwipeRight: {
+                                Task { await viewModel.applyToCampaign(campaign) }
+                            },
+                            onSwipeLeft: {
+                                withAnimation { viewModel.skipCampaign(campaign) }
                             },
                             onTap: {
                                 selectedCampaign = campaign
@@ -67,10 +70,12 @@ struct BrowseView: View {
             }
             .frame(maxHeight: .infinity)
 
-            HStack(spacing: 40) {
+            // Action buttons: Skip, Undo, Apply
+            HStack(spacing: 30) {
+                // Skip button (swipe left)
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
-                        withAnimation { viewModel.removeCard(topCard) }
+                        withAnimation { viewModel.skipCampaign(topCard) }
                     }
                 }) {
                     Image(systemName: "xmark")
@@ -82,18 +87,36 @@ struct BrowseView: View {
                         .shadow(radius: 5)
                 }
 
+                // Undo button (back arrow — restores last skipped ad)
+                Button(action: {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                        viewModel.undoLastSkip()
+                    }
+                }) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.title2)
+                        .foregroundColor(viewModel.canUndo ? .yellow : .gray.opacity(0.4))
+                        .frame(width: 50, height: 50)
+                        .background(Color(UIColor.secondarySystemGroupedBackground))
+                        .clipShape(Circle())
+                        .shadow(radius: viewModel.canUndo ? 5 : 0)
+                }
+                .disabled(!viewModel.canUndo)
+
+                // Refresh button
                 Button(action: {
                     Task { await viewModel.loadCampaigns() }
                 }) {
                     Image(systemName: "arrow.counterclockwise")
-                        .font(.title)
-                        .foregroundColor(.yellow)
+                        .font(.title2)
+                        .foregroundColor(.blue)
                         .frame(width: 50, height: 50)
                         .background(Color(UIColor.secondarySystemGroupedBackground))
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
 
+                // Apply button (swipe right / express interest)
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
                         Task { await viewModel.applyToCampaign(topCard) }
@@ -126,35 +149,99 @@ struct BrowseView: View {
 
 struct SwipeCardContainer: View {
     let campaign: Campaign
-    let onRemove: () -> Void
+    let onSwipeRight: () -> Void
+    let onSwipeLeft: () -> Void
     let onTap: () -> Void
 
     @State private var offset: CGSize = .zero
 
+    /// Normalized drag amount (-1 to 1) for overlay opacity
+    private var dragProgress: Double {
+        Double(offset.width) / 150.0
+    }
+
     var body: some View {
-        BrowseCardView(campaign: campaign)
-            .offset(x: offset.width, y: offset.height * 0.4)
-            .rotationEffect(.degrees(Double(offset.width / 40)))
-            .onTapGesture { onTap() }
-            .gesture(
-                DragGesture()
-                    .onChanged { gesture in
-                        offset = gesture.translation
-                    }
-                    .onEnded { _ in
-                        withAnimation {
-                            if offset.width > 150 {
-                                offset = CGSize(width: 500, height: 0)
-                                onRemove()
-                            } else if offset.width < -150 {
-                                offset = CGSize(width: -500, height: 0)
-                                onRemove()
-                            } else {
-                                offset = .zero
-                            }
+        ZStack {
+            BrowseCardView(campaign: campaign)
+
+            // LIKE overlay — shown when swiping right
+            if dragProgress > 0 {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.green, lineWidth: 4)
+                    .background(Color.green.opacity(0.05).cornerRadius(20))
+                    .overlay(
+                        VStack {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.green)
+                            Text("INTERESTED")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.green)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.9))
+                        .cornerRadius(12)
+                        .rotationEffect(.degrees(-15))
+                        .padding(.top, 40)
+                        .padding(.leading, 20),
+                        alignment: .topLeading
+                    )
+                    .opacity(min(dragProgress, 1.0))
+                    .padding()
+            }
+
+            // SKIP overlay — shown when swiping left
+            if dragProgress < 0 {
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.red, lineWidth: 4)
+                    .background(Color.red.opacity(0.05).cornerRadius(20))
+                    .overlay(
+                        VStack {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 40))
+                                .foregroundColor(.red)
+                            Text("SKIP")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.red)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.9))
+                        .cornerRadius(12)
+                        .rotationEffect(.degrees(15))
+                        .padding(.top, 40)
+                        .padding(.trailing, 20),
+                        alignment: .topTrailing
+                    )
+                    .opacity(min(-dragProgress, 1.0))
+                    .padding()
+            }
+        }
+        .offset(x: offset.width, y: offset.height * 0.4)
+        .rotationEffect(.degrees(Double(offset.width / 40)))
+        .onTapGesture { onTap() }
+        .gesture(
+            DragGesture()
+                .onChanged { gesture in
+                    offset = gesture.translation
+                }
+                .onEnded { _ in
+                    withAnimation {
+                        if offset.width > 150 {
+                            // Swipe RIGHT → express interest (apply)
+                            offset = CGSize(width: 500, height: 0)
+                            onSwipeRight()
+                        } else if offset.width < -150 {
+                            // Swipe LEFT → skip
+                            offset = CGSize(width: -500, height: 0)
+                            onSwipeLeft()
+                        } else {
+                            offset = .zero
                         }
                     }
-            )
+                }
+        )
     }
 }
 

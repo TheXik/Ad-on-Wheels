@@ -7,6 +7,12 @@ class BrowseViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var applySuccess = false
 
+    /// Stack of skipped campaigns for undo (back arrow) functionality
+    @Published private(set) var skippedCampaigns: [Campaign] = []
+
+    /// Whether undo is available (at least one skipped campaign exists)
+    var canUndo: Bool { !skippedCampaigns.isEmpty }
+
     private let api: APIClientProtocol
     private let driverId: Int
 
@@ -26,6 +32,7 @@ class BrowseViewModel: ObservableObject {
             ])
             let fetchedCampaigns: [Campaign] = try await api.send(endpoint)
             self.campaigns = fetchedCampaigns
+            self.skippedCampaigns = []
         } catch {
             self.errorMessage = error.localizedDescription
             self.campaigns = []
@@ -48,6 +55,19 @@ class BrowseViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    /// Skip a campaign (swipe left) — pushes it onto the undo stack
+    func skipCampaign(_ campaign: Campaign) {
+        guard let index = campaigns.firstIndex(where: { $0.id == campaign.id }) else { return }
+        campaigns.remove(at: index)
+        skippedCampaigns.append(campaign)
+    }
+
+    /// Undo the last skip — pops from the undo stack and re-inserts at the front
+    func undoLastSkip() {
+        guard let lastSkipped = skippedCampaigns.popLast() else { return }
+        campaigns.insert(lastSkipped, at: 0)
     }
 
     func removeCard(_ campaign: Campaign) {

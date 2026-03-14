@@ -50,9 +50,15 @@ struct DriverRootView: View {
             }
         }
         .fullScreenCover(isPresented: $showingQRSheet) {
-            QRScanView {
-                showingQRSheet = false
-            }
+            QRScanView(
+                onScanComplete: { showingQRSheet = false },
+                rideViewModel: rideViewModel
+            )
+        }
+        .onAppear {
+            // UC013: Start background GPS buffering so deferred rides are possible
+            rideViewModel.requestLocationPermission()
+            rideViewModel.startGPSBuffering()
         }
         .alert("Ride Error", isPresented: .constant(rideViewModel.errorMessage != nil)) {
             Button("OK") {
