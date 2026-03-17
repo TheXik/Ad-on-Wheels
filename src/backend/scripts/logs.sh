@@ -22,7 +22,7 @@ else
     SERVICE=$1
 
     # Validate service name
-    VALID_SERVICES=("mysql" "eureka-server" "gateway-service" "auth-service" "driver-service" "company-service" "campaign-service" "ride-service" "redis")
+    VALID_SERVICES=("mysql" "cassandra" "eureka-server" "gateway-service" "auth-service" "driver-service" "company-service" "campaign-service" "ride-service")
 
     if ! printf '%s\n' "${VALID_SERVICES[@]}" | grep -qx "$SERVICE"; then
         echo -e "${YELLOW}Unknown service: $SERVICE${NC}"

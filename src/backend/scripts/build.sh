@@ -56,7 +56,7 @@ docker run --rm \
   -v ~/.m2:/root/.m2 \
   -w /app \
   maven:3.9-eclipse-temurin-21 \
-  mvn clean package -DskipTests
+  mvn package -DskipTests
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
@@ -68,6 +68,7 @@ echo "  - auth-service/target/auth-service-0.0.1-SNAPSHOT.jar"
 echo "  - driver-service/target/driver-service-0.0.1-SNAPSHOT.jar"
 echo "  - company-service/target/company-service-0.0.1-SNAPSHOT.jar"
 echo "  - campaign-service/target/campaign-service-0.0.1-SNAPSHOT.jar"
+echo "  - ride-service/target/ride-service-0.0.1-SNAPSHOT.jar"
 echo "  - gateway-service/target/gateway-service-0.0.1-SNAPSHOT.jar"
 echo "  - eureka-server/target/eureka-server-0.0.1-SNAPSHOT.jar"
 echo ""
