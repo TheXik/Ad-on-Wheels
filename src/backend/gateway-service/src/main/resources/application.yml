@@ -61,6 +61,17 @@ spring:
             - StripPrefix=1
             - name: AuthenticationFilter
 
+        # -----------------------------------------------------------------------
+        # Messages (UC005) — lives in campaign-service at /messages
+        # -----------------------------------------------------------------------
+        - id: message-service
+          uri: lb://campaign-service
+          predicates:
+            - Path=/api/messages/**
+          filters:
+            - StripPrefix=1
+            - name: AuthenticationFilter
+
 jwt:
   secret: ${JWT_SECRET_KEY}
 
