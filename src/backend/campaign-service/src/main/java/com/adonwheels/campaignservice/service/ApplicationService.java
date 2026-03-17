@@ -33,6 +33,11 @@ public class ApplicationService {
         return applicationRepository.findByCampaignIdIn(campaignIds);
     }
 
+    /** Find all applications for a specific campaign */
+    public List<Application> findByCampaignId(Long campaignId) {
+        return applicationRepository.findByCampaignId(campaignId);
+    }
+
     @Transactional
     public Application accept(Long id) {
         Application app = applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));

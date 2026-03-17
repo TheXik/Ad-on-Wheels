@@ -3,6 +3,7 @@ import SwiftUI
 struct CompanyStatsView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
     @State private var selectedCampaignIndex = -1
+    @State private var showShareSheet = false
 
     var selectedCampaign: Campaign? {
         guard !dashboard.campaigns.isEmpty, selectedCampaignIndex >= 0 else { return nil }
@@ -46,9 +47,36 @@ struct CompanyStatsView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
-                Text("Statistics")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .padding(.top, 12)
+                HStack {
+                    Text("Statistics")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                    Spacer()
+                    if !dashboard.campaigns.isEmpty {
+                        Button(action: {
+                            Task {
+                                if let campaign = selectedCampaign {
+                                    await dashboard.exportCampaignCSV(campaignId: campaign.id)
+                                } else {
+                                    await dashboard.exportAllCampaignsCSV()
+                                }
+                            }
+                        }) {
+                            if dashboard.isExporting {
+                                ProgressView()
+                                    .frame(width: 34, height: 34)
+                            } else {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 34, height: 34)
+                                    .background(Color.accentBlue)
+                                    .clipShape(Circle())
+                            }
+                        }
+                        .disabled(dashboard.isExporting)
+                    }
+                }
+                .padding(.top, 12)
 
                 campaignPicker
 
@@ -70,6 +98,18 @@ struct CompanyStatsView: View {
         .background(Color.pageBackground)
         .refreshable {
             await dashboard.loadAll()
+        }
+        .onChange(of: dashboard.exportedFileURL) { url in
+            if url != nil {
+                showShareSheet = true
+            }
+        }
+        .sheet(isPresented: $showShareSheet, onDismiss: {
+            dashboard.exportedFileURL = nil
+        }) {
+            if let fileURL = dashboard.exportedFileURL {
+                ShareSheet(activityItems: [fileURL])
+            }
         }
     }
 
@@ -334,4 +374,16 @@ struct CompanyStatsView: View {
         let colors: [Color] = [.blue, .green, .purple, .orange, .pink]
         return colors[index % colors.count]
     }
+}
+
+// MARK: - Share Sheet (UC008)
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

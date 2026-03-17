@@ -8,6 +8,8 @@ class CompanyDashboardViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var actionInProgress: Int?
+    @Published var isExporting = false
+    @Published var exportedFileURL: URL?
 
     private let api: APIClientProtocol
     let companyId: Int
@@ -162,6 +164,46 @@ class CompanyDashboardViewModel: ObservableObject {
             }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - CSV Export (UC008)
+
+    /// Export a single campaign's stats as CSV.
+    func exportCampaignCSV(campaignId: Int) async {
+        isExporting = true
+        defer { isExporting = false }
+        do {
+            let endpoint = Endpoint(
+                path: "api/campaigns/\(campaignId)/export",
+                headers: ["Accept": "text/csv"]
+            )
+            let data = try await api.sendRawData(endpoint)
+            let filename = "campaign_\(campaignId)_stats.csv"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            try data.write(to: url)
+            exportedFileURL = url
+        } catch {
+            errorMessage = "Export failed: \(error.localizedDescription)"
+        }
+    }
+
+    /// Export all campaigns for this company as CSV.
+    func exportAllCampaignsCSV() async {
+        isExporting = true
+        defer { isExporting = false }
+        do {
+            let endpoint = Endpoint(
+                path: "api/campaigns/company/\(companyId)/export",
+                headers: ["Accept": "text/csv"]
+            )
+            let data = try await api.sendRawData(endpoint)
+            let filename = "company_\(companyId)_campaigns.csv"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            try data.write(to: url)
+            exportedFileURL = url
+        } catch {
+            errorMessage = "Export failed: \(error.localizedDescription)"
         }
     }
 }

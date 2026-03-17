@@ -5,6 +5,7 @@ protocol APIClientProtocol {
     func send(_ endpoint: Endpoint) async throws
     func sendMapped<T: Decodable>(_ endpoint: Endpoint) async throws -> T
     func sendMapped(_ endpoint: Endpoint) async throws
+    func sendRawData(_ endpoint: Endpoint) async throws -> Data
 }
 
 final class APIClient: APIClientProtocol {
@@ -97,5 +98,29 @@ final class APIClient: APIClientProtocol {
         }
     }
     
+    /// Download raw bytes (e.g. CSV export) without JSON decoding.
+    func sendRawData(_ endpoint: Endpoint) async throws -> Data {
+        do {
+            let request = try endpoint.makeURLRequest(baseURL: baseURL)
+            let (data, response) = try await session.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.transport(URLError(.badServerResponse))
+            }
+
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw NetworkError.malformedErrorResponse(statusCode: httpResponse.statusCode)
+            }
+
+            return data
+        } catch let error as NetworkError {
+            throw error
+        } catch let urlError as URLError {
+            throw NetworkError.transport(urlError)
+        } catch {
+            throw NetworkError.decoding(error)
+        }
+    }
+
     private struct EmptyResponse: Decodable {}
 }

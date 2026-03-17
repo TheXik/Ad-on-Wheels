@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     List<Application> findByCampaignIdIn(List<Long> campaignIds);
+    List<Application> findByCampaignId(Long campaignId);
 } 
