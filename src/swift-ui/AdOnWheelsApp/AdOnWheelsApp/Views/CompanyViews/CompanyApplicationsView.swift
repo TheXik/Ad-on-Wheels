@@ -1,17 +1,75 @@
 import SwiftUI
 
+// UC007 — Sort options for driver applications
+enum DriverSortOption: String, CaseIterable {
+    case newest = "Newest"
+    case ratingHigh = "Rating ↓"
+    case ratingLow = "Rating ↑"
+    case nameAZ = "Name A–Z"
+}
+
 struct CompanyApplicationsView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
     @State private var selectedFilter = 0
+    @State private var searchText = ""
+    @State private var minRating: Double = 0
+    @State private var verifiedOnly = false
+    @State private var sortOption: DriverSortOption = .newest
+    @State private var showFilters = false
+
+    var activeFilterCount: Int {
+        var count = 0
+        if minRating > 0 { count += 1 }
+        if verifiedOnly { count += 1 }
+        if !searchText.isEmpty { count += 1 }
+        if sortOption != .newest { count += 1 }
+        return count
+    }
 
     var filteredApplications: [ApplicationWithDriver] {
+        var result: [ApplicationWithDriver]
+        // Status filter
         switch selectedFilter {
-        case 0: return dashboard.applications
-        case 1: return dashboard.applications.filter { $0.status.uppercased() == "APPLIED" }
-        case 2: return dashboard.applications.filter { $0.status.uppercased() == "ACCEPTED" }
-        case 3: return dashboard.applications.filter { $0.status.uppercased() == "DECLINED" }
-        default: return dashboard.applications
+        case 0: result = dashboard.applications
+        case 1: result = dashboard.applications.filter { $0.status.uppercased() == "APPLIED" }
+        case 2: result = dashboard.applications.filter { $0.status.uppercased() == "ACCEPTED" }
+        case 3: result = dashboard.applications.filter { $0.status.uppercased() == "DECLINED" }
+        default: result = dashboard.applications
         }
+
+        // UC007: Search by driver name or vehicle
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            result = result.filter {
+                $0.driver.name.lowercased().contains(query) ||
+                $0.driver.vehicleDisplayName.lowercased().contains(query) ||
+                $0.campaignName.lowercased().contains(query)
+            }
+        }
+
+        // UC007: Rating filter
+        if minRating > 0 {
+            result = result.filter { ($0.driver.rating ?? 0) >= minRating }
+        }
+
+        // UC007: Verified vehicle filter
+        if verifiedOnly {
+            result = result.filter { $0.driver.isVehicleVerified }
+        }
+
+        // UC007: Sorting
+        switch sortOption {
+        case .newest:
+            break // keep original order (newest first from API)
+        case .ratingHigh:
+            result.sort { ($0.driver.rating ?? 0) > ($1.driver.rating ?? 0) }
+        case .ratingLow:
+            result.sort { ($0.driver.rating ?? 0) < ($1.driver.rating ?? 0) }
+        case .nameAZ:
+            result.sort { $0.driver.name.lowercased() < $1.driver.name.lowercased() }
+        }
+
+        return result
     }
 
     var body: some View {
@@ -21,16 +79,130 @@ struct CompanyApplicationsView: View {
                     Text("Applications")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                     Spacer()
+                    // UC007: Filter toggle button
                     if !dashboard.applications.isEmpty {
-                        Text("\(dashboard.applications.count)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.secondary.opacity(0.1))
-                            .clipShape(Capsule())
+                        Button(action: { withAnimation { showFilters.toggle() } }) {
+                            ZStack(alignment: .topTrailing) {
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(showFilters ? .white : .accentBlue)
+                                    .frame(width: 34, height: 34)
+                                    .background(showFilters ? Color.accentBlue : Color.accentBlue.opacity(0.1))
+                                    .clipShape(Circle())
+                                if activeFilterCount > 0 {
+                                    Text("\(activeFilterCount)")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 16, height: 16)
+                                        .background(Color.orange)
+                                        .clipShape(Circle())
+                                        .offset(x: 4, y: -4)
+                                }
+                            }
+                        }
                     }
+                }
+
+                // UC007: Search bar
+                if !dashboard.applications.isEmpty {
+                    HStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        TextField("Search drivers, vehicles, campaigns...", text: $searchText)
+                            .font(.subheadline)
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(10)
+                    .background(Color.cardBackground)
+                    .cornerRadius(12)
+                }
+
+                // UC007: Advanced filters panel
+                if showFilters {
+                    VStack(alignment: .leading, spacing: 14) {
+                        // Rating filter
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text("Min Rating")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                HStack(spacing: 3) {
+                                    Image(systemName: "star.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.orange)
+                                    Text(minRating > 0 ? String(format: "%.1f+", minRating) : "Any")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                            Slider(value: $minRating, in: 0...5, step: 0.5)
+                                .tint(.orange)
+                        }
+
+                        // Verified vehicle toggle
+                        Toggle(isOn: $verifiedOnly) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                Text("Verified vehicles only")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .toggleStyle(SwitchToggleStyle(tint: .green))
+
+                        // Sort picker
+                        HStack {
+                            Text("Sort by")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Menu {
+                                ForEach(DriverSortOption.allCases, id: \.self) { option in
+                                    Button(action: { sortOption = option }) {
+                                        if sortOption == option {
+                                            Label(option.rawValue, systemImage: "checkmark")
+                                        } else {
+                                            Text(option.rawValue)
+                                        }
+                                    }
+                                }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Text(sortOption.rawValue)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                    Image(systemName: "chevron.up.chevron.down")
+                                        .font(.caption2)
+                                }
+                                .foregroundColor(.primary)
+                            }
+                        }
+
+                        // Clear filters
+                        if activeFilterCount > 0 {
+                            Button(action: {
+                                minRating = 0
+                                verifiedOnly = false
+                                searchText = ""
+                                sortOption = .newest
+                            }) {
+                                Text("Clear all filters")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+                        }
+                    }
+                    .padding(14)
+                    .background(Color.cardBackground)
+                    .cornerRadius(14)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
                 if !dashboard.applications.isEmpty {
@@ -95,6 +267,7 @@ struct CompanyApplicationsView: View {
                             ApplicationCard(
                                 application: app,
                                 isProcessing: dashboard.actionInProgress == app.id,
+                                companyId: dashboard.companyId,
                                 onAccept: {
                                     Task { await dashboard.acceptApplication(app.id) }
                                 },
@@ -150,8 +323,10 @@ struct CompanyApplicationsView: View {
 struct ApplicationCard: View {
     let application: ApplicationWithDriver
     let isProcessing: Bool
+    let companyId: Int
     let onAccept: () -> Void
     let onDecline: () -> Void
+    @State private var showComposeMessage = false
 
     private var actionInProgress: Int? { nil }
 
@@ -249,9 +424,35 @@ struct ApplicationCard: View {
                     .disabled(isProcessing)
                 }
             }
+
+            // Message button for accepted drivers
+            if application.status.uppercased() == "ACCEPTED" {
+                Button(action: { showComposeMessage = true }) {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "envelope.fill")
+                        Text("Message Driver")
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .padding(.vertical, 11)
+                    .foregroundColor(.accentBlue)
+                    .background(Color.accentBlue.opacity(0.08))
+                    .cornerRadius(12)
+                }
+            }
         }
         .padding(16)
         .background(Color.cardBackground)
         .cornerRadius(16)
+        .sheet(isPresented: $showComposeMessage) {
+            ComposeMessageView(
+                companyId: companyId,
+                recipientId: application.driver.id,
+                recipientName: application.driver.name,
+                campaignId: application.campaignId,
+                campaignName: application.campaignName
+            )
+        }
     }
 }
