@@ -39,7 +39,8 @@ public class GlobalExceptionHandlerAspect {
 
         } catch (Throwable ex) {
             logger.error("An unexpected internal error occurred in {}.", methodName, ex);
-            return buildResponse(AppErrorCode.INTERNAL_SERVER_ERROR);
+            String detail = ex.getClass().getSimpleName() + ": " + ex.getMessage();
+            return buildResponse(AppErrorCode.INTERNAL_SERVER_ERROR, detail);
         }
     }
 

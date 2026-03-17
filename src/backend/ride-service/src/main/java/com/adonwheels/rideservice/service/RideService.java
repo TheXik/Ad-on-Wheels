@@ -44,7 +44,6 @@ public class RideService {
                 .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
     }
 
-    @Transactional
     public StartRideResponse startRide(String driverId) {
         String rideId = UUID.randomUUID().toString();
         RideSession session = new RideSession(rideId, driverId, LocalDateTime.now());
@@ -52,7 +51,6 @@ public class RideService {
         return new StartRideResponse(rideId);
     }
 
-    @Transactional
     public void trackPoint(String rideId, double lat, double lon) {
         RideSession session = requireSession(rideId);
         session.addPoint(new LocationPoint(lat, lon, LocalDateTime.now()));
