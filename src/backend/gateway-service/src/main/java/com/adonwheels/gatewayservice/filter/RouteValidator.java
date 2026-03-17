@@ -13,6 +13,10 @@ public class RouteValidator {
             "/auth/register",
             "/auth/login",
             "/auth/google",
+            "/auth/forgot-password",
+            "/auth/reset-password",
+            "/auth/send-verification",
+            "/auth/verify-email",
             "/eureka" //TODO MAKE sure that this is okay to have it here  im not sure i know i need it for eureka discovery
             //TODO but i dont know if it wont make issues with security
     );

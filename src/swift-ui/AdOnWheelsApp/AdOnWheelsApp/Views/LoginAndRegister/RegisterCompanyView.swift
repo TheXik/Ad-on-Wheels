@@ -6,6 +6,7 @@ struct RegisterCompanyView: View {
     var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
+    @State private var showVerification = false
     
     @StateObject private var viewModel: RegisterCompanyViewModel
     
@@ -91,6 +92,14 @@ struct RegisterCompanyView: View {
                 CompanyRootView(authService: authService)
                     .transition(.move(edge: .trailing))
             }
+        }
+        .onChange(of: viewModel.registrationSuccessful) { success in
+            if success {
+                showVerification = true
+            }
+        }
+        .sheet(isPresented: $showVerification) {
+            EmailVerificationView(email: viewModel.email)
         }
     }
 }
