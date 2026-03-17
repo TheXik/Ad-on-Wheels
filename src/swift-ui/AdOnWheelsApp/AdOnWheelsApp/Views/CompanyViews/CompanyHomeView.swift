@@ -2,6 +2,13 @@ import SwiftUI
 
 struct CompanyHomeView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
+    @StateObject private var inboxVM: InboxViewModel
+    @State private var showInbox = false
+
+    init(dashboard: CompanyDashboardViewModel) {
+        self.dashboard = dashboard
+        _inboxVM = StateObject(wrappedValue: InboxViewModel(userId: dashboard.companyId, userRole: "COMPANY"))
+    }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -12,6 +19,10 @@ struct CompanyHomeView: View {
                     loadingPlaceholder
                 } else {
                     statsGrid
+
+                    if inboxVM.unreadCount > 0 {
+                        messagesBanner
+                    }
 
                     if !dashboard.activeCampaigns.isEmpty {
                         activeCampaignsSection
@@ -32,6 +43,15 @@ struct CompanyHomeView: View {
         .background(Color.pageBackground)
         .refreshable {
             await dashboard.loadAll()
+            await inboxVM.loadInbox()
+        }
+        .task {
+            await inboxVM.loadInbox()
+        }
+        .sheet(isPresented: $showInbox) {
+            NavigationView {
+                InboxView(userId: dashboard.companyId, userRole: "COMPANY")
+            }
         }
     }
 
@@ -96,6 +116,41 @@ struct CompanyHomeView: View {
                 CampaignRow(campaign: campaign)
             }
         }
+    }
+
+    var messagesBanner: some View {
+        Button(action: { showInbox = true }) {
+            HStack(spacing: 12) {
+                Image(systemName: "envelope.badge.fill")
+                    .font(.title3)
+                    .foregroundColor(.accentBlue)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(inboxVM.unreadCount) unread message\(inboxVM.unreadCount == 1 ? "" : "s")")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    Text("Tap to open inbox")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.accentBlue.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(Color.accentBlue.opacity(0.15), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 
     var pendingBanner: some View {

@@ -102,7 +102,7 @@ struct DashboardView: View {
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 4)
                             
-                            NavigationLink(destination: InboxView()) {
+                            NavigationLink(destination: InboxView(userId: authService.userId ?? 0)) {
                                 DashboardCardView(
                                     iconName: "envelope.fill",
                                     title: "New terms available",
