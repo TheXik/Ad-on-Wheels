@@ -1,12 +1,9 @@
 import SwiftUI
 
 struct BrowseView: View {
-    @StateObject private var viewModel: BrowseViewModel
+    @ObservedObject var viewModel: BrowseViewModel
     @State private var selectedCampaign: Campaign?
-
-    init(driverId: Int) {
-        _viewModel = StateObject(wrappedValue: BrowseViewModel(driverId: driverId))
-    }
+    @State private var hasLoadedOnce = false
 
     var body: some View {
         VStack {
@@ -24,16 +21,41 @@ struct BrowseView: View {
                 if viewModel.isLoading {
                     ProgressView("Loading campaigns...")
                 } else if viewModel.campaigns.isEmpty {
-                    VStack {
-                        Image(systemName: viewModel.errorMessage != nil ? "exclamationmark.triangle" : "checkmark.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(viewModel.errorMessage != nil ? .orange : .green)
-                            .padding()
-                        Text(viewModel.errorMessage ?? "No campaigns available")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
+                    VStack(spacing: 12) {
+                        if viewModel.errorMessage != nil {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 60))
+                                .foregroundColor(.orange)
+                                .padding()
+                            Text(viewModel.errorMessage!)
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        } else if viewModel.allCampaignsSeen {
+                            Image(systemName: "eye.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.blue)
+                                .padding()
+                            Text("You've seen all available campaigns.")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                            Text("Check back later for new opportunities!")
+                                .font(.subheadline)
+                                .foregroundColor(.gray.opacity(0.7))
+                        } else {
+                            Image(systemName: "tray")
+                                .font(.system(size: 60))
+                                .foregroundColor(.gray)
+                                .padding()
+                            Text("No campaigns available right now")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
                         Button("Refresh") {
                             Task { await viewModel.loadCampaigns() }
                         }
@@ -103,19 +125,6 @@ struct BrowseView: View {
                 }
                 .disabled(!viewModel.canUndo)
 
-                // Refresh button
-                Button(action: {
-                    Task { await viewModel.loadCampaigns() }
-                }) {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                        .frame(width: 50, height: 50)
-                        .background(Color(UIColor.secondarySystemGroupedBackground))
-                        .clipShape(Circle())
-                        .shadow(radius: 5)
-                }
-
                 // Apply button (swipe right / express interest)
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
@@ -136,6 +145,8 @@ struct BrowseView: View {
         }
         .background(Color(UIColor.systemGroupedBackground))
         .task {
+            guard !hasLoadedOnce else { return }
+            hasLoadedOnce = true
             await viewModel.loadCampaigns()
         }
         .sheet(item: $selectedCampaign) { campaign in
@@ -247,6 +258,6 @@ struct SwipeCardContainer: View {
 
 struct BrowseView_Previews: PreviewProvider {
     static var previews: some View {
-        BrowseView(driverId: 1)
+        BrowseView(viewModel: BrowseViewModel(driverId: 1))
     }
 }

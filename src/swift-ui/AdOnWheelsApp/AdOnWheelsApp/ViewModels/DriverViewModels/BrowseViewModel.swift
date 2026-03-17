@@ -13,6 +13,12 @@ class BrowseViewModel: ObservableObject {
     /// Whether undo is available (at least one skipped campaign exists)
     var canUndo: Bool { !skippedCampaigns.isEmpty }
 
+    /// True when the driver has seen all available campaigns this session
+    @Published var allCampaignsSeen = false
+
+    /// IDs the driver already interacted with (skipped or applied) — survives refresh
+    private var seenCampaignIds: Set<Int> = []
+
     private let api: APIClientProtocol
     private let driverId: Int
 
@@ -31,8 +37,10 @@ class BrowseViewModel: ObservableObject {
                 URLQueryItem(name: "status", value: "RECRUITING")
             ])
             let fetchedCampaigns: [Campaign] = try await api.send(endpoint)
-            self.campaigns = fetchedCampaigns
+            let unseen = fetchedCampaigns.filter { !seenCampaignIds.contains($0.id) }
+            self.campaigns = unseen
             self.skippedCampaigns = []
+            self.allCampaignsSeen = unseen.isEmpty && !fetchedCampaigns.isEmpty
         } catch {
             self.errorMessage = error.localizedDescription
             self.campaigns = []
@@ -48,6 +56,7 @@ class BrowseViewModel: ObservableObject {
             )
             let _: Application = try await api.send(endpoint)
             removeCard(campaign)
+            seenCampaignIds.insert(campaign.id)
             applySuccess = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 self.applySuccess = false
@@ -62,6 +71,7 @@ class BrowseViewModel: ObservableObject {
         guard let index = campaigns.firstIndex(where: { $0.id == campaign.id }) else { return }
         campaigns.remove(at: index)
         skippedCampaigns.append(campaign)
+        seenCampaignIds.insert(campaign.id)
     }
 
     /// Undo the last skip — pops from the undo stack and re-inserts at the front
