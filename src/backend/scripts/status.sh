@@ -92,6 +92,17 @@ check_internal_service "Campaign Service    " "campaign-service"
 check_internal_service "Ride Service        " "ride-service"
 
 echo ""
+echo -e "${BLUE}Data Stores:${NC}"
+echo ""
+
+# Check Cassandra
+if docker compose exec -T cassandra cqlsh -e "DESCRIBE KEYSPACES" > /dev/null 2>&1; then
+    echo -e "  ${GREEN}✓${NC} Cassandra (9042)       - ${GREEN}UP${NC}"
+else
+    echo -e "  ${RED}✗${NC} Cassandra (9042)       - ${RED}DOWN${NC}"
+fi
+
+echo ""
 echo -e "${CYAN}ℹ  Internal services are only accessible through the Gateway${NC}"
 echo ""
 

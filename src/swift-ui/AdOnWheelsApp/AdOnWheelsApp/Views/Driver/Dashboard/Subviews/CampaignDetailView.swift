@@ -1,105 +1,100 @@
 import SwiftUI
 
 struct CampaignDetailView: View {
-    // Mock Data (Ideally passed in)
-    var companyName: String = "Firma XYZ"
-    var campaignTitle: String = "Brand Awareness Spg 24"
-    @State private var showApplyAlert = false
+    let campaign: Campaign
+    var onApply: (() -> Void)?
+    @Environment(\.dismiss) private var dismiss
+
+    private var cardColor: Color {
+        let colors: [Color] = [.blue, .red, .green, .orange, .purple, .pink]
+        return colors[campaign.id % colors.count]
+    }
+
+    private var cardIcon: String {
+        let icons = ["car.fill", "bolt.car.fill", "leaf.fill", "box.truck.fill", "megaphone.fill", "star.fill"]
+        return icons[campaign.id % icons.count]
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Header Image
-                Rectangle()
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(height: 250)
-                    .overlay(
-                        Image(systemName: "car.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .padding(60)
-                            .foregroundColor(.blue)
-                    )
-                
-                VStack(alignment: .leading, spacing: 20) {
-                    // Title Header
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(companyName)
-                            .font(.subheadline)
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Rectangle()
+                        .fill(cardColor.opacity(0.1))
+                        .frame(height: 250)
+                        .overlay(
+                            Image(systemName: cardIcon)
+                                .resizable()
+                                .scaledToFit()
+                                .padding(60)
+                                .foregroundColor(cardColor)
+                        )
+
+                    VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(campaign.companyName ?? "Company")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .fontWeight(.semibold)
+
+                            Text(campaign.name)
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                        }
+
+                        Divider()
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            DetailInfoBox(label: "Duration", value: campaign.formattedDateRange, icon: "calendar")
+                            DetailInfoBox(label: "Budget", value: campaign.formattedBudget, icon: "dollarsign.circle")
+                            DetailInfoBox(label: "Drivers", value: "\(campaign.maxDrivers)", icon: "person.2")
+                            DetailInfoBox(label: "Est. Reach", value: campaign.formattedReach, icon: "eye")
+                        }
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("About Campaign")
+                                .font(.headline)
+                            Text(campaign.description)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .lineSpacing(4)
+                        }
+
+                        Spacer().frame(height: 20)
+
+                        if let onApply {
+                            Button(action: {
+                                onApply()
+                                dismiss()
+                            }) {
+                                Text("Apply Now")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(15)
+                                    .shadow(radius: 5)
+                            }
+                        }
+                    }
+                    .padding(25)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
+                    .cornerRadius(30, corners: [.topLeft, .topRight])
+                    .offset(y: -30)
+                }
+            }
+            .edgesIgnoringSafeArea(.top)
+            .background(Color(UIColor.systemGroupedBackground))
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
                             .foregroundColor(.gray)
-                            .fontWeight(.semibold)
-                        
-                        Text(campaignTitle)
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                    }
-                    
-                    Divider()
-                    
-                    // Info Grid
-                    HStack(spacing: 20) {
-                        DetailInfoBox(label: "Duration", value: "3 Months", icon: "calendar")
-                        DetailInfoBox(label: "Pay", value: "€120/mo", icon: "eurosign.circle")
-                    }
-                    
-                    // Description
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("About Campaign")
-                            .font(.headline)
-                        Text("Drive your daily route with our brand branding on your side doors. Requires minimum 500km monthly driving in city center.")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .lineSpacing(4)
-                    }
-                    
-                    // Requirements
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Requirements")
-                            .font(.headline)
-                        
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                            Text("Sedan or SUV (2018+)")
-                        }
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                            Text("Clean Driving Record")
-                        }
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                            Text("Bratislava Region")
-                        }
-                    }
-                    
-                    Spacer().frame(height: 20)
-                    
-                    Button(action: {
-                        showApplyAlert = true
-                    }) {
-                        Text("Apply Now")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(15)
-                            .shadow(radius: 5)
                     }
                 }
-                .padding(25)
-                .background(Color(UIColor.secondarySystemGroupedBackground))
-                .cornerRadius(30, corners: [.topLeft, .topRight])
-                .offset(y: -30)
             }
-        }
-        .edgesIgnoringSafeArea(.top)
-        .background(Color(UIColor.systemGroupedBackground))
-        .alert(isPresented: $showApplyAlert) {
-            Alert(
-                title: Text("Coming Soon"),
-                message: Text("Campaign applications will be available in a future update."),
-                dismissButton: .default(Text("OK"))
-            )
         }
     }
 }
@@ -108,13 +103,13 @@ struct DetailInfoBox: View {
     let label: String
     let value: String
     let icon: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(.blue)
-            
+
             VStack(alignment: .leading) {
                 Text(value)
                     .font(.headline)
@@ -133,6 +128,13 @@ struct DetailInfoBox: View {
 
 struct CampaignDetailView_Previews: PreviewProvider {
     static var previews: some View {
-        CampaignDetailView()
+        CampaignDetailView(
+            campaign: Campaign(
+                id: 1, name: "Test Campaign", description: "This is a test campaign with a longer description.",
+                companyId: 1, startDate: "2025-03-01", endDate: "2025-06-30",
+                budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING"),
+            onApply: {}
+        )
     }
 }
+

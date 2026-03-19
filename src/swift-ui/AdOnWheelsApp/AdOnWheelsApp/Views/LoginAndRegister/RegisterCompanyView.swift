@@ -6,6 +6,7 @@ struct RegisterCompanyView: View {
     var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
+    @State private var showVerification = false
     
     @StateObject private var viewModel: RegisterCompanyViewModel
     
@@ -75,6 +76,8 @@ struct RegisterCompanyView: View {
                 },
                 bottomLinks: {
                     if !viewModel.registrationSuccessful {
+                        GoogleSignInSection(authService: authService, role: "COMPANY")
+
                         Button("Already have an account? Log in here") {
                             navViewModel.currentScreen = .loginCompany
                         }
@@ -86,9 +89,17 @@ struct RegisterCompanyView: View {
             
             // Auto-navigate to home when registration is successful
             if viewModel.registrationSuccessful && authService.isAuthenticated {
-                CompanyHomePageView(authService: authService)
+                CompanyRootView(authService: authService)
                     .transition(.move(edge: .trailing))
             }
+        }
+        .onChange(of: viewModel.registrationSuccessful) { success in
+            if success {
+                showVerification = true
+            }
+        }
+        .sheet(isPresented: $showVerification) {
+            EmailVerificationView(email: viewModel.email)
         }
     }
 }

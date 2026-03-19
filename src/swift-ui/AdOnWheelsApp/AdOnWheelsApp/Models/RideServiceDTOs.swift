@@ -14,3 +14,16 @@ struct EndRideResponse: Decodable {
     let totalDistanceKm: Double
     let durationSeconds: Int
 }
+
+// MARK: - UC013 Deferred Ride DTOs
+
+struct DeferredLocationPoint: Codable {
+    let lat: Double
+    let lon: Double
+    let capturedAt: String // ISO-8601 timestamp
+}
+
+struct DeferredRideRequest: Encodable {
+    let driverId: String
+    let locationPoints: [DeferredLocationPoint]
+}

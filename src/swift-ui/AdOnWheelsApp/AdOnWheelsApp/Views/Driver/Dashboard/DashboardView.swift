@@ -71,38 +71,54 @@ struct DashboardView: View {
                         .buttonStyle(PlainButtonStyle())
                         .disabled(isVerified)
                         
-                        // Active Campaign
+                        // Active Campaigns
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Active Campaign")
+                            Text("Active Campaigns")
                                 .font(.headline)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 4)
-                            
-                            NavigationLink(destination: CampaignDetailView()) {
+
+                            if viewModel.activeCampaigns.isEmpty {
                                 DashboardCardView(
-                                    iconName: "megaphone.fill",
-                                    title: "Firma XYZ",
-                                    subtitle: "Current Ad",
-                                    content: "Duration: 14. 3. - 12. 4.",
-                                    subContent: "Reward: 100€ / month"
+                                    iconName: "megaphone",
+                                    title: "No active campaigns",
+                                    subtitle: "Browse",
+                                    content: "Swipe through ads to find your first campaign",
+                                    subContent: nil
                                 )
+                            } else {
+                                ForEach(viewModel.activeCampaigns) { campaign in
+                                    NavigationLink(destination: CampaignDetailView(campaign: campaign)) {
+                                        DashboardCardView(
+                                            iconName: "megaphone.fill",
+                                            title: campaign.companyName ?? "Company",
+                                            subtitle: campaign.name,
+                                            content: campaign.formattedDateRange,
+                                            subContent: "Earned: \(viewModel.formattedMonthlyEarnings)"
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
                             }
-                            .buttonStyle(PlainButtonStyle())
                         }
-                        
+
                         // Messages
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Messages")
                                 .font(.headline)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 4)
-                            
-                            NavigationLink(destination: InboxView()) {
+
+                            NavigationLink(destination: InboxView(userId: authService.userId ?? 0)) {
                                 DashboardCardView(
                                     iconName: "envelope.fill",
-                                    title: "New terms available",
-                                    subtitle: "System Message",
-                                    content: "Please check the new terms...",
+                                    title: viewModel.unreadMessageCount > 0
+                                        ? "\(viewModel.unreadMessageCount) new message\(viewModel.unreadMessageCount == 1 ? "" : "s")"
+                                        : "No new messages",
+                                    subtitle: "Inbox",
+                                    content: viewModel.unreadMessageCount > 0
+                                        ? "Tap to read your messages"
+                                        : "You're all caught up",
                                     subContent: nil
                                 )
                             }

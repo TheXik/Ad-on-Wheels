@@ -37,6 +37,15 @@ public class RegistrationSagaOrchestratorService {
 
             logger.info("Registration successful for email: {}", request.email());
 
+            // UC009/UC011: Send verification code after registration
+            try {
+                authService.sendVerificationCode(request.email());
+                logger.info("Verification code sent for email: {}", request.email());
+            } catch (Exception e) {
+                // Non-critical: registration succeeds even if verification code fails
+                logger.warn("Failed to send verification code for {}: {}", request.email(), e.getMessage());
+            }
+
             // Auto login generate new token for the newly registered user
             String token = authService.generateTokenForNewUser(request.email());
 

@@ -39,6 +39,7 @@ docker compose down -v 2>/dev/null || true
 
 # Remove Docker images
 echo "2. Removing Docker images..."
+docker compose images -q 2>/dev/null | xargs -r docker rmi -f 2>/dev/null || true
 docker rmi -f eureka-server gateway-service auth-service driver-service company-service campaign-service ride-service 2>/dev/null || true
 
 # Clean Maven target directories

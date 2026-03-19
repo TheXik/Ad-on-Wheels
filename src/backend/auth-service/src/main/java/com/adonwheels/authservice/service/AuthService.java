@@ -4,6 +4,10 @@ import com.adonwheels.authservice.dto.*;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import com.adonwheels.authservice.repository.AuthRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import dto.ApiResponse;
 import dto.AppErrorCode;
 import dto.exception.BusinessException;
@@ -17,6 +21,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -34,6 +44,8 @@ public class AuthService {
     @Value("${services.company-service.url}")
     private String companyServiceUrl;
 
+    @Value("${google.client-id}")
+    private String googleClientId;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final  JWTService JWTService;
@@ -140,5 +152,163 @@ public class AuthService {
      */
     public String generateTokenForNewUser(String email) {
         return JWTService.generateToken(email);
+    }
+
+    public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
+        GoogleIdToken.Payload payload = verifyGoogleIdToken(request.idToken());
+        String email = payload.getEmail();
+
+        Optional<User> existing = repository.findByEmail(email);
+        if (existing.isPresent()) {
+            User user = existing.get();
+            if (user.getRole() != request.role()) {
+                throw new BusinessException(
+                        AppErrorCode.VALIDATION_ERROR,
+                        "This Google account is already registered as a " + user.getRole()
+                                + ". Please use the " + user.getRole() + " login instead."
+                );
+            }
+            String token = JWTService.generateToken(email);
+            return new LoginResponse(token, "Google sign-in successful");
+        }
+
+        String name = (String) payload.get("name");
+        if (name == null || name.isBlank()) name = email;
+        Role role = request.role();
+
+        Long profileId = null;
+        try {
+            profileId = createProfile(name, email, role);
+
+            User user = new User();
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+            user.setRole(role);
+            user.setProfileId(profileId);
+            repository.save(user);
+
+            String token = JWTService.generateToken(email);
+            return new LoginResponse(token, "Google sign-in successful");
+        } catch (Exception e) {
+            if (profileId != null) {
+                try { deleteProfile(profileId, role); } catch (Exception ignored) {}
+            }
+            throw e;
+        }
+    }
+
+    // UC010/UC012: Forgot Password — generate 6-digit reset code
+    public String generateResetToken(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
+
+        // Generate 6-digit code
+        String code = String.format("%06d", new SecureRandom().nextInt(999999));
+        user.setResetToken(code);
+        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        repository.save(user);
+
+        // In production, send the code via email.
+        // For the thesis demo, the code is logged to console.
+        logger.info("PASSWORD RESET CODE for {}: {}", email, code);
+
+        return code;
+    }
+
+    // UC010/UC012: Reset password using the code
+    public void resetPassword(String email, String resetCode, String newPassword) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
+
+        if (user.getResetToken() == null || user.getResetTokenExpiry() == null) {
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "No password reset was requested");
+        }
+
+        if (LocalDateTime.now().isAfter(user.getResetTokenExpiry())) {
+            user.setResetToken(null);
+            user.setResetTokenExpiry(null);
+            repository.save(user);
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Reset code has expired. Please request a new one.");
+        }
+
+        if (!user.getResetToken().equals(resetCode)) {
+            throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Invalid reset code");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        repository.save(user);
+        logger.info("Password reset successful for {}", email);
+    }
+
+    // UC009/UC011: Send email verification code
+    public void sendVerificationCode(String email) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
+
+        if (user.isEmailVerified()) {
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Email is already verified");
+        }
+
+        String code = String.format("%06d", new SecureRandom().nextInt(999999));
+        user.setVerificationCode(code);
+        user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(15));
+        repository.save(user);
+
+        // In production, send via email service.
+        // For the thesis demo, log to console.
+        logger.info("EMAIL VERIFICATION CODE for {}: {}", email, code);
+    }
+
+    // UC009/UC011: Verify email with code
+    public void verifyEmail(String email, String code) {
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
+
+        if (user.isEmailVerified()) {
+            return; // Already verified, idempotent
+        }
+
+        if (user.getVerificationCode() == null || user.getVerificationCodeExpiry() == null) {
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "No verification code was sent. Please request a new one.");
+        }
+
+        if (LocalDateTime.now().isAfter(user.getVerificationCodeExpiry())) {
+            user.setVerificationCode(null);
+            user.setVerificationCodeExpiry(null);
+            repository.save(user);
+            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Verification code expired. Please request a new one.");
+        }
+
+        if (!user.getVerificationCode().equals(code)) {
+            throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Invalid verification code");
+        }
+
+        user.setEmailVerified(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiry(null);
+        repository.save(user);
+        logger.info("Email verified successfully for {}", email);
+    }
+
+    private GoogleIdToken.Payload verifyGoogleIdToken(String idTokenString) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(googleClientId))
+                    .build();
+
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken == null) {
+                throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Invalid Google ID token");
+            }
+            return idToken.getPayload();
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Google token verification failed", e);
+            throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Google token verification failed");
+        }
     }
 }

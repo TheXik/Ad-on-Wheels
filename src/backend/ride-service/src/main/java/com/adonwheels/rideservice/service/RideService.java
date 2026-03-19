@@ -1,6 +1,7 @@
 package com.adonwheels.rideservice.service;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
+import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
 import com.adonwheels.rideservice.dto.RideStatisticsResponse;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
@@ -55,6 +57,7 @@ public class RideService {
         repository.save(session);
     }
 
+    @Transactional
     public EndRideResponse endRide(String rideId) {
         RideSession session = requireSession(rideId);
 
@@ -77,6 +80,52 @@ public class RideService {
         historyRepository.save(ride);
 
         repository.deleteById(rideId);
+
+        return new EndRideResponse(totalDistanceKm, durationSeconds);
+    }
+
+    /**
+     * UC013 – Deferred ride: reconstructs a completed ride from buffered GPS
+     * points that the iOS app collected in the background while the driver
+     * was driving without having started a ride via QR scan.
+     */
+    @Transactional
+    public EndRideResponse logDeferredRide(DeferredRideRequest request) {
+        List<DeferredRideRequest.LocationPointDto> points = request.getLocationPoints();
+
+        if (points == null || points.size() < 2) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "At least 2 location points are required for a deferred ride");
+        }
+
+        // Sort points by timestamp to ensure correct order
+        points.sort((a, b) -> a.getCapturedAt().compareTo(b.getCapturedAt()));
+
+        // Derive start and end times from the GPS data
+        LocalDateTime startTime = LocalDateTime.parse(points.get(0).getCapturedAt());
+        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).getCapturedAt());
+
+        // Convert to LocationPoint model for distance calculation
+        List<LocationPoint> route = points.stream()
+                .map(p -> new LocationPoint(p.getLat(), p.getLon(), LocalDateTime.parse(p.getCapturedAt())))
+                .toList();
+
+        double totalDistanceKm = calculateTotalDistance(route);
+        long durationSeconds = Duration.between(startTime, endTime).getSeconds();
+        double averageSpeedKmh = durationSeconds > 0
+                ? totalDistanceKm / (durationSeconds / 3600.0)
+                : 0.0;
+
+        CompletedRide ride = new CompletedRide();
+        ride.setDriverId(Long.parseLong(request.getDriverId()));
+        ride.setStartTime(startTime);
+        ride.setEndTime(endTime);
+        ride.setDuration((int) durationSeconds);
+        ride.setDistanceKm(totalDistanceKm);
+        ride.setAverageSpeedKmh(averageSpeedKmh);
+        ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
+        ride.setStatus("DEFERRED");
+        historyRepository.save(ride);
 
         return new EndRideResponse(totalDistanceKm, durationSeconds);
     }

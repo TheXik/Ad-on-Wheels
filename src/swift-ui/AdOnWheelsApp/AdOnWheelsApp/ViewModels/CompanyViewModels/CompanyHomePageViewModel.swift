@@ -2,29 +2,27 @@ import Foundation
 
 @MainActor
 class CompanyHomePageViewModel: ObservableObject {
-    
-    @Published var company: [Company] = []
+    @Published var campaigns: [Campaign] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    private let api: APIClientProtocol
 
-    init(api: APIClientProtocol = APIClient.shared) {
+    private let api: APIClientProtocol
+    private let companyId: Int
+
+    init(companyId: Int, api: APIClientProtocol = APIClient.shared) {
+        self.companyId = companyId
         self.api = api
     }
 
-    func fetchCompanies() async {
+    func fetchCampaigns() async {
         isLoading = true
         errorMessage = nil
-        
         defer { isLoading = false }
 
         do {
-        
-            let endpoint = Endpoint(path: "companies")
-            let fetchedCompanies: [Company] = try await api.send(endpoint)
-            self.company = fetchedCompanies
-            
+            let endpoint = Endpoint(path: "api/campaigns/company/\(companyId)")
+            let fetched: [Campaign] = try await api.send(endpoint)
+            self.campaigns = fetched
         } catch {
             self.errorMessage = error.localizedDescription
         }

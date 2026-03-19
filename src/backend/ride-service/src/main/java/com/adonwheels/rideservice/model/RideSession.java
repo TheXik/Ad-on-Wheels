@@ -1,8 +1,5 @@
 package com.adonwheels.rideservice.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
@@ -11,9 +8,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Table("ride_sessions")
 public class RideSession {
 
@@ -32,10 +26,53 @@ public class RideSession {
     @Column("total_distance_km")
     private double totalDistanceKm;
 
+    public RideSession() {
+    }
+
     public RideSession(String rideId, String driverId, LocalDateTime startTime) {
         this.rideId = rideId;
         this.driverId = driverId;
         this.startTime = startTime;
+    }
+
+    public String getRideId() {
+        return rideId;
+    }
+
+    public void setRideId(String rideId) {
+        this.rideId = rideId;
+    }
+
+    public String getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(String driverId) {
+        this.driverId = driverId;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public List<LocationPoint> getRouteHistory() {
+        return routeHistory;
+    }
+
+    public void setRouteHistory(List<LocationPoint> routeHistory) {
+        this.routeHistory = routeHistory;
+    }
+
+    public double getTotalDistanceKm() {
+        return totalDistanceKm;
+    }
+
+    public void setTotalDistanceKm(double totalDistanceKm) {
+        this.totalDistanceKm = totalDistanceKm;
     }
 
     public void addPoint(LocationPoint point) {
