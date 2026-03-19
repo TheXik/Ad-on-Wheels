@@ -1,6 +1,7 @@
 package com.adonwheels.rideservice.controller;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
+import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
@@ -45,6 +46,17 @@ public class RideController {
             @Valid @RequestBody EndRideRequest request) {
         EndRideResponse response = rideService.endRide(request.getRideId());
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
+     * UC013 – Deferred QR scan: logs a ride from buffered GPS data
+     * when the driver forgot to scan the QR code at the start.
+     */
+    @PostMapping("/deferred")
+    public ResponseEntity<ApiResponse<EndRideResponse>> logDeferredRide(
+            @Valid @RequestBody DeferredRideRequest request) {
+        EndRideResponse response = rideService.logDeferredRide(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     @GetMapping("/{driverId}/active")

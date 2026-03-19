@@ -3,6 +3,7 @@ import SwiftUI
 struct DriverRootView: View {
     @ObservedObject var authService: AuthenticationService
     @StateObject private var rideViewModel: RideViewModel
+    @StateObject private var browseViewModel: BrowseViewModel
     @State private var selectedTab: Int = 0
     @State private var showingRideSheet = false
     @State private var showingQRSheet = false
@@ -12,6 +13,7 @@ struct DriverRootView: View {
     init(authService: AuthenticationService) {
         self.authService = authService
         _rideViewModel = StateObject(wrappedValue: RideViewModel(authService: authService))
+        _browseViewModel = StateObject(wrappedValue: BrowseViewModel(driverId: authService.userId ?? 0))
     }
 
     var body: some View {
@@ -25,7 +27,7 @@ struct DriverRootView: View {
                     }
                 case 1:
                     NavigationView {
-                        BrowseView()
+                        BrowseView(viewModel: browseViewModel)
                             .navigationBarHidden(true)
                     }
                 case 2:
@@ -37,6 +39,7 @@ struct DriverRootView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom, 90)
 
             customTabBar
         }
@@ -50,9 +53,15 @@ struct DriverRootView: View {
             }
         }
         .fullScreenCover(isPresented: $showingQRSheet) {
-            QRScanView {
-                showingQRSheet = false
-            }
+            QRScanView(
+                onScanComplete: { showingQRSheet = false },
+                rideViewModel: rideViewModel
+            )
+        }
+        .onAppear {
+            // UC013: Start background GPS buffering so deferred rides are possible
+            rideViewModel.requestLocationPermission()
+            rideViewModel.startGPSBuffering()
         }
         .alert("Ride Error", isPresented: .constant(rideViewModel.errorMessage != nil)) {
             Button("OK") {

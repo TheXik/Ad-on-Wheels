@@ -19,10 +19,25 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var locationVersion: Int = 0
 
+    // MARK: - UC013 Deferred Ride Properties
+
+    /// Whether background GPS buffering is active (always on when user has a campaign)
+    @Published var isBufferingGPS: Bool = false
+
+    /// Buffered GPS points collected in the background for deferred ride logging
+    @Published private(set) var gpsBuffer: [DeferredLocationPoint] = []
+
+    /// Whether a deferred ride was just completed
+    @Published var deferredRideCompleted: Bool = false
+
+    /// True if there are enough buffered points to reconstruct a ride
+    var hasDeferredRideData: Bool { gpsBuffer.count >= 2 }
+
     var activeCampaignName: String = "Active Campaign"
 
     private var elapsedTimer: AnyCancellable?
     private var trackTimer: AnyCancellable?
+    private var bufferTimer: AnyCancellable?
     private var rideStartDate: Date?
     private var speedReadings: [Double] = []
 
@@ -31,6 +46,13 @@ class RideViewModel: NSObject, ObservableObject {
 
     private let api: APIClientProtocol
     private let authService: AuthenticationService
+
+    /// ISO-8601 date formatter for deferred ride timestamps
+    private static let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
 
     #if DEBUG
     var simulationTimer: AnyCancellable?
@@ -50,6 +72,8 @@ class RideViewModel: NSObject, ObservableObject {
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
     }
+
+    // MARK: - Normal Ride Flow
 
     func startRide(campaignId: Int? = nil) async {
         guard let driverId = authService.userId else {
@@ -73,6 +97,10 @@ class RideViewModel: NSObject, ObservableObject {
             currentSpeed = 0.0
             speedReadings = []
             lastLocation = nil
+
+            // Clear GPS buffer since we're now in a formal ride
+            gpsBuffer = []
+            stopGPSBuffering()
 
             startElapsedTimer()
             startTrackTimer()
@@ -113,6 +141,9 @@ class RideViewModel: NSObject, ObservableObject {
             isRiding = false
             currentRideId = nil
 
+            // Resume GPS buffering after ride ends
+            startGPSBuffering()
+
             NotificationCenter.default.post(name: .rideCompleted, object: nil)
 
         } catch {
@@ -137,6 +168,87 @@ class RideViewModel: NSObject, ObservableObject {
             }
         }
     }
+
+    // MARK: - UC013 Deferred Ride (Background GPS Buffering)
+
+    /// Start buffering GPS points in the background.
+    /// Called when the driver has an active campaign but hasn't started a ride.
+    func startGPSBuffering() {
+        guard !isRiding else { return }
+        isBufferingGPS = true
+        gpsBuffer = []
+
+        // Buffer a GPS point every 10 seconds
+        bufferTimer = Timer.publish(every: 10.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self, let location = self.lastLocation else { return }
+                let point = DeferredLocationPoint(
+                    lat: location.coordinate.latitude,
+                    lon: location.coordinate.longitude,
+                    capturedAt: Self.isoFormatter.string(from: Date())
+                )
+                self.gpsBuffer.append(point)
+
+                // Cap buffer at ~1 hour of data (360 points at 10s intervals)
+                if self.gpsBuffer.count > 360 {
+                    self.gpsBuffer.removeFirst()
+                }
+            }
+    }
+
+    /// Stop buffering GPS points
+    func stopGPSBuffering() {
+        bufferTimer?.cancel()
+        bufferTimer = nil
+        isBufferingGPS = false
+    }
+
+    /// UC013: Submit a deferred ride using the buffered GPS data.
+    /// Called when the user scans QR at the end without having started a ride.
+    func submitDeferredRide() async {
+        guard hasDeferredRideData else {
+            errorMessage = "Not enough GPS data to log a deferred ride"
+            return
+        }
+        guard let driverId = authService.userId else {
+            errorMessage = "Driver ID not found"
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            let request = DeferredRideRequest(
+                driverId: String(driverId),
+                locationPoints: gpsBuffer
+            )
+            let body = try JSONEncoder().encode(request)
+            let endpoint = Endpoint(path: "api/rides/deferred", method: .post, body: body)
+            let response: EndRideResponse = try await api.send(endpoint)
+
+            distanceTravelled = response.totalDistanceKm
+            elapsedTime = TimeInterval(response.durationSeconds)
+
+            saveRideToHistory(from: response)
+
+            gpsBuffer = []
+            deferredRideCompleted = true
+
+            NotificationCenter.default.post(name: .rideCompleted, object: nil)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.deferredRideCompleted = false
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
+    // MARK: - Timers
 
     private func startElapsedTimer() {
         elapsedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
@@ -196,6 +308,8 @@ class RideViewModel: NSObject, ObservableObject {
         historyService.addRide(record)
     }
 }
+
+// MARK: - CLLocationManagerDelegate
 
 extension RideViewModel: CLLocationManagerDelegate {
 

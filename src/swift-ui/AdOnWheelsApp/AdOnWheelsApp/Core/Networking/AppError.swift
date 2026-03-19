@@ -4,7 +4,8 @@ import Foundation
 // App error representation and mapping from backend errors
 enum AppError: LocalizedError, Equatable {
     
-    case unauthorized // 1001, 1002, 1004 - Auth errors
+    case invalidCredentials // 1001 - Wrong email or password
+    case unauthorized // 1002, 1004 - Token expired/invalid
     case accountLocked // 1003 Specific alert
     case profileIncomplete // 2003, 2004 - Navigate to profile setup
     
@@ -24,7 +25,9 @@ enum AppError: LocalizedError, Equatable {
         }
 
         switch backendError.internalCode {
-        case 1001, 1002, 1004:
+        case 1001:
+            self = .invalidCredentials
+        case 1002, 1004:
             self = .unauthorized
         case 1003:
             self = .accountLocked
@@ -38,8 +41,9 @@ enum AppError: LocalizedError, Equatable {
     // Computed property for the UI
     var errorDescription: String? {
         switch self {
+        case .invalidCredentials:
+            return "Invalid email or password."
         case .unauthorized:
-            // TODO: navigate to login
             return "Your session has expired. Please login again."
         case .accountLocked:
             return "Your account is locked. Please contact support."

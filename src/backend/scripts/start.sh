@@ -31,8 +31,16 @@ if [ ! -f ".env" ]; then
 fi
 
 # Check if JAR files are built
-if [ ! -f "auth-service/target/auth-service-0.0.1-SNAPSHOT.jar" ] || \
-   [ ! -f "ride-service/target/ride-service-0.0.1-SNAPSHOT.jar" ]; then
+SERVICES=("auth-service" "driver-service" "company-service" "campaign-service" "ride-service" "gateway-service" "eureka-server")
+MISSING_JARS=false
+for svc in "${SERVICES[@]}"; do
+    if [ ! -f "$svc/target/$svc-0.0.1-SNAPSHOT.jar" ]; then
+        MISSING_JARS=true
+        break
+    fi
+done
+
+if [ "$MISSING_JARS" = true ]; then
     echo -e "${YELLOW} JAR files not found!${NC}"
     echo "Running build first..."
     ./scripts/build.sh
@@ -44,9 +52,9 @@ echo -e "${BLUE}Starting all services...${NC}"
 echo ""
 echo "Services that will start:"
 echo "  1. MySQL Database        (Port 3306)"
-echo "  2. Redis                 (Port 6379)"
+echo "  2. Cassandra             (Port 9042)"
 echo "  3. Eureka Server         (Port 8761)"
-echo "  4. Auth Service          (Port 8085)"
+echo "  4. Auth Service          (Port 8081)"
 echo "  5. Driver Service        (Port 8082)"
 echo "  6. Company Service       (Port 8083)"
 echo "  7. Campaign Service      (Port 8084)"

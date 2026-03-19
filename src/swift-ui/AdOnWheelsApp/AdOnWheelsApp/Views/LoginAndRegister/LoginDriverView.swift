@@ -7,6 +7,7 @@ struct LoginDriverView: View {
     var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
+    @State private var showForgotPassword = false
 
     var body: some View {
         AuthScaffold(
@@ -60,6 +61,16 @@ struct LoginDriverView: View {
                 }
             },
             bottomLinks: {
+                // UC010: Forgot Password link
+                Button("Forgot Password?") {
+                    showForgotPassword = true
+                }
+                .foregroundColor(Color("BrandColor"))
+                .font(.callout)
+                .fontWeight(.medium)
+
+                GoogleSignInSection(authService: authService, role: "DRIVER")
+
                 Button("Don't have an account? Register here") {
                     navViewModel.currentScreen = .registerDriver
                 }
@@ -67,6 +78,9 @@ struct LoginDriverView: View {
                 .font(.callout)
             }
         )
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
     }
 }
 
