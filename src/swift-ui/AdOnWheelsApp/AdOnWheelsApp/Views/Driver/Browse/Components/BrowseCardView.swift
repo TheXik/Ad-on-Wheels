@@ -37,7 +37,7 @@ struct BrowseCardView: View {
                 
                 // Details Area
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Company #\(campaign.companyId)")
+                    Text(campaign.companyName ?? "Company")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                     

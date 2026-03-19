@@ -134,7 +134,7 @@ struct MessageDetailView: View {
                         HStack {
                             Image(systemName: message.senderRole == "COMPANY" ? "building.2" : "person")
                                 .foregroundColor(.blue)
-                            Text("From: \(message.senderRole == "COMPANY" ? "Company" : "Driver") #\(message.senderId)")
+                            Text("From: \(message.senderRole == "COMPANY" ? "Company" : "Driver")")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }

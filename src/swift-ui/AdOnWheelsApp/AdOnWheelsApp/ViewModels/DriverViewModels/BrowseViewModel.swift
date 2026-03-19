@@ -36,7 +36,8 @@ class BrowseViewModel: ObservableObject {
             let endpoint = Endpoint(path: "api/campaigns", queryItems: [
                 URLQueryItem(name: "status", value: "RECRUITING")
             ])
-            let fetchedCampaigns: [Campaign] = try await api.send(endpoint)
+            var fetchedCampaigns: [Campaign] = try await api.send(endpoint)
+            await resolveCompanyNames(&fetchedCampaigns)
             let unseen = fetchedCampaigns.filter { !seenCampaignIds.contains($0.id) }
             self.campaigns = unseen
             self.skippedCampaigns = []
@@ -44,6 +45,23 @@ class BrowseViewModel: ObservableObject {
         } catch {
             self.errorMessage = error.localizedDescription
             self.campaigns = []
+        }
+    }
+
+    private func resolveCompanyNames(_ campaigns: inout [Campaign]) async {
+        let uniqueIds = Set(campaigns.map { $0.companyId })
+        var nameMap: [Int: String] = [:]
+        for companyId in uniqueIds {
+            do {
+                let endpoint = Endpoint(path: "api/companies/\(companyId)")
+                let company: Company = try await api.send(endpoint)
+                nameMap[companyId] = company.name
+            } catch {
+                nameMap[companyId] = "Company"
+            }
+        }
+        for i in campaigns.indices {
+            campaigns[i].companyName = nameMap[campaigns[i].companyId]
         }
     }
 

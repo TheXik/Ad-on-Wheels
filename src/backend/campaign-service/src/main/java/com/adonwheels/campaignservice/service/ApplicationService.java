@@ -33,9 +33,12 @@ public class ApplicationService {
         return applicationRepository.findByCampaignIdIn(campaignIds);
     }
 
-    /** Find all applications for a specific campaign */
     public List<Application> findByCampaignId(Long campaignId) {
         return applicationRepository.findByCampaignId(campaignId);
+    }
+
+    public List<Application> findByDriverIdAndStatus(Long driverId, ApplicationStatus status) {
+        return applicationRepository.findByDriverIdAndStatus(driverId, status);
     }
 
     @Transactional

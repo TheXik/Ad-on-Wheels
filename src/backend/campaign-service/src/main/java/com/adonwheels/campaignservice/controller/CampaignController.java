@@ -3,6 +3,7 @@ package com.adonwheels.campaignservice.controller;
 import com.adonwheels.campaignservice.model.Campaign;
 import com.adonwheels.campaignservice.model.CampaignStatus;
 import com.adonwheels.campaignservice.model.Application;
+import com.adonwheels.campaignservice.model.ApplicationStatus;
 import com.adonwheels.campaignservice.service.CampaignService;
 import com.adonwheels.campaignservice.service.ApplicationService;
 import dto.ApiResponse;
@@ -55,6 +56,16 @@ public class CampaignController {
     public ResponseEntity<ApiResponse<Campaign>> createCampaign(@Valid @RequestBody Campaign campaign) {
         Campaign saved = campaignService.save(campaign);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved));
+    }
+
+    @GetMapping("/driver/{driverId}")
+    public ResponseEntity<ApiResponse<List<Campaign>>> getCampaignsByDriver(@PathVariable Long driverId) {
+        List<Application> accepted = applicationService.findByDriverIdAndStatus(driverId, ApplicationStatus.ACCEPTED);
+        List<Long> campaignIds = accepted.stream().map(Application::getCampaignId).toList();
+        List<Campaign> campaigns = campaignIds.stream()
+                .map(campaignService::findById)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(campaigns));
     }
 
     @PostMapping("/{id}/apply")

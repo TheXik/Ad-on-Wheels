@@ -150,10 +150,10 @@ struct BrowseView: View {
             await viewModel.loadCampaigns()
         }
         .sheet(item: $selectedCampaign) { campaign in
-            CampaignDetailView(campaign: campaign) {
+            CampaignDetailView(campaign: campaign, onApply: {
                 Task { await viewModel.applyToCampaign(campaign) }
                 selectedCampaign = nil
-            }
+            })
         }
     }
 }

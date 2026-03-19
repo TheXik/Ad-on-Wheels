@@ -11,6 +11,7 @@ struct Campaign: Identifiable, Codable, Hashable {
     let maxDrivers: Int
     let estimatedReach: Int?
     let status: String
+    var companyName: String?
 
     var isActive: Bool {
         status == "RECRUITING" || status == "ACTIVE"

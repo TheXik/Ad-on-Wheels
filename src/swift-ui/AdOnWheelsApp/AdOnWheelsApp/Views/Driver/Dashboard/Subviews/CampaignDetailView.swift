@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CampaignDetailView: View {
     let campaign: Campaign
-    let onApply: () -> Void
+    var onApply: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     private var cardColor: Color {
@@ -32,7 +32,7 @@ struct CampaignDetailView: View {
 
                     VStack(alignment: .leading, spacing: 20) {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("Company #\(campaign.companyId)")
+                            Text(campaign.companyName ?? "Company")
                                 .font(.subheadline)
                                 .foregroundColor(.gray)
                                 .fontWeight(.semibold)
@@ -62,18 +62,20 @@ struct CampaignDetailView: View {
 
                         Spacer().frame(height: 20)
 
-                        Button(action: {
-                            onApply()
-                            dismiss()
-                        }) {
-                            Text("Apply Now")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(15)
-                                .shadow(radius: 5)
+                        if let onApply {
+                            Button(action: {
+                                onApply()
+                                dismiss()
+                            }) {
+                                Text("Apply Now")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(15)
+                                    .shadow(radius: 5)
+                            }
                         }
                     }
                     .padding(25)
@@ -135,3 +137,4 @@ struct CampaignDetailView_Previews: PreviewProvider {
         )
     }
 }
+

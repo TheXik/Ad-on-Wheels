@@ -22,6 +22,12 @@ class DashboardViewModel: ObservableObject {
     // Greeting
     @Published var driverName: String = ""
 
+    // Active campaigns (driver is enrolled in)
+    @Published var activeCampaigns: [Campaign] = []
+
+    // Messages
+    @Published var unreadMessageCount: Int = 0
+
     // Home page data
     @Published var homePageData: DriverHomePageResponse?
     @Published var isLoading = false
@@ -57,12 +63,50 @@ class DashboardViewModel: ObservableObject {
             let endpoint = Endpoint(path: "api/drivers/\(driverId)/home")
             let response: DriverHomePageResponse = try await api.send(endpoint)
             self.homePageData = response
-
-            // Update UI properties from BFF response
             updateUIFromResponse(response)
-
         } catch {
             self.errorMessage = error.localizedDescription
+        }
+
+        await fetchDriverCampaigns(driverId: driverId)
+        await fetchUnreadMessages(userId: driverId)
+    }
+
+    private func fetchDriverCampaigns(driverId: Int) async {
+        do {
+            let endpoint = Endpoint(path: "api/campaigns/driver/\(driverId)")
+            var campaigns: [Campaign] = try await api.send(endpoint)
+            await resolveCompanyNames(&campaigns)
+            self.activeCampaigns = campaigns
+        } catch {
+            self.activeCampaigns = []
+        }
+    }
+
+    private func fetchUnreadMessages(userId: Int) async {
+        do {
+            let endpoint = Endpoint(path: "api/messages/inbox/\(userId)")
+            let messages: [Message] = try await api.send(endpoint)
+            self.unreadMessageCount = messages.filter { !$0.isRead }.count
+        } catch {
+            self.unreadMessageCount = 0
+        }
+    }
+
+    private func resolveCompanyNames(_ campaigns: inout [Campaign]) async {
+        let uniqueIds = Set(campaigns.map { $0.companyId })
+        var nameMap: [Int: String] = [:]
+        for companyId in uniqueIds {
+            do {
+                let endpoint = Endpoint(path: "api/companies/\(companyId)")
+                let company: Company = try await api.send(endpoint)
+                nameMap[companyId] = company.name
+            } catch {
+                nameMap[companyId] = "Company"
+            }
+        }
+        for i in campaigns.indices {
+            campaigns[i].companyName = nameMap[campaigns[i].companyId]
         }
     }
 
