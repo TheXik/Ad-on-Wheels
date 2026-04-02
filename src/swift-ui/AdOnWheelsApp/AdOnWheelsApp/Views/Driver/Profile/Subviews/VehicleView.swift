@@ -10,30 +10,32 @@ struct VehicleView: View {
     @State private var color = ""
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                Image(systemName: "car.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 150)
-                    .foregroundColor(.blue)
-                    .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(20)
+        ZStack {
+            Color(UIColor.systemGroupedBackground)
+                .ignoresSafeArea()
 
-                if isEditing {
-                    editForm
-                } else if viewModel.hasVehicle {
-                    vehicleInfo
-                } else {
-                    noVehicle
+            ScrollView {
+                VStack(spacing: 20) {
+                    Image(systemName: "car.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 150)
+                        .foregroundColor(.blue)
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(20)
+
+                    if isEditing {
+                        editForm
+                    } else if viewModel.hasVehicle {
+                        vehicleInfo
+                    } else {
+                        noVehicle
+                    }
                 }
-
-                Spacer()
+                .padding(.top)
             }
-            .padding(.top)
         }
-        .background(Color(UIColor.systemGroupedBackground))
         .navigationBarTitle("My Vehicle")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -54,17 +56,18 @@ struct VehicleView: View {
         }
     }
 
+    @ViewBuilder
     private var editForm: some View {
         VStack(spacing: 0) {
-            FormField(label: "Make", text: $make, placeholder: "e.g. Toyota")
+            VehicleFormField(label: "Make", text: $make, placeholder: "e.g. Toyota")
             Divider()
-            FormField(label: "Model", text: $model, placeholder: "e.g. Corolla")
+            VehicleFormField(label: "Model", text: $model, placeholder: "e.g. Corolla")
             Divider()
-            FormField(label: "Year", text: $year, placeholder: "e.g. 2020", keyboardType: .numberPad)
+            VehicleFormField(label: "Year", text: $year, placeholder: "e.g. 2020", keyboardType: .numberPad)
             Divider()
-            FormField(label: "License Plate", text: $plate, placeholder: "e.g. AB 123 CD", autocapitalization: .characters)
+            VehicleFormField(label: "License Plate", text: $plate, placeholder: "e.g. AB 123 CD", autocapitalization: .characters)
             Divider()
-            FormField(label: "Color", text: $color, placeholder: "e.g. White")
+            VehicleFormField(label: "Color", text: $color, placeholder: "e.g. White")
         }
         .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(15)
@@ -182,7 +185,7 @@ struct VehicleView: View {
     }
 }
 
-private struct FormField: View {
+private struct VehicleFormField: View {
     let label: String
     @Binding var text: String
     var placeholder: String = ""

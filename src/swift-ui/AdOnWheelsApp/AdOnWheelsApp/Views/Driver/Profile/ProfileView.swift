@@ -11,7 +11,7 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationView {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 20) {
                     if viewModel.isLoading {
                         ProgressView("Loading profile...")
@@ -57,7 +57,7 @@ struct ProfileView: View {
                             }
                             Divider()
                             
-                            NavigationLink(destination: SettingsView()) {
+                            NavigationLink(destination: SettingsView(authService: authService)) {
                                 ProfileMenuItem(icon: "gearshape.fill", title: "Settings")
                             }
                         }
@@ -90,6 +90,7 @@ struct ProfileView: View {
                 await viewModel.fetchProfile()
             }
         }
+        .navigationViewStyle(.stack)
     }
 }
 
