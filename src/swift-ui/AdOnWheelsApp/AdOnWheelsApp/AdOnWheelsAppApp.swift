@@ -11,12 +11,18 @@ enum InitialUserRole {
 struct AdOnWheelsAppApp: App {
     @StateObject private var authService = AuthenticationService()
     @State private var selectedRole: InitialUserRole = .none
+    @State private var showSplash = true
     @AppStorage("isDarkMode") private var isDarkMode = false
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if authService.isAuthenticated {
+                if showSplash {
+                    SplashScreenView {
+                        showSplash = false
+                    }
+                    .transition(.opacity)
+                } else if authService.isAuthenticated {
                     switch authService.userRole {
                     case .driver:
                         DriverRootView(authService: authService)
@@ -43,6 +49,7 @@ struct AdOnWheelsAppApp: App {
                     }
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: showSplash)
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)
             }
