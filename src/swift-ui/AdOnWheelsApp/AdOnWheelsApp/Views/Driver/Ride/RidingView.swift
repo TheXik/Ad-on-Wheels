@@ -85,6 +85,13 @@ struct RidingView: View {
             .overlay(Color.black.opacity(0.1))
             .onAppear {
                 viewModel.requestLocationPermission()
+                if let coord = viewModel.currentLocation, !hasInitializedRegion {
+                    region = MKCoordinateRegion(
+                        center: coord,
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    )
+                    hasInitializedRegion = true
+                }
             }
             .onChange(of: viewModel.locationVersion) { _ in
                 guard let coord = viewModel.currentLocation else { return }

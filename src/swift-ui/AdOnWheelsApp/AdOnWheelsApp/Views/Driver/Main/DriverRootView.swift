@@ -22,8 +22,10 @@ struct DriverRootView: View {
                 switch selectedTab {
                 case 0:
                     NavigationView {
-                        DashboardView(authService: authService, rideViewModel: rideViewModel)
-                            .navigationBarHidden(true)
+                        DashboardView(authService: authService, rideViewModel: rideViewModel) {
+                            showingQRSheet = true
+                        }
+                        .navigationBarHidden(true)
                     }
                 case 1:
                     NavigationView {
