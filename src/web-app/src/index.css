@@ -267,6 +267,32 @@ body {
   background: var(--white);
 }
 
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 56px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.password-toggle:hover {
+  color: var(--text);
+}
+
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
