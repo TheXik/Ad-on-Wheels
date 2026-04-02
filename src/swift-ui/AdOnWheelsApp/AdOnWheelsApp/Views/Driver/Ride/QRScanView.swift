@@ -1,17 +1,18 @@
 import SwiftUI
+import AVFoundation
 
 struct QRScanView: View {
     var onScanComplete: () -> Void
 
-    /// Optional: when provided, enables UC013 deferred ride flow
     var rideViewModel: RideViewModel?
 
     @State private var isScanning = true
     @State private var progress: CGFloat = 0.0
     @State private var showDeferredPrompt = false
     @State private var deferredSuccess = false
+    @State private var cameraPermission: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+    @State private var showPermissionDenied = false
 
-    /// Whether this is a deferred scan (no active ride, but GPS data available)
     private var isDeferredScan: Bool {
         guard let vm = rideViewModel else { return false }
         return vm.currentRideId == nil && vm.hasDeferredRideData
@@ -32,13 +33,38 @@ struct QRScanView: View {
             }
         }
         .onAppear {
+            requestCameraAccess()
             withAnimation(.linear(duration: 2).repeatForever(autoreverses: true)) {
                 progress = 1.0
             }
         }
+        .alert("Camera Access Required", isPresented: $showPermissionDenied) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please allow camera access in Settings to scan QR codes.")
+        }
     }
 
-    // MARK: - Scanning View
+    private func requestCameraAccess() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            cameraPermission = .authorized
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    cameraPermission = granted ? .authorized : .denied
+                    if !granted { showPermissionDenied = true }
+                }
+            }
+        default:
+            showPermissionDenied = true
+        }
+    }
 
     private var scanningView: some View {
         VStack(spacing: 20) {
@@ -54,29 +80,46 @@ struct QRScanView: View {
 
             Spacer()
 
-            // Mock Camera Viewfinder
-            ZStack {
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.white, lineWidth: 2)
-                    .frame(width: 250, height: 250)
+            if cameraPermission == .authorized {
+                QRCameraPreview { _ in
+                    completeScan()
+                }
+                .frame(width: 280, height: 280)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white, lineWidth: 2)
+                )
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white, lineWidth: 2)
+                        .frame(width: 250, height: 250)
 
-                // Scanning animation line
-                Rectangle()
-                    .fill(Color.green)
-                    .frame(width: 240, height: 2)
-                    .offset(y: -120 + (progress * 240))
+                    VStack(spacing: 12) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.gray)
+                        Text("Camera access needed")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
             }
 
             Spacer()
 
-            // Simulate Scan Button
-            Button("Simulate Scan") {
+            #if DEBUG
+            Button("Skip Scan (Dev)") {
                 completeScan()
             }
-            .padding()
-            .background(Color.white.opacity(0.2))
+            .font(.footnote.bold())
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(Color.orange.opacity(0.8))
             .cornerRadius(8)
-            .foregroundColor(.white)
+            .foregroundColor(.black)
+            #endif
         }
         .padding(.vertical, 50)
     }
@@ -235,12 +278,9 @@ struct QRScanView: View {
         }
     }
 
-    // MARK: - Actions
-
     func completeScan() {
         withAnimation {
             isScanning = false
-            // UC013: If no active ride but GPS data exists, show deferred prompt
             if isDeferredScan {
                 showDeferredPrompt = true
             }
@@ -248,8 +288,68 @@ struct QRScanView: View {
     }
 }
 
-struct QRScanView_Previews: PreviewProvider {
-    static var previews: some View {
-        QRScanView {}
+struct QRCameraPreview: UIViewRepresentable {
+    var onCodeScanned: (String) -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        let session = AVCaptureSession()
+        context.coordinator.session = session
+
+        guard let device = AVCaptureDevice.default(for: .video),
+              let input = try? AVCaptureDeviceInput(device: device) else { return view }
+
+        if session.canAddInput(input) { session.addInput(input) }
+
+        let output = AVCaptureMetadataOutput()
+        if session.canAddOutput(output) {
+            session.addOutput(output)
+            output.setMetadataObjectsDelegate(context.coordinator, queue: .main)
+            output.metadataObjectTypes = [.qr]
+        }
+
+        let previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.frame = view.bounds
+        view.layer.addSublayer(previewLayer)
+        context.coordinator.previewLayer = previewLayer
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            session.startRunning()
+        }
+
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        context.coordinator.previewLayer?.frame = uiView.bounds
+    }
+
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        coordinator.session?.stopRunning()
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(onCodeScanned: onCodeScanned) }
+
+    class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
+        var session: AVCaptureSession?
+        var previewLayer: AVCaptureVideoPreviewLayer?
+        var onCodeScanned: (String) -> Void
+        private var hasScanned = false
+
+        init(onCodeScanned: @escaping (String) -> Void) {
+            self.onCodeScanned = onCodeScanned
+        }
+
+        func metadataOutput(_ output: AVCaptureMetadataOutput,
+                            didOutput metadataObjects: [AVMetadataObject],
+                            from connection: AVCaptureConnection) {
+            guard !hasScanned,
+                  let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+                  let value = object.stringValue else { return }
+            hasScanned = true
+            session?.stopRunning()
+            onCodeScanned(value)
+        }
     }
 }

@@ -38,6 +38,7 @@ class RideViewModel: NSObject, ObservableObject {
     private var elapsedTimer: AnyCancellable?
     private var trackTimer: AnyCancellable?
     private var bufferTimer: AnyCancellable?
+    private var speedStaleTimer: AnyCancellable?
     private var rideStartDate: Date?
     private var speedReadings: [Double] = []
 
@@ -55,9 +56,8 @@ class RideViewModel: NSObject, ObservableObject {
     }()
 
     #if DEBUG
-    var simulationTimer: AnyCancellable?
-    var simulationIndex: Int = 0
     var isSimulatingMovement: Bool = false
+    private var streetSimulator: StreetRouteSimulator?
     #endif
 
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
@@ -66,6 +66,7 @@ class RideViewModel: NSObject, ObservableObject {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.activityType = .automotiveNavigation
     }
 
     func requestLocationPermission() {
@@ -98,12 +99,13 @@ class RideViewModel: NSObject, ObservableObject {
             speedReadings = []
             lastLocation = nil
 
-            // Clear GPS buffer since we're now in a formal ride
             gpsBuffer = []
             stopGPSBuffering()
 
+            locationManager.startUpdatingLocation()
             startElapsedTimer()
             startTrackTimer()
+            startSpeedStaleTimer()
 
         } catch {
             errorMessage = error.localizedDescription
@@ -123,6 +125,7 @@ class RideViewModel: NSObject, ObservableObject {
 
         stopTrackTimer()
         stopElapsedTimer()
+        stopSpeedStaleTimer()
 
         #if DEBUG
         stopSimulatedMovement()
@@ -178,11 +181,20 @@ class RideViewModel: NSObject, ObservableObject {
         isBufferingGPS = true
         gpsBuffer = []
 
-        // Buffer a GPS point every 10 seconds
+        // Buffer a GPS point every 10 seconds, but only if we actually moved
         bufferTimer = Timer.publish(every: 10.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self, let location = self.lastLocation else { return }
+
+                // Skip if we haven't moved meaningfully since the last buffered point
+                if let prev = self.gpsBuffer.last {
+                    let prevLoc = CLLocation(latitude: prev.lat, longitude: prev.lon)
+                    if location.distance(from: prevLoc) < Self.minDistanceMeters {
+                        return
+                    }
+                }
+
                 let point = DeferredLocationPoint(
                     lat: location.coordinate.latitude,
                     lon: location.coordinate.longitude,
@@ -281,6 +293,22 @@ class RideViewModel: NSObject, ObservableObject {
         trackTimer = nil
     }
 
+    private func startSpeedStaleTimer() {
+        speedStaleTimer = Timer.publish(every: 3.0, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self, self.isRiding, let last = self.lastLocation else { return }
+                if Date().timeIntervalSince(last.timestamp) > 3.0 {
+                    self.currentSpeed = 0
+                }
+            }
+    }
+
+    private func stopSpeedStaleTimer() {
+        speedStaleTimer?.cancel()
+        speedStaleTimer = nil
+    }
+
     var timeString: String {
         let hours = Int(elapsedTime) / 3600
         let minutes = Int(elapsedTime) / 60 % 60
@@ -313,25 +341,53 @@ class RideViewModel: NSObject, ObservableObject {
 
 extension RideViewModel: CLLocationManagerDelegate {
 
+    private static let minDistanceMeters: Double = 10
+    private static let maxPlausibleSpeedKmh: Double = 200
+
     nonisolated func locationManager(
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
         guard let location = locations.last else { return }
-        let speedKmh = max(0, location.speed * 3.6)
+
+        // Reject inaccurate GPS readings (common indoors or with weak signal)
+        guard location.horizontalAccuracy >= 0,
+              location.horizontalAccuracy <= 20 else { return }
+
         Task { @MainActor [weak self] in
             guard let self else { return }
             #if DEBUG
             if self.isSimulatingMovement { return }
             #endif
-            if self.isRiding, let last = self.lastLocation {
-                self.distanceTravelled += location.distance(from: last) / 1000.0
-            }
-            self.lastLocation = location
+
+            // Always update the map pin
             self.currentLocation = location.coordinate
-            self.currentSpeed = speedKmh
-            self.speedReadings.append(speedKmh)
             self.locationVersion += 1
+
+            if let last = self.lastLocation {
+                let dist = location.distance(from: last)
+                let dt = location.timestamp.timeIntervalSince(last.timestamp)
+                let impliedSpeedKmh = dt > 0 ? (dist / dt) * 3.6 : 0
+
+                let isRealMovement = dist >= Self.minDistanceMeters
+                                  && impliedSpeedKmh < Self.maxPlausibleSpeedKmh
+
+                if isRealMovement {
+                    if self.isRiding {
+                        self.distanceTravelled += dist / 1000.0
+                    }
+                    self.currentSpeed = location.speed >= 0 ? location.speed * 3.6 : impliedSpeedKmh
+                    self.speedReadings.append(self.currentSpeed)
+                    self.lastLocation = location
+                } else {
+                    // Standing still or GPS jitter — zero out speed
+                    self.currentSpeed = 0
+                }
+            } else {
+                // First reading ever — just anchor, no distance/speed yet
+                self.lastLocation = location
+                self.currentSpeed = 0
+            }
         }
     }
 
@@ -346,84 +402,39 @@ extension RideViewModel: CLLocationManagerDelegate {
 #if DEBUG
 extension RideViewModel {
 
-    // Relative offsets (~150m steps) applied to the user's current position
-    private static let routeOffsets: [(dlat: Double, dlon: Double)] = [
-        (0.00000, 0.00000),
-        (0.00103, 0.00154),
-        (0.00229, 0.00321),
-        (0.00342, 0.00453),
-        (0.00473, 0.00582),
-        (0.00606, 0.00709),
-        (0.00732, 0.00843),
-        (0.00864, 0.00973),
-        (0.00993, 0.01109),
-        (0.01112, 0.01238),
-        (0.01223, 0.01366),
-        (0.01342, 0.01492),
-        (0.01469, 0.01621),
-        (0.01574, 0.01746),
-        (0.01683, 0.01872),
-        (0.01792, 0.01996),
-    ]
-
-    private func buildRoute(from origin: CLLocationCoordinate2D) -> [CLLocationCoordinate2D] {
-        Self.routeOffsets.map {
-            CLLocationCoordinate2D(latitude: origin.latitude + $0.dlat,
-                                   longitude: origin.longitude + $0.dlon)
-        }
-    }
-
     func startSimulatedMovement() {
         isSimulatingMovement = true
         locationManager.stopUpdatingLocation()
-        simulationIndex = 0
         distanceTravelled = 0.0
 
-        let origin = currentLocation ?? locationManager.location?.coordinate
-            ?? CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378) // Prague fallback
-        let route = buildRoute(from: origin)
+        let simulator = StreetRouteSimulator()
+        self.streetSimulator = simulator
 
-        lastLocation = CLLocation(latitude: route[0].latitude, longitude: route[0].longitude)
-        currentLocation = route[0]
+        simulator.onLocationUpdate = { [weak self] location in
+            guard let self else { return }
+
+            if self.isRiding, let last = self.lastLocation {
+                self.distanceTravelled += location.distance(from: last) / 1000.0
+            }
+
+            self.lastLocation = location
+            self.currentLocation = location.coordinate
+            self.currentSpeed = max(0, location.speed * 3.6)
+            self.speedReadings.append(self.currentSpeed)
+            self.locationVersion += 1
+        }
+
+        let startCoord = currentLocation ?? StreetRouteSimulator.defaultStart
+        lastLocation = CLLocation(latitude: startCoord.latitude, longitude: startCoord.longitude)
+        currentLocation = startCoord
         locationVersion += 1
 
-        simulationTimer = Timer.publish(every: 2.0, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self else { return }
-                let coord = route[self.simulationIndex % route.count]
-
-                let simLocation = CLLocation(
-                    coordinate: coord,
-                    altitude: 200,
-                    horizontalAccuracy: 5,
-                    verticalAccuracy: 5,
-                    course: 45,
-                    speed: 11.0,
-                    timestamp: Date()
-                )
-
-                if self.isRiding, let last = self.lastLocation {
-                    self.distanceTravelled += simLocation.distance(from: last) / 1000.0
-                }
-
-                self.lastLocation = simLocation
-                self.currentLocation = coord
-                self.currentSpeed = 40.0
-                self.speedReadings.append(40.0)
-                self.locationVersion += 1
-
-                if self.isRiding {
-                    self.trackPoint(lat: coord.latitude, lon: coord.longitude)
-                }
-
-                self.simulationIndex += 1
-            }
+        simulator.start(from: startCoord)
     }
 
     func stopSimulatedMovement() {
-        simulationTimer?.cancel()
-        simulationTimer = nil
+        streetSimulator?.stop()
+        streetSimulator = nil
         isSimulatingMovement = false
         locationManager.startUpdatingLocation()
     }

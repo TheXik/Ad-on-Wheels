@@ -25,6 +25,9 @@ class DashboardViewModel: ObservableObject {
     // Active campaigns (driver is enrolled in)
     @Published var activeCampaigns: [Campaign] = []
 
+    // All driver applications (pending, accepted, declined)
+    @Published var myApplications: [ApplicationWithCampaign] = []
+
     // Messages
     @Published var unreadMessageCount: Int = 0
 
@@ -69,6 +72,7 @@ class DashboardViewModel: ObservableObject {
         }
 
         await fetchDriverCampaigns(driverId: driverId)
+        await fetchDriverApplications(driverId: driverId)
         await fetchUnreadMessages(userId: driverId)
     }
 
@@ -80,6 +84,16 @@ class DashboardViewModel: ObservableObject {
             self.activeCampaigns = campaigns
         } catch {
             self.activeCampaigns = []
+        }
+    }
+
+    private func fetchDriverApplications(driverId: Int) async {
+        do {
+            let endpoint = Endpoint(path: "api/campaigns/driver/\(driverId)/applications")
+            let apps: [ApplicationWithCampaign] = try await api.send(endpoint)
+            self.myApplications = apps
+        } catch {
+            self.myApplications = []
         }
     }
 
