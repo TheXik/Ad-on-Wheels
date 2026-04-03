@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Campaign {
@@ -43,6 +45,15 @@ public class Campaign {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CampaignStatus status = CampaignStatus.RECRUITING;
+
+    @ElementCollection
+    @CollectionTable(name = "campaign_image_keys", joinColumns = @JoinColumn(name = "campaign_id"))
+    @Column(name = "image_key")
+    @OrderColumn(name = "sort_order")
+    private List<String> imageKeys = new ArrayList<>();
+
+    @Transient
+    private List<String> imageUrls;
 
     public Campaign() {
     }
@@ -90,4 +101,10 @@ public class Campaign {
 
     public CampaignStatus getStatus() { return status; }
     public void setStatus(CampaignStatus status) { this.status = status; }
+
+    public List<String> getImageKeys() { return imageKeys; }
+    public void setImageKeys(List<String> imageKeys) { this.imageKeys = imageKeys; }
+
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 } 

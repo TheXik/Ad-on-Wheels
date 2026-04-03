@@ -36,6 +36,10 @@ public class Message {
     private Long recipientId;
 
     @NotBlank
+    @Column(nullable = false)
+    private String recipientRole; // "DRIVER" or "COMPANY"
+
+    @NotBlank
     @Column(nullable = false, length = 200)
     private String subject;
 
@@ -69,6 +73,9 @@ public class Message {
 
     public Long getRecipientId() { return recipientId; }
     public void setRecipientId(Long recipientId) { this.recipientId = recipientId; }
+
+    public String getRecipientRole() { return recipientRole; }
+    public void setRecipientRole(String recipientRole) { this.recipientRole = recipientRole; }
 
     public String getSubject() { return subject; }
     public void setSubject(String subject) { this.subject = subject; }
