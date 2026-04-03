@@ -15,6 +15,8 @@ public class CompletedRide {
     @Column(nullable = false)
     private Long driverId;
 
+    private Long campaignId;
+
     @Column(nullable = false)
     private LocalDateTime startTime;
 
@@ -36,6 +38,11 @@ public class CompletedRide {
     @Column(nullable = false)
     private String status;
 
+    private Double startLat;
+    private Double startLon;
+    private Double endLat;
+    private Double endLon;
+
     public CompletedRide() {
     }
 
@@ -53,6 +60,14 @@ public class CompletedRide {
 
     public void setDriverId(Long driverId) {
         this.driverId = driverId;
+    }
+
+    public Long getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(Long campaignId) {
+        this.campaignId = campaignId;
     }
 
     public LocalDateTime getStartTime() {
@@ -110,4 +125,16 @@ public class CompletedRide {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public Double getStartLat() { return startLat; }
+    public void setStartLat(Double startLat) { this.startLat = startLat; }
+
+    public Double getStartLon() { return startLon; }
+    public void setStartLon(Double startLon) { this.startLon = startLon; }
+
+    public Double getEndLat() { return endLat; }
+    public void setEndLat(Double endLat) { this.endLat = endLat; }
+
+    public Double getEndLon() { return endLon; }
+    public void setEndLon(Double endLon) { this.endLon = endLon; }
 }

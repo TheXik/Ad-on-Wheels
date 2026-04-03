@@ -1,6 +1,7 @@
 package com.adonwheels.rideservice.service;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
+import com.adonwheels.rideservice.dto.CampaignRideStatsResponse;
 import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,9 +46,9 @@ public class RideService {
                 .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
     }
 
-    public StartRideResponse startRide(String driverId) {
+    public StartRideResponse startRide(String driverId, Long campaignId) {
         String rideId = UUID.randomUUID().toString();
-        RideSession session = new RideSession(rideId, driverId, LocalDateTime.now());
+        RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId);
         repository.save(session);
         return new StartRideResponse(rideId);
     }
@@ -70,6 +72,7 @@ public class RideService {
 
         CompletedRide ride = new CompletedRide();
         ride.setDriverId(Long.parseLong(session.getDriverId()));
+        ride.setCampaignId(session.getCampaignId());
         ride.setStartTime(session.getStartTime());
         ride.setEndTime(endTime);
         ride.setDuration((int) durationSeconds);
@@ -77,6 +80,7 @@ public class RideService {
         ride.setAverageSpeedKmh(averageSpeedKmh);
         ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
         ride.setStatus("COMPLETED");
+        extractGeoCoords(ride, session.getRouteHistory());
         historyRepository.save(ride);
 
         repository.deleteById(rideId);
@@ -84,11 +88,6 @@ public class RideService {
         return new EndRideResponse(totalDistanceKm, durationSeconds);
     }
 
-    /**
-     * UC013 – Deferred ride: reconstructs a completed ride from buffered GPS
-     * points that the iOS app collected in the background while the driver
-     * was driving without having started a ride via QR scan.
-     */
     @Transactional
     public EndRideResponse logDeferredRide(DeferredRideRequest request) {
         List<DeferredRideRequest.LocationPointDto> points = request.getLocationPoints();
@@ -98,16 +97,13 @@ public class RideService {
                     HttpStatus.BAD_REQUEST, "At least 2 location points are required for a deferred ride");
         }
 
-        // Sort points by timestamp to ensure correct order
         points.sort((a, b) -> a.getCapturedAt().compareTo(b.getCapturedAt()));
 
-        // Derive start and end times from the GPS data
-        LocalDateTime startTime = LocalDateTime.parse(points.get(0).getCapturedAt());
-        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).getCapturedAt());
+        LocalDateTime startTime = LocalDateTime.parse(points.get(0).getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME);
 
-        // Convert to LocationPoint model for distance calculation
         List<LocationPoint> route = points.stream()
-                .map(p -> new LocationPoint(p.getLat(), p.getLon(), LocalDateTime.parse(p.getCapturedAt())))
+                .map(p -> new LocationPoint(p.getLat(), p.getLon(), LocalDateTime.parse(p.getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME)))
                 .toList();
 
         double totalDistanceKm = calculateTotalDistance(route);
@@ -118,6 +114,7 @@ public class RideService {
 
         CompletedRide ride = new CompletedRide();
         ride.setDriverId(Long.parseLong(request.getDriverId()));
+        ride.setCampaignId(request.getCampaignId());
         ride.setStartTime(startTime);
         ride.setEndTime(endTime);
         ride.setDuration((int) durationSeconds);
@@ -125,6 +122,7 @@ public class RideService {
         ride.setAverageSpeedKmh(averageSpeedKmh);
         ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
         ride.setStatus("DEFERRED");
+        extractGeoCoords(ride, route);
         historyRepository.save(ride);
 
         return new EndRideResponse(totalDistanceKm, durationSeconds);
@@ -134,6 +132,11 @@ public class RideService {
         Pageable pageable = PageRequest.of(0, limit);
         List<CompletedRide> rides = historyRepository.findByDriverIdOrderByStartTimeDesc(driverId, pageable);
         return rides.stream().map(this::toHistoryResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteAllRides(Long driverId) {
+        historyRepository.deleteByDriverId(driverId);
     }
 
     public RideStatisticsResponse getStatistics(Long driverId) {
@@ -174,15 +177,52 @@ public class RideService {
         );
     }
 
+    public CampaignRideStatsResponse getCampaignStatistics(Long campaignId) {
+        List<CompletedRide> rides = historyRepository.findByCampaignId(campaignId);
+        return buildCampaignStats(campaignId, rides);
+    }
+
+    public List<CampaignRideStatsResponse> getCampaignStatistics(List<Long> campaignIds) {
+        List<CompletedRide> allRides = historyRepository.findByCampaignIdIn(campaignIds);
+        return campaignIds.stream().map(cid -> {
+            List<CompletedRide> campaignRides = allRides.stream()
+                    .filter(r -> cid.equals(r.getCampaignId()))
+                    .toList();
+            return buildCampaignStats(cid, campaignRides);
+        }).toList();
+    }
+
+    private CampaignRideStatsResponse buildCampaignStats(Long campaignId, List<CompletedRide> rides) {
+        long totalRides = rides.size();
+        double totalDistance = rides.stream().mapToDouble(CompletedRide::getDistanceKm).sum();
+        long totalDuration = rides.stream().mapToLong(CompletedRide::getDuration).sum();
+        double totalEarnings = rides.stream().mapToDouble(CompletedRide::getEarnings).sum();
+        long driverCount = rides.stream().map(CompletedRide::getDriverId).distinct().count();
+
+        return new CampaignRideStatsResponse(
+                campaignId, totalRides, totalDistance, totalDuration, totalEarnings, driverCount);
+    }
+
     private RideHistoryResponse toHistoryResponse(CompletedRide ride) {
         return new RideHistoryResponse(
-                ride.getId(), ride.getDriverId(), null,
+                ride.getId(), ride.getDriverId(), ride.getCampaignId(),
                 ride.getStartTime(), ride.getEndTime(),
                 null, null,
                 ride.getDuration(), null,
                 ride.getStatus(), ride.getDistanceKm(),
                 ride.getAverageSpeedKmh(), ride.getEarnings()
         );
+    }
+
+    private void extractGeoCoords(CompletedRide ride, List<LocationPoint> route) {
+        if (route != null && !route.isEmpty()) {
+            LocationPoint first = route.get(0);
+            LocationPoint last = route.get(route.size() - 1);
+            ride.setStartLat(first.getLat());
+            ride.setStartLon(first.getLon());
+            ride.setEndLat(last.getLat());
+            ride.setEndLon(last.getLon());
+        }
     }
 
     private RideSession requireSession(String rideId) {
@@ -197,7 +237,25 @@ public class RideService {
         }
         double total = 0.0;
         for (int i = 1; i < route.size(); i++) {
-            total += haversineKm(route.get(i - 1), route.get(i));
+            LocationPoint a = route.get(i - 1);
+            LocationPoint b = route.get(i);
+            double segmentKm = haversineKm(a, b);
+
+            // Skip GPS glitches: if a single segment implies > 200 km/h, discard it
+            long dtSeconds = java.time.Duration.between(a.getCapturedAt(), b.getCapturedAt()).getSeconds();
+            if (dtSeconds > 0) {
+                double impliedSpeedKmh = segmentKm / (dtSeconds / 3600.0);
+                if (impliedSpeedKmh > 200) {
+                    continue;
+                }
+            }
+
+            // Skip GPS jitter: ignore segments under 10 meters
+            if (segmentKm < 0.01) {
+                continue;
+            }
+
+            total += segmentKm;
         }
         return total;
     }

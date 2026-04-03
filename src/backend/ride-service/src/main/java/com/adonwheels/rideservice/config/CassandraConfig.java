@@ -57,7 +57,7 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
 
     @Override
     public SchemaAction getSchemaAction() {
-        return SchemaAction.CREATE_IF_NOT_EXISTS;
+        return SchemaAction.RECREATE_DROP_UNUSED;
     }
 
     @Override
@@ -68,9 +68,9 @@ public class CassandraConfig extends AbstractCassandraConfiguration {
     @Override
     protected DriverConfigLoaderBuilderConfigurer getDriverConfigLoaderBuilderConfigurer() {
         return builder -> builder
-                .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(10))
-                .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
-                .withDuration(DefaultDriverOption.CONTROL_CONNECTION_TIMEOUT, Duration.ofSeconds(10))
-                .withDuration(DefaultDriverOption.METADATA_SCHEMA_REQUEST_TIMEOUT, Duration.ofSeconds(10));
+                .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(30))
+                .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(30))
+                .withDuration(DefaultDriverOption.CONTROL_CONNECTION_TIMEOUT, Duration.ofSeconds(30))
+                .withDuration(DefaultDriverOption.METADATA_SCHEMA_REQUEST_TIMEOUT, Duration.ofSeconds(30));
     }
 }

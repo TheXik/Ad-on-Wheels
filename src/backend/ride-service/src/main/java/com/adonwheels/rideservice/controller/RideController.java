@@ -1,6 +1,7 @@
 package com.adonwheels.rideservice.controller;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
+import com.adonwheels.rideservice.dto.CampaignRideStatsResponse;
 import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
@@ -31,7 +32,7 @@ public class RideController {
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<StartRideResponse>> startRide(
             @Valid @RequestBody StartRideRequest request) {
-        StartRideResponse response = rideService.startRide(request.getDriverId());
+        StartRideResponse response = rideService.startRide(request.getDriverId(), request.getCampaignId());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
@@ -68,6 +69,12 @@ public class RideController {
                         .body(ApiResponse.error(dto.AppErrorCode.RIDE_NOT_ACTIVE)));
     }
 
+    @DeleteMapping("/{driverId}/history")
+    public ResponseEntity<Void> deleteAllRides(@PathVariable("driverId") Long driverId) {
+        rideService.deleteAllRides(driverId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{driverId}/history")
     public ResponseEntity<ApiResponse<List<RideHistoryResponse>>> getHistory(
             @PathVariable("driverId") Long driverId,
@@ -79,5 +86,17 @@ public class RideController {
     public ResponseEntity<ApiResponse<RideStatisticsResponse>> getStatistics(
             @PathVariable("driverId") Long driverId) {
         return ResponseEntity.ok(ApiResponse.success(rideService.getStatistics(driverId)));
+    }
+
+    @GetMapping("/campaign/{campaignId}/statistics")
+    public ResponseEntity<ApiResponse<CampaignRideStatsResponse>> getCampaignStatistics(
+            @PathVariable("campaignId") Long campaignId) {
+        return ResponseEntity.ok(ApiResponse.success(rideService.getCampaignStatistics(campaignId)));
+    }
+
+    @GetMapping("/campaigns/statistics")
+    public ResponseEntity<ApiResponse<List<CampaignRideStatsResponse>>> getCampaignStatisticsBulk(
+            @RequestParam("ids") List<Long> campaignIds) {
+        return ResponseEntity.ok(ApiResponse.success(rideService.getCampaignStatistics(campaignIds)));
     }
 }
