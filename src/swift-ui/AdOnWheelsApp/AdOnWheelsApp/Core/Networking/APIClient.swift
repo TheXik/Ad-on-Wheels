@@ -122,5 +122,43 @@ final class APIClient: APIClientProtocol {
         }
     }
 
+    func uploadImages(campaignId: Int, images: [Data]) async throws -> Campaign {
+        let boundary = UUID().uuidString
+        var body = Data()
+
+        for (index, imageData) in images.enumerated() {
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"files\"; filename=\"image\(index).jpg\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+            body.append(imageData)
+            body.append("\r\n".data(using: .utf8)!)
+        }
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+        let path = "api/campaigns/\(campaignId)/images"
+
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let token = TokenManager.shared.retrieveToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = body
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.malformedErrorResponse(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0)
+        }
+
+        let apiResponse = try decoder.decode(ApiResponse<Campaign>.self, from: data)
+        guard apiResponse.success, let campaign = apiResponse.data else {
+            throw NetworkError.decoding(URLError(.cannotParseResponse))
+        }
+        return campaign
+    }
+
     private struct EmptyResponse: Decodable {}
 }
