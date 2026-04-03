@@ -31,7 +31,8 @@ services:
       test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 120s
 
   gateway-service:
     image: gateway-service
@@ -101,6 +102,25 @@ services:
       eureka-server:
         condition: service_healthy
 
+  minio:
+    image: minio/minio:latest
+    container_name: ad_on_wheels_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   campaign-service:
     image: campaign-service
     build:
@@ -114,6 +134,8 @@ services:
       mysql:
         condition: service_healthy
       eureka-server:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   cassandra:
@@ -131,8 +153,8 @@ services:
       test: ["CMD-SHELL", "cqlsh -e 'DESCRIBE KEYSPACES'"]
       interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 60s
+      retries: 15
+      start_period: 90s
 
   ride-service:
     image: ride-service
@@ -154,3 +176,4 @@ services:
 volumes:
   mysql-data:
   cassandra-data:
+  minio-data:
