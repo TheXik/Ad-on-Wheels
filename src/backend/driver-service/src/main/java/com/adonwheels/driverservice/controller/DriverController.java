@@ -1,24 +1,31 @@
 package com.adonwheels.driverservice.controller;
 
+import com.adonwheels.driverservice.dto.OnboardingRequest;
 import com.adonwheels.driverservice.dto.VehicleRequest;
 import com.adonwheels.driverservice.model.Driver;
 import com.adonwheels.driverservice.service.DriverService;
+import com.adonwheels.driverservice.service.VehicleImageService;
 import dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/drivers")
 public class DriverController {
 
     private final DriverService service;
+    private final VehicleImageService imageService;
 
-    public DriverController(DriverService service) {
+    public DriverController(DriverService service, VehicleImageService imageService) {
         this.service = service;
+        this.imageService = imageService;
     }
 
     // GET /drivers — list all drivers
@@ -68,6 +75,44 @@ public class DriverController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(updatedDriver));
+    }
+
+    @PatchMapping("/{id}/onboarding")
+    public ResponseEntity<ApiResponse<Driver>> completeOnboarding(
+            @PathVariable Long id,
+            @Valid @RequestBody OnboardingRequest request) {
+        Driver updatedDriver = service.completeOnboarding(id, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(updatedDriver));
+    }
+
+    @PostMapping("/{id}/verify-decal")
+    public ResponseEntity<ApiResponse<Driver>> verifyDecal(
+            @PathVariable Long id,
+            @RequestParam String photoBase64) {
+        Driver driver = service.submitVerification(id, photoBase64);
+        return ResponseEntity.ok(ApiResponse.success(driver));
+    }
+
+    @PostMapping("/{id}/vehicle-image")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadVehicleImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        String key = imageService.upload(id, file);
+        String imageUrl = "/drivers/images/" + key;
+        return ResponseEntity.ok(ApiResponse.success(Map.of("imageUrl", imageUrl)));
+    }
+
+    @GetMapping("/images/**")
+    public ResponseEntity<byte[]> serveImage(jakarta.servlet.http.HttpServletRequest request) {
+        String fullPath = request.getRequestURI();
+        String key = fullPath.substring(fullPath.indexOf("/images/") + "/images/".length());
+        byte[] data = imageService.download(key);
+        String contentType = imageService.getContentType(key);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(data);
     }
 
     // DELETE /drivers/{id} — remove a driver
