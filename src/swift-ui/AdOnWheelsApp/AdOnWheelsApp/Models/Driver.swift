@@ -8,13 +8,16 @@ struct Driver: Identifiable, Codable {
     // Vehicle info
     let vehicleMake: String?
     let vehicleModel: String?
-    let vehicleYear: Int?
+    let vehicleYear: String?
     let vehiclePlate: String?
     let vehicleColor: String?
+    let vehicleImageUrl: String?
     let vehicleVerified: Bool?
     
     // Driver info
     let rating: Double?
+    let monthlyGoalKm: Double?
+    let onboardingCompleted: Bool?
     let memberSince: String?
     
     // Computed properties
@@ -22,7 +25,7 @@ struct Driver: Identifiable, Codable {
         guard let make = vehicleMake, let model = vehicleModel else {
             return "No vehicle"
         }
-        if let year = vehicleYear {
+        if let year = vehicleYear, !year.isEmpty {
             return "\(year) \(make) \(model)"
         }
         return "\(make) \(model)"
@@ -35,6 +38,10 @@ struct Driver: Identifiable, Codable {
     
     var isVehicleVerified: Bool {
         vehicleVerified ?? false
+    }
+
+    var needsOnboarding: Bool {
+        !(onboardingCompleted ?? false) && vehicleMake == nil
     }
 }
 
