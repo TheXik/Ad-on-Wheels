@@ -30,6 +30,8 @@ public enum AppErrorCode {
     INVALID_CAMPAIGN_DATES(3004, "Start date must be before end date", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_BUDGET(3005, "Company has insufficient budget for this campaign", HttpStatus.BAD_REQUEST),
     APPLICATION_NOT_FOUND(3006, "Application not found", HttpStatus.NOT_FOUND),
+    ALREADY_APPLIED(3007, "Driver has already applied to this campaign", HttpStatus.CONFLICT),
+    DRIVER_HAS_ACTIVE_CAMPAIGN(3008, "Driver already has an active campaign", HttpStatus.CONFLICT),
 
     // Ride & QR Logic (400, 404, 409)
     INVALID_QR_CODE(5001, "The scanned QR code is invalid or unknown", HttpStatus.NOT_FOUND),
