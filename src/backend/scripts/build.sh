@@ -56,7 +56,7 @@ docker run --rm \
   -v ~/.m2:/root/.m2 \
   -w /app \
   maven:3.9-eclipse-temurin-21 \
-  mvn package -DskipTests
+  mvn clean package -DskipTests
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
