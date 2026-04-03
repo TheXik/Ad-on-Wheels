@@ -34,6 +34,7 @@ class RideViewModel: NSObject, ObservableObject {
     var hasDeferredRideData: Bool { gpsBuffer.count >= 2 }
 
     var activeCampaignName: String = "Active Campaign"
+    var activeCampaignId: Int?
 
     private var elapsedTimer: AnyCancellable?
     private var trackTimer: AnyCancellable?
@@ -82,11 +83,13 @@ class RideViewModel: NSObject, ObservableObject {
             return
         }
 
+        let cid = campaignId ?? activeCampaignId
+
         isLoading = true
         errorMessage = nil
 
         do {
-            let body = try JSONEncoder().encode(StartRideRequest(driverId: String(driverId)))
+            let body = try JSONEncoder().encode(StartRideRequest(driverId: String(driverId), campaignId: cid))
             let endpoint = Endpoint(path: "api/rides/start", method: .post, body: body)
             let response: StartRideResponse = try await api.send(endpoint)
 
@@ -234,6 +237,7 @@ class RideViewModel: NSObject, ObservableObject {
         do {
             let request = DeferredRideRequest(
                 driverId: String(driverId),
+                campaignId: activeCampaignId,
                 locationPoints: gpsBuffer
             )
             let body = try JSONEncoder().encode(request)

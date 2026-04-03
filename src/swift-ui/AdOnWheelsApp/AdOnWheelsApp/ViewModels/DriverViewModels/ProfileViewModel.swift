@@ -46,10 +46,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     var vehicleYear: String {
-        if let year = driver?.vehicleYear {
-            return String(year)
-        }
-        return ""
+        driver?.vehicleYear ?? ""
     }
     
     var vehiclePlate: String {

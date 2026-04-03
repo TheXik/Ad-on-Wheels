@@ -125,12 +125,13 @@ class DashboardViewModel: ObservableObject {
     }
 
     private func updateUIFromResponse(_ response: DriverHomePageResponse) {
-        // Update driver name
         driverName = response.driver.name
 
-        // Update stats from statistics - ALL DATA FROM BACKEND
+        if let backendGoal = response.driver.monthlyGoalKm, backendGoal > 0 {
+            monthlyGoalTotal = backendGoal
+        }
+
         if let stats = response.statistics {
-            // Distance from backend
             let monthlyDistance = stats.monthlyDistanceKm ?? 0
             distanceDriven = monthlyDistance
             distanceRemaining = max(0, monthlyGoalTotal - distanceDriven)
