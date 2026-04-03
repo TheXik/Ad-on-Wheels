@@ -29,8 +29,9 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     @Override
     public GatewayFilter apply(Config config) {
         return ((exchange, chain) -> {
+            var mutatedExchange = exchange;
+
             if (validator.isSecured.test(exchange.getRequest())) {
-                // Check for the auth header
                 if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing authorization header");
                 }
@@ -41,13 +42,17 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 }
 
                 try {
-                    // AUTHENTICATION
                     Claims claims = jwtUtil.extractAllClaims(authHeader);
 
+                    String role = claims.get("role", String.class);
+                    Object profileIdRaw = claims.get("profileID");
+                    String profileId = profileIdRaw != null ? profileIdRaw.toString() : null;
 
-                    // TODO AUTHORIZATION later
-                    // String role = claims.get("role", String.class);
-                    // String path = exchange.getRequest().getURI().getPath();
+                    mutatedExchange = exchange.mutate()
+                            .request(r -> r
+                                    .header("X-User-Role", role)
+                                    .header("X-User-Id", profileId))
+                            .build();
 
                 } catch (ExpiredJwtException e) {
                     System.err.println("JWT expired: " + e.getMessage());
@@ -60,7 +65,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized access: Invalid token");
                 }
             }
-            return chain.filter(exchange);
+            return chain.filter(mutatedExchange);
         });
     }
 

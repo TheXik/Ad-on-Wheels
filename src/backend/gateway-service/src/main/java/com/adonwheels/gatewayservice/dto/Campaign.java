@@ -2,6 +2,7 @@ package com.adonwheels.gatewayservice.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public class Campaign {
     private Long id;
@@ -14,6 +15,7 @@ public class Campaign {
     private Integer maxDrivers;
     private Long estimatedReach;
     private String status;
+    private List<String> imageUrls;
 
     public Campaign() {
     }
@@ -47,4 +49,7 @@ public class Campaign {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 } 
