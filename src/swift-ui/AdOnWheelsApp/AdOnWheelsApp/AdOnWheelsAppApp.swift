@@ -14,6 +14,14 @@ struct AdOnWheelsAppApp: App {
     @State private var showSplash = true
     @AppStorage("isDarkMode") private var isDarkMode = false
 
+    init() {
+        let hasLaunchedKey = "hasLaunchedBefore"
+        if !UserDefaults.standard.bool(forKey: hasLaunchedKey) {
+            TokenManager.shared.deleteToken()
+            UserDefaults.standard.set(true, forKey: hasLaunchedKey)
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             Group {
@@ -25,7 +33,7 @@ struct AdOnWheelsAppApp: App {
                 } else if authService.isAuthenticated {
                     switch authService.userRole {
                     case .driver:
-                        DriverRootView(authService: authService)
+                        DriverEntryView(authService: authService)
                     case .company:
                         CompanyRootView(authService: authService)
                     case .none:
