@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { campaigns as campaignsApi, applicationsWithDrivers, messages } from '../services/api';
+import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats } from '../services/api';
 
 export default function CampaignDetailPage() {
   const { id } = useParams();
@@ -9,6 +9,7 @@ export default function CampaignDetailPage() {
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [rideStats, setRideStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [composeTo, setComposeTo] = useState(null);
@@ -19,15 +20,20 @@ export default function CampaignDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [camp, apps] = await Promise.all([
+        const [camp, apps, stats] = await Promise.all([
           campaignsApi.getById(id),
           applicationsWithDrivers.get(user.profileId),
+          campaignStats.getByCompany(user.profileId).catch(() => []),
         ]);
         setCampaign(camp);
         const campaignApps = (Array.isArray(apps) ? apps : []).filter(
           (a) => a.campaignId === parseInt(id)
         );
         setApplications(campaignApps);
+        const match = (Array.isArray(stats) ? stats : []).find(
+          (s) => s.rideStats?.campaignId === parseInt(id)
+        );
+        if (match) setRideStats(match.rideStats);
       } catch (err) {
         setError(err.message);
       }
@@ -62,6 +68,7 @@ export default function CampaignDetailPage() {
         senderId: user.profileId,
         senderRole: 'COMPANY',
         recipientId: composeTo.driver.id,
+        recipientRole: 'DRIVER',
         subject: msgSubject,
         body: msgBody,
       });
@@ -110,6 +117,27 @@ export default function CampaignDetailPage() {
           Export CSV
         </button>
       </div>
+
+      {rideStats && (
+        <div className="stats-grid" style={{ marginBottom: '20px' }}>
+          <div className="stat-card">
+            <span className="stat-value">{rideStats.totalDistanceKm?.toFixed(1)} km</span>
+            <span className="stat-label">Km Driven</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-value">{rideStats.totalRides}</span>
+            <span className="stat-label">Rides</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-value">€{rideStats.totalEarnings?.toFixed(2)}</span>
+            <span className="stat-label">Earnings Paid</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-value">{rideStats.activeDriverCount}</span>
+            <span className="stat-label">Active Drivers</span>
+          </div>
+        </div>
+      )}
 
       <div className="detail-grid">
         <div className="detail-card">

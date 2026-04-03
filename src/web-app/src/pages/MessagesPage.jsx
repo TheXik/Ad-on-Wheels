@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { messages, drivers } from '../services/api';
 
@@ -10,35 +10,43 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [driverNames, setDriverNames] = useState({});
+  const pollRef = useRef(null);
+
+  async function loadInbox() {
+    try {
+      const data = await messages.getInbox(user.profileId);
+      const msgs = Array.isArray(data) ? data : [];
+      setInbox(msgs);
+
+      const driverIds = [...new Set(
+        msgs.filter((m) => m.senderRole === 'DRIVER').map((m) => m.senderId)
+      )];
+      const names = {};
+      await Promise.all(
+        driverIds.map(async (did) => {
+          try {
+            const d = await drivers.getById(did);
+            names[did] = d.name;
+          } catch {
+            // keep as fallback
+          }
+        })
+      );
+      setDriverNames((prev) => ({ ...prev, ...names }));
+    } catch {
+      setInbox([]);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await messages.getInbox(user.profileId);
-        const msgs = Array.isArray(data) ? data : [];
-        setInbox(msgs);
-
-        const driverIds = [...new Set(
-          msgs.filter((m) => m.senderRole === 'DRIVER').map((m) => m.senderId)
-        )];
-        const names = {};
-        await Promise.all(
-          driverIds.map(async (did) => {
-            try {
-              const d = await drivers.getById(did);
-              names[did] = d.name;
-            } catch {
-              // keep as fallback
-            }
-          })
-        );
-        setDriverNames(names);
-      } catch {
-        setInbox([]);
-      }
+    async function init() {
+      await loadInbox();
       setLoading(false);
     }
-    load();
+    init();
+
+    pollRef.current = setInterval(() => loadInbox(), 15000);
+    return () => clearInterval(pollRef.current);
   }, [user.profileId]);
 
   async function handleReply() {
@@ -50,12 +58,12 @@ export default function MessagesPage() {
         senderId: user.profileId,
         senderRole: 'COMPANY',
         recipientId: selected.senderId,
+        recipientRole: selected.senderRole,
         subject: `Re: ${selected.subject}`,
         body: replyText,
       });
       setReplyText('');
-      const data = await messages.getInbox(user.profileId);
-      setInbox(Array.isArray(data) ? data : []);
+      await loadInbox();
     } catch (err) {
       alert(err.message);
     }
