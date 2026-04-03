@@ -15,6 +15,8 @@ public class DeferredRideRequest {
     @NotBlank(message = "driverId must not be blank")
     private String driverId;
 
+    private Long campaignId;
+
     @NotEmpty(message = "locationPoints must not be empty")
     private List<LocationPointDto> locationPoints;
 
@@ -27,6 +29,14 @@ public class DeferredRideRequest {
 
     public void setDriverId(String driverId) {
         this.driverId = driverId;
+    }
+
+    public Long getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(Long campaignId) {
+        this.campaignId = campaignId;
     }
 
     public List<LocationPointDto> getLocationPoints() {
