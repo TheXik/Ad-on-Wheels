@@ -6,25 +6,34 @@ import com.adonwheels.campaignservice.model.Application;
 import com.adonwheels.campaignservice.model.ApplicationStatus;
 import com.adonwheels.campaignservice.service.CampaignService;
 import com.adonwheels.campaignservice.service.ApplicationService;
+import com.adonwheels.campaignservice.service.ImageStorageService;
+import com.adonwheels.campaignservice.dto.ApplicationWithCampaign;
 import dto.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/campaigns")
 public class CampaignController {
     private final CampaignService campaignService;
     private final ApplicationService applicationService;
+    private final ImageStorageService imageStorageService;
 
-    public CampaignController(CampaignService campaignService, ApplicationService applicationService) {
+    public CampaignController(CampaignService campaignService,
+                              ApplicationService applicationService,
+                              ImageStorageService imageStorageService) {
         this.campaignService = campaignService;
         this.applicationService = applicationService;
+        this.imageStorageService = imageStorageService;
     }
 
     @GetMapping
@@ -58,6 +67,13 @@ public class CampaignController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCampaign(@PathVariable Long id) {
+        applicationService.deleteByCampaignId(id);
+        campaignService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/driver/{driverId}")
     public ResponseEntity<ApiResponse<List<Campaign>>> getCampaignsByDriver(@PathVariable Long driverId) {
         List<Application> accepted = applicationService.findByDriverIdAndStatus(driverId, ApplicationStatus.ACCEPTED);
@@ -66,6 +82,19 @@ public class CampaignController {
                 .map(campaignService::findById)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(campaigns));
+    }
+
+    @GetMapping("/driver/{driverId}/applications")
+    public ResponseEntity<ApiResponse<List<ApplicationWithCampaign>>> getApplicationsByDriver(
+            @PathVariable Long driverId) {
+        List<Application> apps = applicationService.findByDriverId(driverId);
+        List<ApplicationWithCampaign> result = apps.stream().map(app -> {
+            Campaign campaign = campaignService.findById(app.getCampaignId());
+            return new ApplicationWithCampaign(
+                    app.getId(), app.getCampaignId(),
+                    campaign.getName(), campaign.getCompanyId(), app.getStatus().name());
+        }).toList();
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @PostMapping("/{id}/apply")
@@ -145,9 +174,30 @@ public class CampaignController {
                 .body(csv.toString().getBytes());
     }
 
-    /**
-     * UC008 – Export all campaigns for a company as CSV.
-     */
+    @PostMapping("/{id}/images")
+    public ResponseEntity<ApiResponse<Campaign>> uploadImages(
+            @PathVariable Long id,
+            @RequestParam("files") List<MultipartFile> files) {
+        Campaign campaign = campaignService.findById(id);
+        List<String> newKeys = imageStorageService.upload(id, files, campaign.getImageKeys().size());
+        campaign.getImageKeys().addAll(newKeys);
+        Campaign updated = campaignService.save(campaign);
+        return ResponseEntity.ok(ApiResponse.success(updated));
+    }
+
+    @GetMapping("/images/{campaignId}/{filename}")
+    public ResponseEntity<byte[]> getImage(
+            @PathVariable Long campaignId,
+            @PathVariable String filename) {
+        String key = campaignId + "/" + filename;
+        byte[] imageBytes = imageStorageService.download(key);
+        String contentType = imageStorageService.getContentType(key);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .cacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic())
+                .body(imageBytes);
+    }
+
     @GetMapping("/company/{companyId}/export")
     public ResponseEntity<byte[]> exportAllCampaignStats(@PathVariable Long companyId) {
         List<Campaign> campaigns = campaignService.findByCompanyId(companyId);

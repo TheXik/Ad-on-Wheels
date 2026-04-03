@@ -1,6 +1,5 @@
 package com.adonwheels.campaignservice.config;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,22 +30,18 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
-        return S3Client.builder()
+        S3Client client = S3Client.builder()
                 .endpointOverride(URI.create(endpoint))
                 .region(Region.US_EAST_1)
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
                 .forcePathStyle(true)
                 .build();
-    }
-
-    @PostConstruct
-    public void createBucketIfNotExists() {
-        S3Client client = s3Client();
         try {
             client.headBucket(HeadBucketRequest.builder().bucket(bucket).build());
         } catch (NoSuchBucketException e) {
             client.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
         }
+        return client;
     }
 }
