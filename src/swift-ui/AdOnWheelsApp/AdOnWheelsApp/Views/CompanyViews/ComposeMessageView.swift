@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct ComposeMessageView: View {
-    let companyId: Int
+    let senderId: Int
+    let senderRole: String
     let recipientId: Int
+    let recipientRole: String
     let recipientName: String
     let campaignId: Int
     let campaignName: String
@@ -143,6 +145,7 @@ struct ComposeMessageView: View {
                 }
             }
             .background(Color.pageBackground)
+            .dismissKeyboardOnTap()
             .navigationTitle("New Message")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -160,9 +163,10 @@ struct ComposeMessageView: View {
             do {
                 let request = SendMessageRequest(
                     campaignId: campaignId,
-                    senderId: companyId,
-                    senderRole: "COMPANY",
+                    senderId: senderId,
+                    senderRole: senderRole,
                     recipientId: recipientId,
+                    recipientRole: recipientRole,
                     subject: subject,
                     body: messageBody
                 )

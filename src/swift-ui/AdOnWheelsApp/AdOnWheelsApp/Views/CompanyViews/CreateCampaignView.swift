@@ -1,8 +1,10 @@
 import SwiftUI
+import PhotosUI
 
 struct CreateCampaignView: View {
     @StateObject private var viewModel: CreateCampaignViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var photosPickerItems: [PhotosPickerItem] = []
     let onCreated: () -> Void
 
     init(companyId: Int, onCreated: @escaping () -> Void) {
@@ -39,6 +41,64 @@ struct CreateCampaignView: View {
                                         alignment: .topLeading
                                     )
                             }
+                        }
+                    }
+
+                    formSection(title: "Campaign Images") {
+                        VStack(spacing: 12) {
+                            if !viewModel.selectedImages.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 10) {
+                                        ForEach(Array(viewModel.selectedImages.enumerated()), id: \.offset) { index, image in
+                                            ZStack(alignment: .topTrailing) {
+                                                Image(uiImage: image)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 90, height: 90)
+                                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                                                Button {
+                                                    viewModel.removeImage(at: index)
+                                                } label: {
+                                                    Image(systemName: "xmark.circle.fill")
+                                                        .font(.system(size: 20))
+                                                        .foregroundColor(.white)
+                                                        .shadow(radius: 2)
+                                                }
+                                                .offset(x: 6, y: -6)
+                                            }
+                                        }
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                            }
+
+                            if viewModel.selectedImages.count < CreateCampaignViewModel.maxImages {
+                                PhotosPicker(
+                                    selection: $photosPickerItems,
+                                    maxSelectionCount: CreateCampaignViewModel.maxImages - viewModel.selectedImages.count,
+                                    matching: .images
+                                ) {
+                                    HStack {
+                                        Image(systemName: "photo.on.rectangle.angled")
+                                        Text(viewModel.selectedImages.isEmpty ? "Add Photos" : "Add More")
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundColor(.accentBlue)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.accentBlue.opacity(0.08))
+                                    .cornerRadius(10)
+                                }
+                                .onChange(of: photosPickerItems) { items in
+                                    viewModel.loadImages(from: items)
+                                    photosPickerItems = []
+                                }
+                            }
+
+                            Text("\(viewModel.selectedImages.count)/\(CreateCampaignViewModel.maxImages) photos")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
                         }
                     }
 
@@ -105,6 +165,8 @@ struct CreateCampaignView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .dismissKeyboardOnTap()
+            .keyboardDoneButton()
             .onChange(of: viewModel.didCreate) { created in
                 if created { onCreated() }
             }

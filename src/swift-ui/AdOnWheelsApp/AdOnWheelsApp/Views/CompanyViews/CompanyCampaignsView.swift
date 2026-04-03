@@ -4,10 +4,17 @@ struct CompanyCampaignsView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
     @State private var showCreateSheet = false
     @State private var selectedFilter = 0
+    @State private var campaignToDelete: Campaign?
+
+    private let filterOptions = ["All", "Recruiting", "Active", "Paused", "Completed"]
 
     var filteredCampaigns: [Campaign] {
-        dashboard.campaigns.filter { campaign in
-            selectedFilter == 0 ? campaign.isActive : !campaign.isActive
+        switch selectedFilter {
+        case 1: return dashboard.campaigns.filter { $0.status == "RECRUITING" }
+        case 2: return dashboard.campaigns.filter { $0.status == "ACTIVE" }
+        case 3: return dashboard.campaigns.filter { $0.status == "PAUSED" }
+        case 4: return dashboard.campaigns.filter { $0.status == "COMPLETED" }
+        default: return dashboard.campaigns
         }
     }
 
@@ -29,12 +36,23 @@ struct CompanyCampaignsView: View {
             .padding(.horizontal, 20)
             .padding(.top, 12)
 
-            Picker("Filter", selection: $selectedFilter) {
-                Text("Active").tag(0)
-                Text("Past").tag(1)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(0..<filterOptions.count, id: \.self) { index in
+                        Button(action: { selectedFilter = index }) {
+                            Text(filterOptions[index])
+                                .font(.subheadline)
+                                .fontWeight(selectedFilter == index ? .semibold : .regular)
+                                .foregroundColor(selectedFilter == index ? .white : .secondary)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(selectedFilter == index ? Color.accentBlue : Color.gray.opacity(0.12))
+                                .cornerRadius(20)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 20)
             .padding(.vertical, 12)
 
             if dashboard.isLoading {
@@ -57,7 +75,8 @@ struct CompanyCampaignsView: View {
                                 campaign: campaign,
                                 hiredCount: dashboard.applications
                                     .filter { $0.campaignId == campaign.id && $0.status.uppercased() == "ACCEPTED" }
-                                    .count
+                                    .count,
+                                onDelete: { campaignToDelete = campaign }
                             )
                         }
                     }
@@ -74,6 +93,17 @@ struct CompanyCampaignsView: View {
                 Task { await dashboard.fetchCampaigns() }
             }
         }
+        .alert("Delete Campaign", isPresented: .constant(campaignToDelete != nil)) {
+            Button("Cancel", role: .cancel) { campaignToDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let campaign = campaignToDelete {
+                    campaignToDelete = nil
+                    Task { await dashboard.deleteCampaign(campaign.id) }
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(campaignToDelete?.name ?? "")\"? This cannot be undone.")
+        }
     }
 
     var emptyState: some View {
@@ -81,7 +111,7 @@ struct CompanyCampaignsView: View {
             Image(systemName: "megaphone")
                 .font(.system(size: 48))
                 .foregroundColor(.secondary.opacity(0.3))
-            Text(selectedFilter == 0 ? "No active campaigns" : "No past campaigns")
+            Text(selectedFilter == 0 ? "No campaigns yet" : "No \(filterOptions[selectedFilter].lowercased()) campaigns")
                 .font(.headline)
                 .foregroundColor(.secondary)
             if selectedFilter == 0 {
@@ -127,6 +157,7 @@ struct CompanyCampaignsView: View {
 struct CampaignDetailCard: View {
     let campaign: Campaign
     let hiredCount: Int
+    var onDelete: (() -> Void)? = nil
 
     var statusColor: Color {
         switch campaign.status {
@@ -197,6 +228,13 @@ struct CampaignDetailCard: View {
         .padding(16)
         .background(Color.cardBackground)
         .cornerRadius(16)
+        .contextMenu {
+            if let onDelete {
+                Button(role: .destructive, action: onDelete) {
+                    Label("Delete Campaign", systemImage: "trash")
+                }
+            }
+        }
     }
 
     func campaignMetric(icon: String, value: String, label: String) -> some View {
