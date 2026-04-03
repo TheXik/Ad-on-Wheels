@@ -30,6 +30,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
+          <img src="/app-icon.png" alt="Ad on Wheels" className="login-logo" />
           <h1>Ad on Wheels</h1>
           <p>Company Portal</p>
         </div>

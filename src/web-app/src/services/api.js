@@ -40,6 +40,21 @@ export const campaigns = {
   getById: (id) => request(`/api/campaigns/${id}`),
   create: (data) =>
     request('/api/campaigns', { method: 'POST', body: JSON.stringify(data) }),
+  uploadImages: (campaignId, files) => {
+    const form = new FormData();
+    files.forEach((f) => form.append('files', f));
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return fetch(`${API_BASE}/api/campaigns/${campaignId}/images`, {
+      method: 'POST',
+      headers,
+      body: form,
+    }).then((res) => {
+      if (!res.ok) throw new Error(`Image upload failed: ${res.status}`);
+      return res.json();
+    });
+  },
   getApplications: (companyId) =>
     request(`/api/campaigns/${companyId}/applications`),
   acceptApplication: (applicationId) =>
@@ -62,7 +77,8 @@ export const messages = {
     request('/api/messages', { method: 'POST', body: JSON.stringify(data) }),
   markRead: (messageId) =>
     request(`/api/messages/${messageId}/read`, { method: 'PATCH' }),
-  getUnreadCount: (userId) => request(`/api/messages/unread-count/${userId}`),
+  getUnreadCount: (userId) =>
+    request(`/api/messages/unread-count/${userId}`),
 };
 
 export const drivers = {
@@ -71,4 +87,9 @@ export const drivers = {
 
 export const applicationsWithDrivers = {
   get: (companyId) => request(`/api/companies/${companyId}/applications-with-drivers`),
+};
+
+export const campaignStats = {
+  getByCompany: (companyId) => request(`/api/companies/${companyId}/campaign-stats`),
+  exportCsv: (companyId) => request(`/api/companies/${companyId}/export-csv`),
 };
