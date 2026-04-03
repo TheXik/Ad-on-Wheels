@@ -12,33 +12,65 @@ import java.util.List;
 @Service
 public class CampaignService {
     private final CampaignRepository repository;
+    private final ImageStorageService imageStorageService;
 
-    public CampaignService(CampaignRepository repository) {
+    public CampaignService(CampaignRepository repository, ImageStorageService imageStorageService) {
         this.repository = repository;
+        this.imageStorageService = imageStorageService;
     }
 
     public List<Campaign> findAll() {
-        return repository.findAll();
+        List<Campaign> campaigns = repository.findAll();
+        campaigns.forEach(this::populateImageUrls);
+        return campaigns;
     }
 
     public Campaign findById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new CampaignNotFoundException(id));
+        Campaign campaign = repository.findById(id).orElseThrow(() -> new CampaignNotFoundException(id));
+        populateImageUrls(campaign);
+        return campaign;
     }
 
     @Transactional
     public Campaign save(Campaign campaign) {
-        return repository.save(campaign);
+        Campaign saved = repository.save(campaign);
+        populateImageUrls(saved);
+        return saved;
     }
 
     public List<Campaign> findByCompanyId(Long companyId) {
-        return repository.findByCompanyId(companyId);
+        List<Campaign> campaigns = repository.findByCompanyId(companyId);
+        campaigns.forEach(this::populateImageUrls);
+        return campaigns;
     }
 
     public List<Campaign> findByCompanyIdAndStatus(Long companyId, CampaignStatus status) {
-        return repository.findByCompanyIdAndStatus(companyId, status);
+        List<Campaign> campaigns = repository.findByCompanyIdAndStatus(companyId, status);
+        campaigns.forEach(this::populateImageUrls);
+        return campaigns;
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        if (!repository.existsById(id)) {
+            throw new CampaignNotFoundException(id);
+        }
+        repository.deleteById(id);
     }
 
     public List<Campaign> findByStatus(CampaignStatus status) {
-        return repository.findByStatus(status);
+        List<Campaign> campaigns = repository.findByStatus(status);
+        campaigns.forEach(this::populateImageUrls);
+        return campaigns;
+    }
+
+    private void populateImageUrls(Campaign campaign) {
+        if (campaign.getImageKeys() != null && !campaign.getImageKeys().isEmpty()) {
+            campaign.setImageUrls(
+                    campaign.getImageKeys().stream()
+                            .map(imageStorageService::buildImageUrl)
+                            .toList()
+            );
+        }
     }
 } 
