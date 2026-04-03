@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @ObservedObject var authService: AuthenticationService
-    @StateObject private var viewModel: DashboardViewModel
+    @ObservedObject var viewModel: DashboardViewModel
     @ObservedObject var rideViewModel: RideViewModel
     var onDeferredScanTap: () -> Void
 
@@ -14,13 +14,6 @@ struct DashboardView: View {
     @State private var composeApp: ApplicationWithCampaign?
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
-
-    init(authService: AuthenticationService, rideViewModel: RideViewModel, onDeferredScanTap: @escaping () -> Void = {}) {
-        self.authService = authService
-        self.rideViewModel = rideViewModel
-        self.onDeferredScanTap = onDeferredScanTap
-        _viewModel = StateObject(wrappedValue: DashboardViewModel(authService: authService))
-    }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -250,6 +243,7 @@ struct DashboardView: View {
                 senderId: authService.userId ?? 0,
                 senderRole: "DRIVER",
                 recipientId: app.companyId ?? 0,
+                recipientRole: "COMPANY",
                 recipientName: app.campaignName,
                 campaignId: app.campaignId,
                 campaignName: app.campaignName
@@ -298,6 +292,7 @@ private func applicationLabel(_ status: String) -> String {
 
 struct DashboardView_Previews: PreviewProvider {
     static var previews: some View {
-        DashboardView(authService: AuthenticationService(), rideViewModel: RideViewModel(authService: AuthenticationService())) {}
+        let auth = AuthenticationService()
+        DashboardView(authService: auth, viewModel: DashboardViewModel(authService: auth), rideViewModel: RideViewModel(authService: auth)) {}
     }
 }
