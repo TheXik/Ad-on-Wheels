@@ -1,11 +1,12 @@
 package com.adonwheels.driverservice.exception;
 
-import dto.AppErrorCode;
-import dto.exception.BusinessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-public class DriverNotFoundException extends BusinessException {
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class DriverNotFoundException extends RuntimeException {
 
     public DriverNotFoundException(Long id) {
-        super(AppErrorCode.USER_NOT_FOUND, "Driver with ID " + id + " not found");
+        super("Driver with ID " + id + " not found");
     }
 } 

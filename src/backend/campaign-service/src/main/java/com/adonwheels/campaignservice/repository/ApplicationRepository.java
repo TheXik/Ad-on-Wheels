@@ -10,4 +10,11 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findByCampaignIdIn(List<Long> campaignIds);
     List<Application> findByCampaignId(Long campaignId);
     List<Application> findByDriverIdAndStatus(Long driverId, ApplicationStatus status);
+    List<Application> findByDriverId(Long driverId);
+
+    List<Application> findByDriverIdAndStatusAndIdNot(Long driverId, ApplicationStatus status, Long excludeId);
+
+    boolean existsByDriverIdAndCampaignId(Long driverId, Long campaignId);
+
+    boolean existsByDriverIdAndStatus(Long driverId, ApplicationStatus status);
 } 

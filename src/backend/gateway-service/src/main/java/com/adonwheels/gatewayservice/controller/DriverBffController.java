@@ -33,6 +33,11 @@ public class DriverBffController {
                 .map(ApiResponseWrapper::success);
     }
     
+    @DeleteMapping("/{driverId}/rides")
+    public Mono<Void> deleteDriverRideHistory(@PathVariable("driverId") Long driverId) {
+        return driverBffService.deleteDriverRideHistory(driverId);
+    }
+
     @GetMapping(value = "/{driverId}/rides", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ApiResponseWrapper<List<Ride>>> getDriverRideHistory(
             @PathVariable("driverId") Long driverId,

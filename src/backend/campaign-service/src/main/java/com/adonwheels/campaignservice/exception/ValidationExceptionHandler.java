@@ -13,13 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
 
-/**
- * Handles exceptions that occur before entering the controller methods
- * (like @Valid validation),
- * which cannot be caught by AspectJ @Around advice.
- */
 @RestControllerAdvice
-@Order(1) // Ensure this runs before default handlers
+@Order(1)
 public class ValidationExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ValidationExceptionHandler.class);
@@ -38,5 +33,21 @@ public class ValidationExceptionHandler {
         return ResponseEntity
                 .status(AppErrorCode.VALIDATION_ERROR.getHttpStatus())
                 .body(ApiResponse.error(AppErrorCode.VALIDATION_ERROR, errorMessage, validationErrors));
+    }
+
+    @ExceptionHandler(DuplicateApplicationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateApplication(DuplicateApplicationException ex) {
+        logger.warn("Duplicate application attempt: {}", ex.getMessage());
+        return ResponseEntity
+                .status(AppErrorCode.ALREADY_APPLIED.getHttpStatus())
+                .body(ApiResponse.error(AppErrorCode.ALREADY_APPLIED, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ActiveCampaignException.class)
+    public ResponseEntity<ApiResponse<Void>> handleActiveCampaign(ActiveCampaignException ex) {
+        logger.warn("Active campaign conflict: {}", ex.getMessage());
+        return ResponseEntity
+                .status(AppErrorCode.DRIVER_HAS_ACTIVE_CAMPAIGN.getHttpStatus())
+                .body(ApiResponse.error(AppErrorCode.DRIVER_HAS_ACTIVE_CAMPAIGN, ex.getMessage()));
     }
 }

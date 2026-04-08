@@ -23,8 +23,10 @@ class ForgotPasswordViewModel: ObservableObject {
     }
 
     var canRequestCode: Bool {
-        !email.trimmingCharacters(in: .whitespaces).isEmpty &&
-        email.contains("@")
+        let trimmed = email.trimmingCharacters(in: .whitespaces)
+        let pred = NSPredicate(format: "SELF MATCHES %@",
+                               "^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$")
+        return pred.evaluate(with: trimmed)
     }
 
     var canResetPassword: Bool {

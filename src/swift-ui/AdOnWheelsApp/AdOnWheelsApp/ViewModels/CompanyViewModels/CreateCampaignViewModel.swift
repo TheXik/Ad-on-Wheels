@@ -1,4 +1,7 @@
 import Foundation
+import UIKit
+import PhotosUI
+import SwiftUI
 
 @MainActor
 class CreateCampaignViewModel: ObservableObject {
@@ -9,14 +12,17 @@ class CreateCampaignViewModel: ObservableObject {
     @Published var budget = ""
     @Published var maxDrivers = ""
     @Published var estimatedReach = ""
+    @Published var selectedImages: [UIImage] = []
     @Published var isSubmitting = false
     @Published var errorMessage: String?
     @Published var didCreate = false
 
-    private let api: APIClientProtocol
+    static let maxImages = 5
+
+    private let api: APIClient
     private let companyId: Int
 
-    init(companyId: Int, api: APIClientProtocol = APIClient.shared) {
+    init(companyId: Int, api: APIClient = .shared) {
         self.companyId = companyId
         self.api = api
     }
@@ -27,6 +33,26 @@ class CreateCampaignViewModel: ObservableObject {
         Double(budget) != nil && Double(budget)! > 0 &&
         Int(maxDrivers) != nil && Int(maxDrivers)! > 0 &&
         endDate > startDate
+    }
+
+    func removeImage(at index: Int) {
+        guard selectedImages.indices.contains(index) else { return }
+        selectedImages.remove(at: index)
+    }
+
+    func loadImages(from selections: [PhotosPickerItem]) {
+        let remaining = Self.maxImages - selectedImages.count
+        let toLoad = Array(selections.prefix(remaining))
+        for item in toLoad {
+            item.loadTransferable(type: Data.self) { [weak self] result in
+                DispatchQueue.main.async {
+                    if case .success(let data?) = result,
+                       let image = UIImage(data: data) {
+                        self?.selectedImages.append(image)
+                    }
+                }
+            }
+        }
     }
 
     func createCampaign() async {
@@ -52,7 +78,17 @@ class CreateCampaignViewModel: ObservableObject {
             )
             let body = try JSONEncoder().encode(request)
             let endpoint = Endpoint(path: "api/campaigns", method: .post, body: body)
-            let _: Campaign = try await api.send(endpoint)
+            let campaign: Campaign = try await api.send(endpoint)
+
+            if !selectedImages.isEmpty {
+                let imageDataList = selectedImages.compactMap { image in
+                    image.jpegData(compressionQuality: 0.7)
+                }
+                if !imageDataList.isEmpty {
+                    _ = try await api.uploadImages(campaignId: campaign.id, images: imageDataList)
+                }
+            }
+
             didCreate = true
         } catch {
             errorMessage = error.localizedDescription

@@ -46,10 +46,7 @@ class ProfileViewModel: ObservableObject {
     }
     
     var vehicleYear: String {
-        if let year = driver?.vehicleYear {
-            return String(year)
-        }
-        return ""
+        driver?.vehicleYear ?? ""
     }
     
     var vehiclePlate: String {
@@ -102,6 +99,39 @@ class ProfileViewModel: ObservableObject {
         return formatter.string(from: Date())
     }
     
+    @Published var isSavingVehicle = false
+    @Published var vehicleSaveSuccess = false
+
+    func saveVehicle(make: String, model: String, year: String, plate: String, color: String) async {
+        guard let driverId = authService.userId else { return }
+
+        isSavingVehicle = true
+        vehicleSaveSuccess = false
+        errorMessage = nil
+        defer { isSavingVehicle = false }
+
+        do {
+            let body: [String: String] = [
+                "make": make,
+                "model": model,
+                "year": year,
+                "licensePlate": plate,
+                "color": color
+            ]
+            let data = try JSONEncoder().encode(body)
+            let endpoint = Endpoint(
+                path: "api/drivers/\(driverId)/vehicle",
+                method: .patch,
+                body: data
+            )
+            let _: Driver = try await api.send(endpoint)
+            vehicleSaveSuccess = true
+            await fetchProfile()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     var hasVehicle: Bool {
         !vehicleMake.isEmpty && !vehicleModel.isEmpty
     }

@@ -10,6 +10,7 @@ class CompanyDashboardViewModel: ObservableObject {
     @Published var actionInProgress: Int?
     @Published var isExporting = false
     @Published var exportedFileURL: URL?
+    @Published var campaignRideStats: [CampaignRideStat] = []
 
     private let api: APIClientProtocol
     let companyId: Int
@@ -91,8 +92,9 @@ class CompanyDashboardViewModel: ObservableObject {
         async let companyTask: () = fetchCompany()
         async let campaignsTask: () = fetchCampaigns()
         async let applicationsTask: () = fetchApplications()
+        async let rideStatsTask: () = fetchCampaignRideStats()
 
-        _ = await (companyTask, campaignsTask, applicationsTask)
+        _ = await (companyTask, campaignsTask, applicationsTask, rideStatsTask)
     }
 
     func fetchCompany() async {
@@ -122,6 +124,43 @@ class CompanyDashboardViewModel: ObservableObject {
             self.applications = fetched
         } catch {
             // Non-critical for home/stats
+        }
+    }
+
+    func fetchCampaignRideStats() async {
+        do {
+            let endpoint = Endpoint(path: "api/companies/\(companyId)/campaign-stats")
+            let fetched: [CampaignRideStat] = try await api.send(endpoint)
+            self.campaignRideStats = fetched
+        } catch {
+            // Non-critical — stats may not be available yet
+        }
+    }
+
+    var totalKmDriven: Double {
+        campaignRideStats.reduce(0) { $0 + $1.rideStats.totalDistanceKm }
+    }
+
+    var totalCampaignRides: Int {
+        campaignRideStats.reduce(0) { $0 + $1.rideStats.totalRides }
+    }
+
+    var totalEarningsPaid: Double {
+        campaignRideStats.reduce(0) { $0 + $1.rideStats.totalEarnings }
+    }
+
+    func rideStatsFor(campaignId: Int) -> RideStatsData? {
+        campaignRideStats.first { $0.campaign.id == campaignId }?.rideStats
+    }
+
+    func deleteCampaign(_ campaignId: Int) async {
+        do {
+            let endpoint = Endpoint(path: "api/campaigns/\(campaignId)", method: .delete)
+            try await api.send(endpoint)
+            campaigns.removeAll { $0.id == campaignId }
+            applications.removeAll { $0.campaignId == campaignId }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -188,13 +227,13 @@ class CompanyDashboardViewModel: ObservableObject {
         }
     }
 
-    /// Export all campaigns for this company as CSV.
+    /// Export all campaigns for this company as enriched CSV (with ride stats).
     func exportAllCampaignsCSV() async {
         isExporting = true
         defer { isExporting = false }
         do {
             let endpoint = Endpoint(
-                path: "api/campaigns/company/\(companyId)/export",
+                path: "api/companies/\(companyId)/export-csv",
                 headers: ["Accept": "text/csv"]
             )
             let data = try await api.sendRawData(endpoint)

@@ -4,6 +4,7 @@ struct DriverRootView: View {
     @ObservedObject var authService: AuthenticationService
     @StateObject private var rideViewModel: RideViewModel
     @StateObject private var browseViewModel: BrowseViewModel
+    @StateObject private var dashboardViewModel: DashboardViewModel
     @State private var selectedTab: Int = 0
     @State private var showingRideSheet = false
     @State private var showingQRSheet = false
@@ -14,6 +15,7 @@ struct DriverRootView: View {
         self.authService = authService
         _rideViewModel = StateObject(wrappedValue: RideViewModel(authService: authService))
         _browseViewModel = StateObject(wrappedValue: BrowseViewModel(driverId: authService.userId ?? 0))
+        _dashboardViewModel = StateObject(wrappedValue: DashboardViewModel(authService: authService))
     }
 
     var body: some View {
@@ -22,8 +24,10 @@ struct DriverRootView: View {
                 switch selectedTab {
                 case 0:
                     NavigationView {
-                        DashboardView(authService: authService, rideViewModel: rideViewModel)
-                            .navigationBarHidden(true)
+                        DashboardView(authService: authService, viewModel: dashboardViewModel, rideViewModel: rideViewModel) {
+                            showingQRSheet = true
+                        }
+                        .navigationBarHidden(true)
                     }
                 case 1:
                     NavigationView {
@@ -121,8 +125,12 @@ struct DriverRootView: View {
     }
 
     func startRideFlow() {
+        let campaignId = dashboardViewModel.activeCampaigns.first?.id
+        let campaignName = dashboardViewModel.activeCampaigns.first?.name ?? "Active Campaign"
+        rideViewModel.activeCampaignId = campaignId
+        rideViewModel.activeCampaignName = campaignName
         Task {
-            await rideViewModel.startRide()
+            await rideViewModel.startRide(campaignId: campaignId)
             if rideViewModel.errorMessage == nil {
                 showingRideSheet = true
             }

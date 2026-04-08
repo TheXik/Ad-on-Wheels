@@ -52,7 +52,6 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
             .edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 20) {
-                // Back button at the top
                 if let onBack = onBack {
                     HStack {
                         Button(action: onBack) {
@@ -124,6 +123,7 @@ struct AuthScaffold<Fields: View, BottomLinks: View>: View {
                 .padding(.bottom, 40)
             }
         }
+        .dismissKeyboardOnTap()
     }
 
     @ViewBuilder
@@ -174,5 +174,28 @@ private struct AuthFieldStyle: ViewModifier {
 extension View {
     func authFieldStyle() -> some View {
         modifier(AuthFieldStyle())
+    }
+
+    func dismissKeyboardOnTap() -> some View {
+        self.onTapGesture {
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.resignFirstResponder),
+                to: nil, from: nil, for: nil
+            )
+        }
+    }
+
+    func keyboardDoneButton() -> some View {
+        self.toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder),
+                        to: nil, from: nil, for: nil
+                    )
+                }
+            }
+        }
     }
 }

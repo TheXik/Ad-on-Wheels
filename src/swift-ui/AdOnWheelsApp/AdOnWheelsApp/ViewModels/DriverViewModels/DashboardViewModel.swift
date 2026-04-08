@@ -25,6 +25,9 @@ class DashboardViewModel: ObservableObject {
     // Active campaigns (driver is enrolled in)
     @Published var activeCampaigns: [Campaign] = []
 
+    // All driver applications (pending, accepted, declined)
+    @Published var myApplications: [ApplicationWithCampaign] = []
+
     // Messages
     @Published var unreadMessageCount: Int = 0
 
@@ -69,6 +72,7 @@ class DashboardViewModel: ObservableObject {
         }
 
         await fetchDriverCampaigns(driverId: driverId)
+        await fetchDriverApplications(driverId: driverId)
         await fetchUnreadMessages(userId: driverId)
     }
 
@@ -80,6 +84,16 @@ class DashboardViewModel: ObservableObject {
             self.activeCampaigns = campaigns
         } catch {
             self.activeCampaigns = []
+        }
+    }
+
+    private func fetchDriverApplications(driverId: Int) async {
+        do {
+            let endpoint = Endpoint(path: "api/campaigns/driver/\(driverId)/applications")
+            let apps: [ApplicationWithCampaign] = try await api.send(endpoint)
+            self.myApplications = apps
+        } catch {
+            self.myApplications = []
         }
     }
 
@@ -111,12 +125,13 @@ class DashboardViewModel: ObservableObject {
     }
 
     private func updateUIFromResponse(_ response: DriverHomePageResponse) {
-        // Update driver name
         driverName = response.driver.name
 
-        // Update stats from statistics - ALL DATA FROM BACKEND
+        if let backendGoal = response.driver.monthlyGoalKm, backendGoal > 0 {
+            monthlyGoalTotal = backendGoal
+        }
+
         if let stats = response.statistics {
-            // Distance from backend
             let monthlyDistance = stats.monthlyDistanceKm ?? 0
             distanceDriven = monthlyDistance
             distanceRemaining = max(0, monthlyGoalTotal - distanceDriven)

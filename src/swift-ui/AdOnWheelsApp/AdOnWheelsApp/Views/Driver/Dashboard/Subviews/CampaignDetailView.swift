@@ -15,20 +15,39 @@ struct CampaignDetailView: View {
         return icons[campaign.id % icons.count]
     }
 
+    private var imageURLs: [URL] {
+        campaign.resolvedImageUrls
+    }
+
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Rectangle()
-                        .fill(cardColor.opacity(0.1))
+                    if !imageURLs.isEmpty {
+                        TabView {
+                            ForEach(imageURLs, id: \.absoluteString) { url in
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    case .failure:
+                                        fallbackImageView
+                                    default:
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                            .background(cardColor.opacity(0.05))
+                                    }
+                                }
+                            }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .always))
                         .frame(height: 250)
-                        .overlay(
-                            Image(systemName: cardIcon)
-                                .resizable()
-                                .scaledToFit()
-                                .padding(60)
-                                .foregroundColor(cardColor)
-                        )
+                    } else {
+                        fallbackImageView
+                            .frame(height: 250)
+                    }
 
                     VStack(alignment: .leading, spacing: 20) {
                         VStack(alignment: .leading, spacing: 5) {
@@ -97,6 +116,18 @@ struct CampaignDetailView: View {
             }
         }
     }
+
+    private var fallbackImageView: some View {
+        Rectangle()
+            .fill(cardColor.opacity(0.1))
+            .overlay(
+                Image(systemName: cardIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(60)
+                    .foregroundColor(cardColor)
+            )
+    }
 }
 
 struct DetailInfoBox: View {
@@ -132,7 +163,8 @@ struct CampaignDetailView_Previews: PreviewProvider {
             campaign: Campaign(
                 id: 1, name: "Test Campaign", description: "This is a test campaign with a longer description.",
                 companyId: 1, startDate: "2025-03-01", endDate: "2025-06-30",
-                budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING"),
+                budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING",
+                imageUrls: nil),
             onApply: {}
         )
     }

@@ -20,7 +20,9 @@ eureka:
   instance:
     hostname: ${spring.application.name}
     prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 5
   client:
+    registry-fetch-interval-seconds: 5
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
 

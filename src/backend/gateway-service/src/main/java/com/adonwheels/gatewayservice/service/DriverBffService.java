@@ -103,6 +103,13 @@ public class DriverBffService {
                 .defaultIfEmpty(Collections.emptyList());
     }
 
+    public Mono<Void> deleteDriverRideHistory(Long driverId) {
+        return rideClient.delete()
+                .uri("/rides/{driverId}/history", driverId)
+                .retrieve()
+                .bodyToMono(Void.class);
+    }
+
     private Ride createEmptyRide() {
         return new Ride();
     }

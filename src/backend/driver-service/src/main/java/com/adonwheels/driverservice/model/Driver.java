@@ -41,7 +41,10 @@ public class Driver {
     
     @Column(nullable = true)
     private String vehicleColor;
-    
+
+    @Column(nullable = true)
+    private String vehicleImageUrl;
+
     @Column(nullable = true)
     private Boolean vehicleVerified;
     
@@ -49,6 +52,16 @@ public class Driver {
     @Column(nullable = true)
     private Double rating;
     
+    @Column(nullable = true)
+    private LocalDateTime lastVerificationDate;
+
+    // Monthly driving goal
+    @Column(nullable = true)
+    private Double monthlyGoalKm;
+
+    @Column(nullable = true)
+    private Boolean onboardingCompleted;
+
     // Registration date
     @Column(nullable = true)
     private LocalDateTime memberSince;
@@ -118,6 +131,14 @@ public class Driver {
         this.vehicleColor = vehicleColor;
     }
 
+    public String getVehicleImageUrl() {
+        return vehicleImageUrl;
+    }
+
+    public void setVehicleImageUrl(String vehicleImageUrl) {
+        this.vehicleImageUrl = vehicleImageUrl;
+    }
+
     public Boolean getVehicleVerified() {
         return vehicleVerified;
     }
@@ -134,11 +155,35 @@ public class Driver {
         this.rating = rating;
     }
 
+    public LocalDateTime getLastVerificationDate() {
+        return lastVerificationDate;
+    }
+
+    public void setLastVerificationDate(LocalDateTime lastVerificationDate) {
+        this.lastVerificationDate = lastVerificationDate;
+    }
+
     public LocalDateTime getMemberSince() {
         return memberSince;
     }
 
     public void setMemberSince(LocalDateTime memberSince) {
         this.memberSince = memberSince;
+    }
+
+    public Double getMonthlyGoalKm() {
+        return monthlyGoalKm;
+    }
+
+    public void setMonthlyGoalKm(Double monthlyGoalKm) {
+        this.monthlyGoalKm = monthlyGoalKm;
+    }
+
+    public Boolean getOnboardingCompleted() {
+        return onboardingCompleted;
+    }
+
+    public void setOnboardingCompleted(Boolean onboardingCompleted) {
+        this.onboardingCompleted = onboardingCompleted;
     }
 } 

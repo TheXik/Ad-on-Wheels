@@ -3,13 +3,14 @@ import SwiftUI
 struct CompanyProfileView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
     @ObservedObject var authService: AuthenticationService
+    @AppStorage("isDarkMode") private var isDarkMode = false
+    @State private var showSettings = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
                 profileHeader
-                mainMenuSection
-                legalSection
+                settingsSection
                 logoutButton
             }
             .padding(.horizontal, 20)
@@ -17,6 +18,9 @@ struct CompanyProfileView: View {
             .padding(.bottom, 80)
         }
         .background(Color.pageBackground)
+        .sheet(isPresented: $showSettings) {
+            CompanySettingsSheet(isDarkMode: $isDarkMode)
+        }
     }
 
     var profileHeader: some View {
@@ -71,25 +75,11 @@ struct CompanyProfileView: View {
         }
     }
 
-    var mainMenuSection: some View {
+    var settingsSection: some View {
         VStack(spacing: 0) {
-            profileMenuItem(icon: "person.circle", label: "Edit Profile")
-            Divider().padding(.leading, 56)
-            profileMenuItem(icon: "lock.shield", label: "Security")
-            Divider().padding(.leading, 56)
-            profileMenuItem(icon: "gearshape", label: "Settings")
-            Divider().padding(.leading, 56)
-            profileMenuItem(icon: "questionmark.circle", label: "Help & Support")
-        }
-        .background(Color.cardBackground)
-        .cornerRadius(16)
-    }
-
-    var legalSection: some View {
-        VStack(spacing: 0) {
-            profileMenuItem(icon: "doc.text", label: "Terms of Service")
-            Divider().padding(.leading, 56)
-            profileMenuItem(icon: "hand.raised", label: "Privacy Policy")
+            Button(action: { showSettings = true }) {
+                profileMenuItem(icon: "gearshape", label: "Settings")
+            }
         }
         .background(Color.cardBackground)
         .cornerRadius(16)
@@ -129,5 +119,35 @@ struct CompanyProfileView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+    }
+}
+
+struct CompanySettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var isDarkMode: Bool
+
+    var body: some View {
+        NavigationView {
+            List {
+                Section {
+                    Toggle(isOn: $isDarkMode) {
+                        HStack(spacing: 12) {
+                            Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
+                                .foregroundColor(.accentBlue)
+                                .frame(width: 24)
+                            Text("Dark Mode")
+                        }
+                    }
+                    .tint(.accentBlue)
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
     }
 }

@@ -1,96 +1,221 @@
 import SwiftUI
+import UIKit
+import AVFoundation
 
 struct VerificationCameraView: View {
     @Environment(\.presentationMode) var presentationMode
-    @State private var isTakingPhoto = false
-    @State private var photoTaken = false
-    
+    @State private var showCamera = false
+    @State private var capturedImage: UIImage?
+    @State private var isUploading = false
+    @State private var uploadSuccess = false
+    @State private var errorMessage: String?
+    @State private var showPermissionDenied = false
+
+    var driverId: Int
     var onComplete: () -> Void
-    
+
     var body: some View {
         ZStack {
             Color.black.edgesIgnoringSafeArea(.all)
-            
-            if photoTaken {
-                VStack {
-                    Spacer()
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 80))
-                        .foregroundColor(.green)
-                        .padding()
-                    Text("Verification Uploaded!")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    Spacer()
-                }
-                .transition(.scale)
+
+            if uploadSuccess {
+                successView
+            } else if let image = capturedImage {
+                reviewView(image: image)
             } else {
-                VStack {
-                    // Camera Header
-                    HStack {
-                        Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                            Image(systemName: "xmark")
-                                .font(.title)
-                                .foregroundColor(.white)
-                        }
-                        Spacer()
-                    }
-                    .padding()
-                    
-                    Spacer()
-                    
-                    // Camera Placeholder
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.white.opacity(0.5), lineWidth: 2)
-                            .frame(height: 400)
-                        
-                        Text("Align passenger side decal here")
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                    .padding()
-                    
-                    Spacer()
-                    
-                    // Shutter Button
-                    Button(action: takePhoto) {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 80, height: 80)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.black.opacity(0.2), lineWidth: 4)
-                            )
-                    }
-                    .padding(.bottom, 50)
+                promptView
+            }
+        }
+        .sheet(isPresented: $showCamera) {
+            ImagePicker(image: $capturedImage)
+        }
+        .alert("Camera Access Required", isPresented: $showPermissionDenied) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
                 }
             }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please allow camera access in Settings to complete your weekly verification.")
         }
     }
-    
-    func takePhoto() {
-        withAnimation {
-            isTakingPhoto = true
+
+    private var promptView: some View {
+        VStack(spacing: 24) {
+            HStack {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "xmark")
+                        .font(.title)
+                        .foregroundColor(.white)
+                }
+                Spacer()
+            }
+            .padding()
+
+            Spacer()
+
+            Image(systemName: "camera.viewfinder")
+                .font(.system(size: 80))
+                .foregroundColor(.white.opacity(0.6))
+
+            Text("Take a photo of the\npassenger side decal")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+
+            Button(action: { requestCameraAccess() }) {
+                Text("Open Camera")
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 14)
+                    .background(Color.white)
+                    .cornerRadius(14)
+            }
+
+            Spacer()
         }
-        
-        // Simulate network/upload delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            withAnimation {
-                photoTaken = true
+    }
+
+    private func reviewView(image: UIImage) -> some View {
+        VStack(spacing: 20) {
+            HStack {
+                Button(action: { capturedImage = nil }) {
+                    Text("Retake")
+                        .foregroundColor(.white)
+                }
+                Spacer()
             }
-            
-            // Close after success message
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                onComplete()
-                presentationMode.wrappedValue.dismiss()
+            .padding()
+
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .cornerRadius(16)
+                .padding(.horizontal)
+
+            if let error = errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
             }
+
+            Button(action: { Task { await uploadPhoto(image) } }) {
+                if isUploading {
+                    ProgressView()
+                        .tint(.black)
+                        .padding(.horizontal, 40)
+                        .padding(.vertical, 14)
+                } else {
+                    Text("Submit Verification")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 40)
+                        .padding(.vertical, 14)
+                }
+            }
+            .background(Color.white)
+            .cornerRadius(14)
+            .disabled(isUploading)
+
+            Spacer()
+        }
+    }
+
+    private var successView: some View {
+        VStack {
+            Spacer()
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 80))
+                .foregroundColor(.green)
+                .padding()
+            Text("Verification Uploaded!")
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+            Spacer()
+        }
+        .transition(.scale)
+    }
+
+    private func requestCameraAccess() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            showCamera = true
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted { showCamera = true } else { showPermissionDenied = true }
+                }
+            }
+        default:
+            showPermissionDenied = true
+        }
+    }
+
+    private func uploadPhoto(_ image: UIImage) async {
+        isUploading = true
+        errorMessage = nil
+        defer { isUploading = false }
+
+        guard let jpegData = image.jpegData(compressionQuality: 0.5) else {
+            errorMessage = "Failed to compress image"
+            return
+        }
+
+        let base64 = jpegData.base64EncodedString()
+
+        do {
+            let endpoint = Endpoint(
+                path: "api/drivers/\(driverId)/verify-decal",
+                method: .post,
+                queryItems: [URLQueryItem(name: "photoBase64", value: base64)]
+            )
+            let _: Driver = try await APIClient.shared.send(endpoint)
+            withAnimation { uploadSuccess = true }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            onComplete()
+            presentationMode.wrappedValue.dismiss()
+        } catch {
+            errorMessage = "Upload failed. Try again."
         }
     }
 }
 
-struct VerificationCameraView_Previews: PreviewProvider {
-    static var previews: some View {
-        VerificationCameraView(onComplete: {})
+struct ImagePicker: UIViewControllerRepresentable {
+    @Binding var image: UIImage?
+    @Environment(\.presentationMode) var presentationMode
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            picker.sourceType = .camera
+        } else {
+            picker.sourceType = .photoLibrary
+        }
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePicker
+        init(_ parent: ImagePicker) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let uiImage = info[.originalImage] as? UIImage {
+                parent.image = uiImage
+            }
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.presentationMode.wrappedValue.dismiss()
+        }
     }
 }

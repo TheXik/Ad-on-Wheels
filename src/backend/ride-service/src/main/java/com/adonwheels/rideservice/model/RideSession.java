@@ -20,6 +20,9 @@ public class RideSession {
     @Column("start_time")
     private LocalDateTime startTime;
 
+    @Column("campaign_id")
+    private Long campaignId;
+
     @Column("route_history")
     private List<LocationPoint> routeHistory = new ArrayList<>();
 
@@ -29,10 +32,11 @@ public class RideSession {
     public RideSession() {
     }
 
-    public RideSession(String rideId, String driverId, LocalDateTime startTime) {
+    public RideSession(String rideId, String driverId, LocalDateTime startTime, Long campaignId) {
         this.rideId = rideId;
         this.driverId = driverId;
         this.startTime = startTime;
+        this.campaignId = campaignId;
     }
 
     public String getRideId() {
@@ -57,6 +61,14 @@ public class RideSession {
 
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+    }
+
+    public Long getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(Long campaignId) {
+        this.campaignId = campaignId;
     }
 
     public List<LocationPoint> getRouteHistory() {

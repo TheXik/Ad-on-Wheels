@@ -447,8 +447,10 @@ struct ApplicationCard: View {
         .cornerRadius(16)
         .sheet(isPresented: $showComposeMessage) {
             ComposeMessageView(
-                companyId: companyId,
+                senderId: companyId,
+                senderRole: "COMPANY",
                 recipientId: application.driver.id,
+                recipientRole: "DRIVER",
                 recipientName: application.driver.name,
                 campaignId: application.campaignId,
                 campaignName: application.campaignName

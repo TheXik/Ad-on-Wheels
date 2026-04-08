@@ -6,8 +6,6 @@ struct RegisterDriverView: View {
     var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
-    @State private var showVerification = false
-    
     @StateObject private var viewModel: RegisterDriverViewModel
     
     init(authService: AuthenticationService, navViewModel: AuthNavigationViewModel, lockedRole: InitialUserRole? = nil, onBack: (() -> Void)? = nil) {
@@ -48,6 +46,8 @@ struct RegisterDriverView: View {
                         .authFieldStyle()
                     if let error = viewModel.fieldErrors["email"] {
                         Text(error).foregroundColor(.red).font(.caption).padding(.horizontal)
+                    } else if !viewModel.email.isEmpty && !viewModel.isEmailValid {
+                        Text("Please enter a valid email address").foregroundColor(.red).font(.caption).padding(.horizontal)
                     }
 
                     HStack {
@@ -92,14 +92,6 @@ struct RegisterDriverView: View {
                 DriverRootView(authService: authService)
                     .transition(.move(edge: .trailing))
             }
-        }
-        .onChange(of: viewModel.registrationSuccessful) { success in
-            if success {
-                showVerification = true
-            }
-        }
-        .sheet(isPresented: $showVerification) {
-            EmailVerificationView(email: viewModel.email)
         }
     }
 }

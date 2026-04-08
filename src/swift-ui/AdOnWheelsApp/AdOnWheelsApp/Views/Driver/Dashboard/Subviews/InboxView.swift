@@ -64,6 +64,10 @@ struct InboxView: View {
         }
         .task {
             await viewModel.loadInbox()
+            viewModel.startPolling()
+        }
+        .onDisappear {
+            viewModel.stopPolling()
         }
         .sheet(item: $selectedMessage) { message in
             MessageDetailView(message: message, viewModel: viewModel)
@@ -173,6 +177,7 @@ struct MessageDetailView: View {
                                     let success = await viewModel.sendMessage(
                                         campaignId: message.campaignId,
                                         recipientId: message.senderId,
+                                        recipientRole: message.senderRole,
                                         subject: "Re: \(message.subject)",
                                         body: replyText
                                     )

@@ -33,6 +33,8 @@ class BrowseViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
+            await fetchAppliedCampaignIds()
+
             let endpoint = Endpoint(path: "api/campaigns", queryItems: [
                 URLQueryItem(name: "status", value: "RECRUITING")
             ])
@@ -45,6 +47,19 @@ class BrowseViewModel: ObservableObject {
         } catch {
             self.errorMessage = error.localizedDescription
             self.campaigns = []
+        }
+    }
+
+    private func fetchAppliedCampaignIds() async {
+        do {
+            let endpoint = Endpoint(path: "api/campaigns/driver/\(driverId)/applications")
+            let apps: [ApplicationWithCampaign] = try await api.send(endpoint)
+            for app in apps {
+                seenCampaignIds.insert(app.campaignId)
+            }
+        } catch {
+            // Non-fatal: worst case we show campaigns the driver already applied to,
+            // but the backend will reject duplicates with 409
         }
     }
 
@@ -78,6 +93,15 @@ class BrowseViewModel: ObservableObject {
             applySuccess = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 self.applySuccess = false
+            }
+        } catch let error as NetworkError {
+            removeCard(campaign)
+            seenCampaignIds.insert(campaign.id)
+            if case .serverError(let details) = error,
+               details.internalCode == 3007 || details.internalCode == 3008 {
+                errorMessage = details.message
+            } else {
+                errorMessage = error.localizedDescription
             }
         } catch {
             errorMessage = error.localizedDescription

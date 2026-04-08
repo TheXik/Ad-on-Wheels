@@ -7,6 +7,8 @@ public class StartRideRequest {
     @NotBlank(message = "driverId must not be blank")
     private String driverId;
 
+    private Long campaignId;
+
     public StartRideRequest() {
     }
 
@@ -16,5 +18,13 @@ public class StartRideRequest {
 
     public void setDriverId(String driverId) {
         this.driverId = driverId;
+    }
+
+    public Long getCampaignId() {
+        return campaignId;
+    }
+
+    public void setCampaignId(Long campaignId) {
+        this.campaignId = campaignId;
     }
 }
