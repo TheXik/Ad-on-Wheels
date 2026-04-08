@@ -10,13 +10,16 @@ public class Driver {
     // Vehicle info
     private String vehicleMake;
     private String vehicleModel;
-    private Integer vehicleYear;
+    private String vehicleYear;
     private String vehiclePlate;
     private String vehicleColor;
+    private String vehicleImageUrl;
     private Boolean vehicleVerified;
     
     // Driver info
     private Double rating;
+    private Double monthlyGoalKm;
+    private Boolean onboardingCompleted;
     private LocalDate memberSince;
 
     public Driver() {
@@ -69,11 +72,11 @@ public class Driver {
         this.vehicleModel = vehicleModel;
     }
 
-    public Integer getVehicleYear() {
+    public String getVehicleYear() {
         return vehicleYear;
     }
 
-    public void setVehicleYear(Integer vehicleYear) {
+    public void setVehicleYear(String vehicleYear) {
         this.vehicleYear = vehicleYear;
     }
 
@@ -91,6 +94,14 @@ public class Driver {
 
     public void setVehicleColor(String vehicleColor) {
         this.vehicleColor = vehicleColor;
+    }
+
+    public String getVehicleImageUrl() {
+        return vehicleImageUrl;
+    }
+
+    public void setVehicleImageUrl(String vehicleImageUrl) {
+        this.vehicleImageUrl = vehicleImageUrl;
     }
 
     public Boolean getVehicleVerified() {
@@ -115,5 +126,21 @@ public class Driver {
 
     public void setMemberSince(LocalDate memberSince) {
         this.memberSince = memberSince;
+    }
+
+    public Double getMonthlyGoalKm() {
+        return monthlyGoalKm;
+    }
+
+    public void setMonthlyGoalKm(Double monthlyGoalKm) {
+        this.monthlyGoalKm = monthlyGoalKm;
+    }
+
+    public Boolean getOnboardingCompleted() {
+        return onboardingCompleted;
+    }
+
+    public void setOnboardingCompleted(Boolean onboardingCompleted) {
+        this.onboardingCompleted = onboardingCompleted;
     }
 } 

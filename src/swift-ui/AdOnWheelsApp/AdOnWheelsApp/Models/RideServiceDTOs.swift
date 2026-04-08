@@ -25,5 +25,6 @@ struct DeferredLocationPoint: Codable {
 
 struct DeferredRideRequest: Encodable {
     let driverId: String
+    let campaignId: Int?
     let locationPoints: [DeferredLocationPoint]
 }

@@ -10,6 +10,7 @@ class InboxViewModel: ObservableObject {
     private let api: APIClientProtocol
     private let userId: Int
     private let userRole: String
+    private var pollTimer: Timer?
 
     init(userId: Int, userRole: String = "DRIVER", api: APIClientProtocol = APIClient.shared) {
         self.userId = userId
@@ -32,6 +33,21 @@ class InboxViewModel: ObservableObject {
         }
     }
 
+    func startPolling(interval: TimeInterval = 15) {
+        stopPolling()
+        pollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                await self.loadInbox()
+            }
+        }
+    }
+
+    func stopPolling() {
+        pollTimer?.invalidate()
+        pollTimer = nil
+    }
+
     func markAsRead(_ message: Message) async {
         guard !message.isRead else { return }
         do {
@@ -40,24 +56,21 @@ class InboxViewModel: ObservableObject {
                 method: .patch
             )
             try await api.send(endpoint)
-
-            // Update local state
-            if let index = messages.firstIndex(where: { $0.id == message.id }) {
-                // Re-fetch to get updated isRead state
-                await loadInbox()
-            }
+            await loadInbox()
         } catch {
-            // Non-critical — silently fail
+            // Non-critical
         }
     }
 
-    func sendMessage(campaignId: Int, recipientId: Int, subject: String, body: String) async -> Bool {
+    func sendMessage(campaignId: Int, recipientId: Int, recipientRole: String,
+                     subject: String, body: String) async -> Bool {
         do {
             let request = SendMessageRequest(
                 campaignId: campaignId,
                 senderId: userId,
                 senderRole: userRole,
                 recipientId: recipientId,
+                recipientRole: recipientRole,
                 subject: subject,
                 body: body
             )

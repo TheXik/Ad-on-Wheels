@@ -10,6 +10,13 @@ class RegisterDriverViewModel: ObservableObject {
     @Published var registrationSuccessful = false
     @Published var fieldErrors: [String: String] = [:]
 
+    var isEmailValid: Bool {
+        let trimmed = email.trimmingCharacters(in: .whitespaces)
+        let pred = NSPredicate(format: "SELF MATCHES %@",
+                               "^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$")
+        return pred.evaluate(with: trimmed)
+    }
+
     private let api: APIClientProtocol
     private let authService: AuthenticationService
 

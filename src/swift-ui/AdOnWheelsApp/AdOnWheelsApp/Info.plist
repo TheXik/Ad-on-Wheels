@@ -29,5 +29,7 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Ad on Wheels uses your location to track your active ride and send GPS data to the ride service.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Ad on Wheels needs camera access so you can take a photo of your decal for weekly verification.</string>
 </dict>
 </plist>

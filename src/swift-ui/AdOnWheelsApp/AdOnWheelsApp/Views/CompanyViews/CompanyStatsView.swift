@@ -158,9 +158,9 @@ struct CompanyStatsView: View {
     var overviewCards: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
             CompanyStatCard(
-                icon: "eye.fill",
-                value: formattedNumber(totalReach),
-                label: "Total Reach",
+                icon: "road.lanes",
+                value: String(format: "%.1f km", dashboard.totalKmDriven),
+                label: "Km Driven",
                 iconColor: .purple
             )
             CompanyStatCard(
@@ -170,9 +170,9 @@ struct CompanyStatsView: View {
                 iconColor: .green
             )
             CompanyStatCard(
-                icon: "eurosign.circle.fill",
-                value: String(format: "€%.0f", totalBudget),
-                label: "Total Budget",
+                icon: "car.fill",
+                value: "\(dashboard.totalCampaignRides)",
+                label: "Total Rides",
                 iconColor: .orange
             )
             CompanyStatCard(

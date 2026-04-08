@@ -3,6 +3,7 @@ package com.adonwheels.campaignservice.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"campaignId", "driverId"}))
 public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

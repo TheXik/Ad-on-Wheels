@@ -11,6 +11,7 @@ struct Campaign: Identifiable, Codable, Hashable {
     let maxDrivers: Int
     let estimatedReach: Int?
     let status: String
+    let imageUrls: [String]?
     var companyName: String?
 
     var isActive: Bool {
@@ -26,6 +27,17 @@ struct Campaign: Identifiable, Codable, Hashable {
         let start = inFmt.date(from: startDate).map { outFmt.string(from: $0) } ?? startDate
         let end = inFmt.date(from: endDate).map { outFmt.string(from: $0) } ?? endDate
         return "\(start) – \(end)"
+    }
+
+    var resolvedImageUrls: [URL] {
+        guard let urls = imageUrls else { return [] }
+        return urls.compactMap { path in
+            if path.hasPrefix("http") {
+                return URL(string: path)
+            }
+            let normalized = path.hasPrefix("/") ? String(path.dropFirst()) : path
+            return AppConfig.baseURL.appendingPathComponent(normalized)
+        }
     }
 
     var formattedBudget: String {

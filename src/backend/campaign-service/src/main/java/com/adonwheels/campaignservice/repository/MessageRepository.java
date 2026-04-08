@@ -7,18 +7,14 @@ import java.util.List;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    /** All messages received by a user, newest first */
-    List<Message> findByRecipientIdOrderByCreatedAtDesc(Long recipientId);
+    List<Message> findByRecipientIdAndRecipientRoleOrderByCreatedAtDesc(Long recipientId, String recipientRole);
 
-    /** All messages in a conversation (campaign + both parties) */
     List<Message> findByCampaignIdAndSenderIdAndRecipientIdOrCampaignIdAndSenderIdAndRecipientIdOrderByCreatedAtAsc(
             Long campaignId1, Long senderId1, Long recipientId1,
             Long campaignId2, Long senderId2, Long recipientId2
     );
 
-    /** Count unread messages for a recipient */
-    long countByRecipientIdAndIsReadFalse(Long recipientId);
+    long countByRecipientIdAndRecipientRoleAndIsReadFalse(Long recipientId, String recipientRole);
 
-    /** All messages for a given campaign */
     List<Message> findByCampaignIdOrderByCreatedAtDesc(Long campaignId);
 }
