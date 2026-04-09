@@ -10,3 +10,7 @@
 # Local backend URL config (single source of truth, populated per machine)
 config/backend.env
 src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/LocalConfig.swift
+
+# Xcode per-user state
+*.xcuserstate
+xcuserdata/
