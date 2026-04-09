@@ -5,8 +5,6 @@ import CoreLocation
 @MainActor
 class RideViewModel: NSObject, ObservableObject {
 
-    private let historyService = RideHistoryService.shared
-
     @Published var isRiding: Bool = false
     @Published var elapsedTime: TimeInterval = 0
     @Published var distanceTravelled: Double = 0.0
@@ -41,7 +39,6 @@ class RideViewModel: NSObject, ObservableObject {
     private var bufferTimer: AnyCancellable?
     private var speedStaleTimer: AnyCancellable?
     private var rideStartDate: Date?
-    private var speedReadings: [Double] = []
 
     private let locationManager = CLLocationManager()
     private var lastLocation: CLLocation?
@@ -99,7 +96,6 @@ class RideViewModel: NSObject, ObservableObject {
             elapsedTime = 0
             distanceTravelled = 0.0
             currentSpeed = 0.0
-            speedReadings = []
             lastLocation = nil
 
             gpsBuffer = []
@@ -141,8 +137,6 @@ class RideViewModel: NSObject, ObservableObject {
 
             distanceTravelled = response.totalDistanceKm
             elapsedTime = TimeInterval(response.durationSeconds)
-
-            saveRideToHistory(from: response)
 
             isRiding = false
             currentRideId = nil
@@ -247,8 +241,6 @@ class RideViewModel: NSObject, ObservableObject {
             distanceTravelled = response.totalDistanceKm
             elapsedTime = TimeInterval(response.durationSeconds)
 
-            saveRideToHistory(from: response)
-
             gpsBuffer = []
             deferredRideCompleted = true
 
@@ -320,25 +312,6 @@ class RideViewModel: NSObject, ObservableObject {
         return String(format: "%02i:%02i:%02i", hours, minutes, seconds)
     }
 
-    var averageSpeedKmh: Double {
-        speedReadings.isEmpty ? 0 : speedReadings.reduce(0, +) / Double(speedReadings.count)
-    }
-
-    private func saveRideToHistory(from response: EndRideResponse) {
-        let endDate = Date()
-        let startDate = rideStartDate ?? endDate.addingTimeInterval(-Double(response.durationSeconds))
-
-        let record = RideRecord(
-            startTime: startDate,
-            endTime: endDate,
-            distance: response.totalDistanceKm,
-            duration: TimeInterval(response.durationSeconds),
-            averageSpeed: averageSpeedKmh,
-            campaignName: activeCampaignName
-        )
-
-        historyService.addRide(record)
-    }
 }
 
 // MARK: - CLLocationManagerDelegate
@@ -381,7 +354,6 @@ extension RideViewModel: CLLocationManagerDelegate {
                         self.distanceTravelled += dist / 1000.0
                     }
                     self.currentSpeed = location.speed >= 0 ? location.speed * 3.6 : impliedSpeedKmh
-                    self.speedReadings.append(self.currentSpeed)
                     self.lastLocation = location
                 } else {
                     // Standing still or GPS jitter — zero out speed
@@ -424,7 +396,6 @@ extension RideViewModel {
             self.lastLocation = location
             self.currentLocation = location.coordinate
             self.currentSpeed = max(0, location.speed * 3.6)
-            self.speedReadings.append(self.currentSpeed)
             self.locationVersion += 1
         }
 
