@@ -43,6 +43,9 @@ public class CompletedRide {
     private Double endLat;
     private Double endLon;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String routePointsJson;
+
     public CompletedRide() {
     }
 
@@ -137,4 +140,7 @@ public class CompletedRide {
 
     public Double getEndLon() { return endLon; }
     public void setEndLon(Double endLon) { this.endLon = endLon; }
+
+    public String getRoutePointsJson() { return routePointsJson; }
+    public void setRoutePointsJson(String routePointsJson) { this.routePointsJson = routePointsJson; }
 }

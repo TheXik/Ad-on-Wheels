@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 
 struct Ride: Identifiable, Codable {
     let id: Int
@@ -12,13 +13,40 @@ struct Ride: Identifiable, Codable {
     let qrCodeData: String?
     let status: String          // ACTIVE, COMPLETED, VERIFIED, CANCELLED
     let campaignName: String?   // Campaign name for display
-    
-    // New fields for distance and earnings
+
     let distanceKm: Double?
     let averageSpeedKmh: Double?
     let earnings: Double?
-    
-    // Computed property for display
+
+    let startLat: Double?
+    let startLon: Double?
+    let endLat: Double?
+    let endLon: Double?
+    let trackPoints: [LatLng]?
+
+    struct LatLng: Codable, Hashable {
+        let lat: Double
+        let lon: Double
+    }
+
+    var displayTitle: String {
+        "Ride #\(id)"
+    }
+
+    var trackCoordinates: [CLLocationCoordinate2D] {
+        (trackPoints ?? []).map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+    }
+
+    var startCoordinate: CLLocationCoordinate2D? {
+        guard let lat = startLat, let lon = startLon else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+
+    var endCoordinate: CLLocationCoordinate2D? {
+        guard let lat = endLat, let lon = endLon else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+
     var displayCampaignName: String {
         campaignName ?? "Campaign #\(campaignId ?? 0)"
     }

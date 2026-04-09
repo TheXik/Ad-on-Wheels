@@ -269,7 +269,7 @@ private struct RideRow: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(ride.displayCampaignName)
+                Text(ride.displayTitle)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
