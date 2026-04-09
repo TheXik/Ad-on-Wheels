@@ -172,15 +172,15 @@ struct SwipeCardContainer: View {
     }
 
     var body: some View {
-        ZStack {
-            BrowseCardView(campaign: campaign)
-
-            // LIKE overlay — shown when swiping right
-            if dragProgress > 0 {
+        BrowseCardView(campaign: campaign)
+            .overlay(
                 RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.green, lineWidth: 4)
-                    .background(Color.green.opacity(0.05).cornerRadius(20))
-                    .overlay(
+                    .strokeBorder(Color.green, lineWidth: 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.green.opacity(0.05))
+                    )
+                    .overlay(alignment: .topLeading) {
                         VStack {
                             Image(systemName: "heart.fill")
                                 .font(.system(size: 40))
@@ -195,19 +195,18 @@ struct SwipeCardContainer: View {
                         .cornerRadius(12)
                         .rotationEffect(.degrees(-15))
                         .padding(.top, 40)
-                        .padding(.leading, 20),
-                        alignment: .topLeading
-                    )
-                    .opacity(min(dragProgress, 1.0))
-                    .padding()
-            }
-
-            // SKIP overlay — shown when swiping left
-            if dragProgress < 0 {
+                        .padding(.leading, 20)
+                    }
+                    .opacity(dragProgress > 0 ? min(dragProgress, 1.0) : 0)
+            )
+            .overlay(
                 RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.red, lineWidth: 4)
-                    .background(Color.red.opacity(0.05).cornerRadius(20))
-                    .overlay(
+                    .strokeBorder(Color.red, lineWidth: 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.red.opacity(0.05))
+                    )
+                    .overlay(alignment: .topTrailing) {
                         VStack {
                             Image(systemName: "xmark")
                                 .font(.system(size: 40))
@@ -222,14 +221,12 @@ struct SwipeCardContainer: View {
                         .cornerRadius(12)
                         .rotationEffect(.degrees(15))
                         .padding(.top, 40)
-                        .padding(.trailing, 20),
-                        alignment: .topTrailing
-                    )
-                    .opacity(min(-dragProgress, 1.0))
-                    .padding()
-            }
-        }
-        .offset(x: offset.width, y: offset.height * 0.4)
+                        .padding(.trailing, 20)
+                    }
+                    .opacity(dragProgress < 0 ? min(-dragProgress, 1.0) : 0)
+            )
+            .padding()
+            .offset(x: offset.width, y: offset.height * 0.4)
         .rotationEffect(.degrees(Double(offset.width / 40)))
         .onTapGesture { onTap() }
         .gesture(

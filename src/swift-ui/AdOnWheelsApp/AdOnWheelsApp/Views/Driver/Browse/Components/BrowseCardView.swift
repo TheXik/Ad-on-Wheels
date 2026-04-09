@@ -83,7 +83,6 @@ struct BrowseCardView: View {
             }
         }
         .frame(height: 500)
-        .padding()
     }
 
     private var fallbackView: some View {
