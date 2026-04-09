@@ -4,6 +4,7 @@ import com.adonwheels.rideservice.dto.ActiveRideResponse;
 import com.adonwheels.rideservice.dto.CampaignRideStatsResponse;
 import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
+import com.adonwheels.rideservice.dto.LatLng;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
 import com.adonwheels.rideservice.dto.RideStatisticsResponse;
 import com.adonwheels.rideservice.dto.StartRideResponse;
@@ -12,6 +13,9 @@ import com.adonwheels.rideservice.model.LocationPoint;
 import com.adonwheels.rideservice.model.RideSession;
 import com.adonwheels.rideservice.repository.RideHistoryRepository;
 import com.adonwheels.rideservice.repository.RideRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -22,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,10 +40,14 @@ public class RideService {
 
     private final RideRepository repository;
     private final RideHistoryRepository historyRepository;
+    private final ObjectMapper objectMapper;
 
-    public RideService(RideRepository repository, RideHistoryRepository historyRepository) {
+    public RideService(RideRepository repository,
+                       RideHistoryRepository historyRepository,
+                       ObjectMapper objectMapper) {
         this.repository = repository;
         this.historyRepository = historyRepository;
+        this.objectMapper = objectMapper;
     }
 
     public Optional<ActiveRideResponse> getActiveRide(Long driverId) {
@@ -81,6 +90,7 @@ public class RideService {
         ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
         ride.setStatus("COMPLETED");
         extractGeoCoords(ride, session.getRouteHistory());
+        ride.setRoutePointsJson(serializeRoute(session.getRouteHistory()));
         historyRepository.save(ride);
 
         repository.deleteById(rideId);
@@ -123,6 +133,7 @@ public class RideService {
         ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
         ride.setStatus("DEFERRED");
         extractGeoCoords(ride, route);
+        ride.setRoutePointsJson(serializeRoute(route));
         historyRepository.save(ride);
 
         return new EndRideResponse(totalDistanceKm, durationSeconds);
@@ -204,7 +215,7 @@ public class RideService {
     }
 
     private RideHistoryResponse toHistoryResponse(CompletedRide ride) {
-        return new RideHistoryResponse(
+        RideHistoryResponse response = new RideHistoryResponse(
                 ride.getId(), ride.getDriverId(), ride.getCampaignId(),
                 ride.getStartTime(), ride.getEndTime(),
                 null, null,
@@ -212,6 +223,37 @@ public class RideService {
                 ride.getStatus(), ride.getDistanceKm(),
                 ride.getAverageSpeedKmh(), ride.getEarnings()
         );
+        response.setStartLat(ride.getStartLat());
+        response.setStartLon(ride.getStartLon());
+        response.setEndLat(ride.getEndLat());
+        response.setEndLon(ride.getEndLon());
+        response.setTrackPoints(deserializeRoute(ride.getRoutePointsJson()));
+        return response;
+    }
+
+    private String serializeRoute(List<LocationPoint> route) {
+        if (route == null || route.isEmpty()) {
+            return null;
+        }
+        List<LatLng> points = route.stream()
+                .map(p -> new LatLng(p.getLat(), p.getLon()))
+                .toList();
+        try {
+            return objectMapper.writeValueAsString(points);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    private List<LatLng> deserializeRoute(String json) {
+        if (json == null || json.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<LatLng>>() {});
+        } catch (JsonProcessingException e) {
+            return Collections.emptyList();
+        }
     }
 
     private void extractGeoCoords(CompletedRide ride, List<LocationPoint> route) {
