@@ -22,9 +22,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -42,8 +43,8 @@ public class AuthService {
     @Value("${services.company-service.url}")
     private String companyServiceUrl;
 
-    @Value("${google.client-id}")
-    private String googleClientId;
+    @Value("${google.client-ids}")
+    private String googleClientIdsRaw;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final  JWTService JWTService;
@@ -60,6 +61,10 @@ public class AuthService {
      */
     public boolean emailExists(String email) {
         return repository.findByEmail(email).isPresent();
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return repository.findByEmail(email);
     }
 
     /**
@@ -141,6 +146,13 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
+        if (loginRequest.expectedRole() != null) {
+            User user = repository.findByEmail(loginRequest.email())
+                    .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
+            if (user.getRole() != loginRequest.expectedRole()) {
+                throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
+            }
+        }
         return new LoginResponse(JWTService.generateToken(loginRequest.email()), "Token Generated");
     }
 
@@ -160,11 +172,7 @@ public class AuthService {
         if (existing.isPresent()) {
             User user = existing.get();
             if (user.getRole() != request.role()) {
-                throw new BusinessException(
-                        AppErrorCode.VALIDATION_ERROR,
-                        "This Google account is already registered as a " + user.getRole()
-                                + ". Please use the " + user.getRole() + " login instead."
-                );
+                throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
             }
             String token = JWTService.generateToken(email);
             return new LoginResponse(token, "Google sign-in successful");
@@ -199,7 +207,10 @@ public class AuthService {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(), GsonFactory.getDefaultInstance())
-                    .setAudience(Collections.singletonList(googleClientId))
+                    .setAudience(Arrays.stream(googleClientIdsRaw.split(","))
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .collect(Collectors.toList()))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(idTokenString);

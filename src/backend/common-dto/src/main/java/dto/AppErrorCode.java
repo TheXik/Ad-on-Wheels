@@ -22,6 +22,7 @@ public enum AppErrorCode {
     COMPANY_PROFILE_INCOMPLETE(2004, "Company profile is incomplete", HttpStatus.BAD_REQUEST),
     IMAGE_UPLOAD_FAILED(2005, "Failed to upload profile/car image", HttpStatus.INTERNAL_SERVER_ERROR),
     COMPANY_NOT_FOUND(2006, "Company not found", HttpStatus.NOT_FOUND),
+    ROLE_MISMATCH(2007, "Email already registered under a different role", HttpStatus.CONFLICT),
 
     // Campaign Management (404, 400)
     CAMPAIGN_NOT_FOUND(3001, "Campaign not found", HttpStatus.NOT_FOUND),
