@@ -1,6 +1,9 @@
 services:
   mysql:
-    image: mysql:8.0
+    image: ad-on-wheels-mysql
+    build:
+      context: mysql
+      dockerfile: Dockerfile
     container_name: ad_on_wheels_Database
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -10,7 +13,6 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 5s
