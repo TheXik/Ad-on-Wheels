@@ -51,32 +51,4 @@ public class AuthController {
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(loginData));
     }
-
-    /** UC010/UC012: Request password reset code */
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.generateResetToken(request.email());
-        return ResponseEntity.ok(ApiResponse.success("Reset code sent to your email"));
-    }
-
-    /** UC010/UC012: Reset password with code */
-    @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request.email(), request.resetCode(), request.newPassword());
-        return ResponseEntity.ok(ApiResponse.success("Password reset successful"));
-    }
-
-    /** UC009/UC011: Send email verification code */
-    @PostMapping("/send-verification")
-    public ResponseEntity<ApiResponse<String>> sendVerification(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.sendVerificationCode(request.email());
-        return ResponseEntity.ok(ApiResponse.success("Verification code sent"));
-    }
-
-    /** UC009/UC011: Verify email with code */
-    @PostMapping("/verify-email")
-    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestBody VerifyEmailRequest request) {
-        authService.verifyEmail(request.email(), request.code());
-        return ResponseEntity.ok(ApiResponse.success("Email verified successfully"));
-    }
 }

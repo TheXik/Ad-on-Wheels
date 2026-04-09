@@ -22,8 +22,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -195,101 +193,6 @@ public class AuthService {
             }
             throw e;
         }
-    }
-
-    // UC010/UC012: Forgot Password — generate 6-digit reset code
-    public String generateResetToken(String email) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
-
-        // Generate 6-digit code
-        String code = String.format("%06d", new SecureRandom().nextInt(999999));
-        user.setResetToken(code);
-        user.setResetTokenExpiry(LocalDateTime.now().plusMinutes(15));
-        repository.save(user);
-
-        // In production, send the code via email.
-        // For the thesis demo, the code is logged to console.
-        logger.info("PASSWORD RESET CODE for {}: {}", email, code);
-
-        return code;
-    }
-
-    // UC010/UC012: Reset password using the code
-    public void resetPassword(String email, String resetCode, String newPassword) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
-
-        if (user.getResetToken() == null || user.getResetTokenExpiry() == null) {
-            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "No password reset was requested");
-        }
-
-        if (LocalDateTime.now().isAfter(user.getResetTokenExpiry())) {
-            user.setResetToken(null);
-            user.setResetTokenExpiry(null);
-            repository.save(user);
-            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Reset code has expired. Please request a new one.");
-        }
-
-        if (!user.getResetToken().equals(resetCode)) {
-            throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Invalid reset code");
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setResetToken(null);
-        user.setResetTokenExpiry(null);
-        repository.save(user);
-        logger.info("Password reset successful for {}", email);
-    }
-
-    // UC009/UC011: Send email verification code
-    public void sendVerificationCode(String email) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
-
-        if (user.isEmailVerified()) {
-            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Email is already verified");
-        }
-
-        String code = String.format("%06d", new SecureRandom().nextInt(999999));
-        user.setVerificationCode(code);
-        user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(15));
-        repository.save(user);
-
-        // In production, send via email service.
-        // For the thesis demo, log to console.
-        logger.info("EMAIL VERIFICATION CODE for {}: {}", email, code);
-    }
-
-    // UC009/UC011: Verify email with code
-    public void verifyEmail(String email, String code) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
-
-        if (user.isEmailVerified()) {
-            return; // Already verified, idempotent
-        }
-
-        if (user.getVerificationCode() == null || user.getVerificationCodeExpiry() == null) {
-            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "No verification code was sent. Please request a new one.");
-        }
-
-        if (LocalDateTime.now().isAfter(user.getVerificationCodeExpiry())) {
-            user.setVerificationCode(null);
-            user.setVerificationCodeExpiry(null);
-            repository.save(user);
-            throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Verification code expired. Please request a new one.");
-        }
-
-        if (!user.getVerificationCode().equals(code)) {
-            throw new BusinessException(AppErrorCode.INVALID_CREDENTIALS, "Invalid verification code");
-        }
-
-        user.setEmailVerified(true);
-        user.setVerificationCode(null);
-        user.setVerificationCodeExpiry(null);
-        repository.save(user);
-        logger.info("Email verified successfully for {}", email);
     }
 
     private GoogleIdToken.Payload verifyGoogleIdToken(String idTokenString) {
