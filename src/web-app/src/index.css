@@ -338,6 +338,36 @@ body {
   margin-top: 8px;
 }
 
+.google-signin {
+  margin-top: 20px;
+}
+
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.google-button-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.google-button-wrapper > div {
+  width: 100%;
+}
+
 .auth-switch {
   text-align: center;
   margin-top: 16px;

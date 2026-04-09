@@ -30,6 +30,11 @@ export const auth = {
       method: 'POST',
       body: JSON.stringify({ email, password, name, role }),
     }),
+  googleLogin: (idToken, role) =>
+    request('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken, role }),
+    }),
 };
 
 export const campaigns = {
