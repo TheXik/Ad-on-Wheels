@@ -52,9 +52,9 @@ enum AppError: LocalizedError, Equatable {
         case .serverMessage(let message):
             return message
         case .validation(let errors):
-            return "Please check your input. (\(errors.values.first ?? "Invalid data"))"
-        case .networking(let error):
-            return "Connection failed. Please check your internet. (\(error))"
+            return errors.values.first ?? "Invalid input."
+        case .networking:
+            return "No connection."
         case .unknown:
             return "Something went wrong."
         }
