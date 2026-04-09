@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../services/api';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -85,6 +86,7 @@ export default function RegisterPage() {
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
+        <GoogleLoginButton />
         <p className="auth-switch">
           Already have an account? <Link to="/login">Log In</Link>
         </p>
