@@ -113,7 +113,8 @@ class GlobalExceptionHandlerAspectTest {
         // Given
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
-                "wrongpassword"
+                "wrongpassword",
+                null
         );
 
         when(authService.verify(any(LoginRequest.class)))
@@ -223,7 +224,8 @@ class GlobalExceptionHandlerAspectTest {
         // Given
         LoginRequest loginRequest = new LoginRequest(
                 "test@example.com",
-                "wrongpassword"
+                "wrongpassword",
+                null
         );
 
 

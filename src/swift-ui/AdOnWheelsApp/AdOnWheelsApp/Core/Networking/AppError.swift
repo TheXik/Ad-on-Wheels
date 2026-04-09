@@ -8,7 +8,8 @@ enum AppError: LocalizedError, Equatable {
     case unauthorized // 1002, 1004 - Token expired/invalid
     case accountLocked // 1003 Specific alert
     case profileIncomplete // 2003, 2004 - Navigate to profile setup
-    
+    case roleMismatch(existingRole: UserRole) // 2007 - Email registered under a different role
+
     // messages from the server for dynamic errors
     case serverMessage(String)
     
@@ -33,6 +34,15 @@ enum AppError: LocalizedError, Equatable {
             self = .accountLocked
         case 2003, 2004:
             self = .profileIncomplete
+        case 2007:
+            let raw = backendError.message.trimmingCharacters(in: .whitespaces).uppercased()
+            if raw == "DRIVER" {
+                self = .roleMismatch(existingRole: .driver)
+            } else if raw == "COMPANY" {
+                self = .roleMismatch(existingRole: .company)
+            } else {
+                self = .serverMessage(backendError.message)
+            }
         default:
             self = .serverMessage(backendError.message)
         }
@@ -49,6 +59,8 @@ enum AppError: LocalizedError, Equatable {
             return "Your account is locked. Please contact support."
         case .profileIncomplete:
             return "Please complete your profile to continue."
+        case .roleMismatch(let existingRole):
+            return "This email is already registered as a \(existingRole.rawValue)."
         case .serverMessage(let message):
             return message
         case .validation(let errors):

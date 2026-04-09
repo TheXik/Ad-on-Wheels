@@ -4,6 +4,7 @@ import GoogleSignIn
 struct GoogleSignInSection: View {
     let authService: AuthenticationService
     let role: String
+    var onRoleMismatch: ((UserRole, String) -> Void)? = nil
     @State private var isLoading = false
     @State private var errorMessage: String?
 
@@ -18,8 +19,10 @@ struct GoogleSignInSection: View {
                 Task { await signInWithGoogle() }
             } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "g.circle.fill")
-                        .font(.title3)
+                    Image("GoogleLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                     Text("Sign in with Google")
                         .font(.subheadline)
                         .fontWeight(.semibold)
@@ -75,6 +78,7 @@ struct GoogleSignInSection: View {
             return
         }
 
+        var capturedIdToken: String?
         do {
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: googleClientID)
             let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
@@ -83,6 +87,7 @@ struct GoogleSignInSection: View {
                 errorMessage = "Google Sign-In did not return an ID token."
                 return
             }
+            capturedIdToken = idToken
 
             let requestBody: [String: String] = ["idToken": idToken, "role": role]
             let endpoint = Endpoint(
@@ -95,7 +100,12 @@ struct GoogleSignInSection: View {
         } catch let error as GIDSignInError where error.code == .canceled {
             return
         } catch {
-            errorMessage = error.localizedDescription
+            let mapped = AppErrorMapper.map(error)
+            if case .roleMismatch(let existing) = mapped, let idToken = capturedIdToken {
+                onRoleMismatch?(existing, idToken)
+            } else {
+                errorMessage = mapped.errorDescription ?? error.localizedDescription
+            }
         }
     }
 }

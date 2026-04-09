@@ -2,8 +2,11 @@ package com.adonwheels.authservice.service;
 
 import com.adonwheels.authservice.dto.RegistrationRequest;
 import com.adonwheels.authservice.model.Role;
+import com.adonwheels.authservice.model.User;
 import dto.AppErrorCode;
 import dto.exception.BusinessException;
+
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.adonwheels.authservice.dto.RegistrationResponse;
@@ -24,7 +27,14 @@ public class RegistrationSagaOrchestratorService {
         try {
             // STEP 1: Check if email already exists BEFORE creating profile
             // This prevents orphaned profiles in remote services
-            if (authService.emailExists(request.email())) {
+            Optional<User> existing = authService.findByEmail(request.email());
+            if (existing.isPresent()) {
+                User existingUser = existing.get();
+                if (existingUser.getRole() != request.role()) {
+                    logger.warn("Registration attempt with email {} under role {} but already registered as {}",
+                            request.email(), request.role(), existingUser.getRole());
+                    throw new BusinessException(AppErrorCode.ROLE_MISMATCH, existingUser.getRole().name());
+                }
                 logger.warn("Registration attempt with existing email: {}", request.email());
                 throw new BusinessException(AppErrorCode.EMAIL_ALREADY_EXISTS);
             }
