@@ -6,3 +6,7 @@
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Local backend URL config (single source of truth, populated per machine)
+config/backend.env
+src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/LocalConfig.swift

@@ -1,17 +1,12 @@
 import Foundation
 
 enum AppConfig {
-    //TODO: when going to production remove this "http://192.168.1.27:8080" // desktop   // "http://192.168.0.120:8080" // laptop // "http://172.20.10.11:8080" // hotspot
-    private static let defaultBaseURLString: String = "http://100.122.33.104:8080" // lukbaos-ubuntu via Tailscale
-    
-
-    
     static var baseURLString: String {
         if let configured = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
            !configured.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return configured
         }
-        return defaultBaseURLString
+        return LocalConfig.backendURL
     }
 
     static var baseURL: URL {
