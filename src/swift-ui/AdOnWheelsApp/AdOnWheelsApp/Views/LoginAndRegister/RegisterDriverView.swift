@@ -76,7 +76,14 @@ struct RegisterDriverView: View {
                 },
                 bottomLinks: {
                     if !viewModel.registrationSuccessful {
-                        GoogleSignInSection(authService: authService, role: "DRIVER")
+                        GoogleSignInSection(
+                            authService: authService,
+                            role: "DRIVER",
+                            onRoleMismatch: { existing, idToken in
+                                viewModel.pendingGoogleIdToken = idToken
+                                viewModel.roleMismatch = existing
+                            }
+                        )
 
                         Button("Already have an account? Log in here") {
                             navViewModel.currentScreen = .loginDriver
@@ -86,7 +93,31 @@ struct RegisterDriverView: View {
                     }
                 }
             )
-            
+            .alert(
+                "Account already exists",
+                isPresented: Binding(
+                    get: { viewModel.roleMismatch != nil },
+                    set: { if !$0 { viewModel.roleMismatch = nil } }
+                ),
+                presenting: viewModel.roleMismatch
+            ) { existing in
+                Button("Cancel", role: .cancel) {
+                    viewModel.roleMismatch = nil
+                }
+                Button("Log in as \(existing.rawValue)") {
+                    let targetRole = existing
+                    viewModel.roleMismatch = nil
+                    Task {
+                        let ok = await viewModel.loginAsExistingRole(targetRole)
+                        if !ok {
+                            navViewModel.currentScreen = (targetRole == .driver) ? .loginDriver : .loginCompany
+                        }
+                    }
+                }
+            } message: { existing in
+                Text("This email is already registered as a \(existing.rawValue). Would you like to log in as a \(existing.rawValue) instead?")
+            }
+
             // Auto-navigate to home when registration is successful
             if viewModel.registrationSuccessful && authService.isAuthenticated {
                 DriverRootView(authService: authService)

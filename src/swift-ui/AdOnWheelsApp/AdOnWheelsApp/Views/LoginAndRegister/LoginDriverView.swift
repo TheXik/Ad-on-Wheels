@@ -7,7 +7,6 @@ struct LoginDriverView: View {
     var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
-    @State private var showForgotPassword = false
 
     var body: some View {
         AuthScaffold(
@@ -61,15 +60,13 @@ struct LoginDriverView: View {
                 }
             },
             bottomLinks: {
-                // UC010: Forgot Password link
-                Button("Forgot Password?") {
-                    showForgotPassword = true
-                }
-                .foregroundColor(Color("BrandColor"))
-                .font(.callout)
-                .fontWeight(.medium)
-
-                GoogleSignInSection(authService: authService, role: "DRIVER")
+                GoogleSignInSection(
+                    authService: authService,
+                    role: "DRIVER",
+                    onRoleMismatch: { existing, _ in
+                        viewModel.roleMismatch = existing
+                    }
+                )
 
                 Button("Don't have an account? Register here") {
                     navViewModel.currentScreen = .registerDriver
@@ -78,8 +75,27 @@ struct LoginDriverView: View {
                 .font(.callout)
             }
         )
-        .sheet(isPresented: $showForgotPassword) {
-            ForgotPasswordView()
+        .alert(
+            "Account already exists",
+            isPresented: Binding(
+                get: { viewModel.roleMismatch != nil },
+                set: { if !$0 { viewModel.roleMismatch = nil } }
+            ),
+            presenting: viewModel.roleMismatch
+        ) { existing in
+            Button("Cancel", role: .cancel) {
+                viewModel.roleMismatch = nil
+            }
+            Button("Log in as \(existing.rawValue)") {
+                viewModel.roleMismatch = nil
+                Task {
+                    if let token = await viewModel.loginAsExistingRole() {
+                        authService.didLogin(token: token)
+                    }
+                }
+            }
+        } message: { existing in
+            Text("This email is already registered as a \(existing.rawValue). Would you like to log in as a \(existing.rawValue) instead?")
         }
     }
 }
