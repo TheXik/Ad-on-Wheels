@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../services/api';
 import GoogleLoginButton from '../components/GoogleLoginButton';
+import RoleMismatchModal from '../components/RoleMismatchModal';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showRoleModal, setShowRoleModal] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -22,7 +24,11 @@ export default function LoginPage() {
       login(data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      if (err.code === 2007) {
+        setShowRoleModal(true);
+      } else {
+        setError(err.message);
+      }
     }
     setIsLoading(false);
   }
@@ -73,11 +79,15 @@ export default function LoginPage() {
             {isLoading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
-        <GoogleLoginButton />
+        <GoogleLoginButton onRoleMismatch={() => setShowRoleModal(true)} />
         <p className="auth-switch">
           Don't have an account? <Link to="/register">Sign Up</Link>
         </p>
       </div>
+      <RoleMismatchModal
+        open={showRoleModal}
+        onClose={() => setShowRoleModal(false)}
+      />
     </div>
   );
 }

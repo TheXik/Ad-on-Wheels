@@ -4,7 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../services/api';
 
-export default function GoogleLoginButton() {
+export default function GoogleLoginButton({ onRoleMismatch }) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -16,7 +16,11 @@ export default function GoogleLoginButton() {
       login(data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message);
+      if (err.code === 2007 && onRoleMismatch) {
+        onRoleMismatch();
+      } else {
+        setError(err.message);
+      }
     }
   }
 
