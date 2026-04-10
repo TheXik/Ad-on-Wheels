@@ -11,6 +11,9 @@ class OnboardingViewModel: ObservableObject {
     @Published var vehicleYear = ""
     @Published var vehiclePlate = ""
 
+    // Errors only surface after the first Continue tap on the vehicle step.
+    @Published var vehicleFieldsTouched = false
+
     // Vehicle photo
     @Published var selectedPhotoItem: PhotosPickerItem?
     @Published var vehicleImage: UIImage?
@@ -36,11 +39,41 @@ class OnboardingViewModel: ObservableObject {
 
     var totalSteps: Int { 3 }
 
+    // Per-field validation mirrors backend rules in OnboardingRequest.java.
+    var makeError: String? {
+        vehicleMake.trimmingCharacters(in: .whitespaces).isEmpty
+            ? "Make is required" : nil
+    }
+
+    var modelError: String? {
+        vehicleModel.trimmingCharacters(in: .whitespaces).isEmpty
+            ? "Model is required" : nil
+    }
+
+    var yearError: String? {
+        let trimmed = vehicleYear.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty { return "Year is required" }
+        guard trimmed.range(of: #"^\d{4}$"#, options: .regularExpression) != nil
+        else { return "Year must be a 4-digit number" }
+        let currentYear = Calendar.current.component(.year, from: Date())
+        guard let y = Int(trimmed), (1900...currentYear + 1).contains(y)
+        else { return "Enter a realistic year (1900–\(currentYear + 1))" }
+        return nil
+    }
+
+    var plateError: String? {
+        let trimmed = vehiclePlate.trimmingCharacters(in: .whitespaces).uppercased()
+        if trimmed.isEmpty { return "License plate is required" }
+        if trimmed.count < 2 || trimmed.count > 20 {
+            return "License plate must be 2–20 characters"
+        }
+        guard trimmed.range(of: #"^[A-Z0-9 \-]+$"#, options: .regularExpression) != nil
+        else { return "Use only letters, digits, spaces, and hyphens" }
+        return nil
+    }
+
     var vehicleFormValid: Bool {
-        !vehicleMake.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !vehicleModel.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !vehicleYear.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !vehiclePlate.trimmingCharacters(in: .whitespaces).isEmpty
+        makeError == nil && modelError == nil && yearError == nil && plateError == nil
     }
 
     func loadSelectedPhoto() async {
@@ -105,8 +138,20 @@ class OnboardingViewModel: ObservableObject {
 
             isComplete = true
             nextStep()
+        } catch let NetworkError.serverError(response) {
+            if let fieldErrors = response.validationErrors, !fieldErrors.isEmpty {
+                // Surface server-side validation errors inline on the vehicle step.
+                vehicleFieldsTouched = true
+                let vehicleFieldKeys = ["make", "model", "year", "licensePlate"]
+                if vehicleFieldKeys.contains(where: { fieldErrors[$0] != nil }) {
+                    currentStep = 1
+                }
+                errorMessage = fieldErrors.values.joined(separator: "\n")
+            } else {
+                errorMessage = response.message
+            }
         } catch {
-            errorMessage = "Something went wrong. Please try again."
+            errorMessage = error.localizedDescription
         }
     }
 
