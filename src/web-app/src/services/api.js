@@ -8,7 +8,10 @@ async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(body?.error?.message || `Request failed: ${res.status}`);
+    const err = new Error(body?.error?.message || `Request failed: ${res.status}`);
+    err.code = body?.error?.internalCode;
+    err.status = res.status;
+    throw err;
   }
 
   const contentType = res.headers.get('content-type');
@@ -23,7 +26,7 @@ export const auth = {
   login: (email, password) =>
     request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, expectedRole: 'COMPANY' }),
     }),
   register: (email, password, name, role) =>
     request('/auth/register', {
