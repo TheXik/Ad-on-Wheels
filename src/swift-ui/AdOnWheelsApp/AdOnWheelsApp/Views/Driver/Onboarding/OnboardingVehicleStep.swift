@@ -21,13 +21,38 @@ struct OnboardingVehicleStep: View {
                     .padding(.top, 20)
 
                     VStack(spacing: 0) {
-                        OnboardingTextField(label: "Make", text: $viewModel.vehicleMake, placeholder: "e.g. Toyota")
+                        OnboardingTextField(
+                            label: "Make",
+                            text: $viewModel.vehicleMake,
+                            placeholder: "e.g. Toyota",
+                            errorText: viewModel.vehicleFieldsTouched ? viewModel.makeError : nil
+                        )
                         Divider()
-                        OnboardingTextField(label: "Model", text: $viewModel.vehicleModel, placeholder: "e.g. Corolla")
+                        OnboardingTextField(
+                            label: "Model",
+                            text: $viewModel.vehicleModel,
+                            placeholder: "e.g. Corolla",
+                            errorText: viewModel.vehicleFieldsTouched ? viewModel.modelError : nil
+                        )
                         Divider()
-                        OnboardingTextField(label: "Year", text: $viewModel.vehicleYear, placeholder: "e.g. 2020", keyboardType: .numberPad)
+                        OnboardingTextField(
+                            label: "Year",
+                            text: $viewModel.vehicleYear,
+                            placeholder: "e.g. 2020",
+                            keyboardType: .numberPad,
+                            errorText: viewModel.vehicleFieldsTouched ? viewModel.yearError : nil
+                        )
                         Divider()
-                        OnboardingTextField(label: "License Plate", text: $viewModel.vehiclePlate, placeholder: "e.g. AB 123 CD", autocapitalization: .characters)
+                        OnboardingTextField(
+                            label: "License Plate",
+                            text: Binding(
+                                get: { viewModel.vehiclePlate },
+                                set: { viewModel.vehiclePlate = $0.uppercased() }
+                            ),
+                            placeholder: "e.g. AB 123 CD",
+                            autocapitalization: .characters,
+                            errorText: viewModel.vehicleFieldsTouched ? viewModel.plateError : nil
+                        )
                     }
                     .background(Color(UIColor.secondarySystemGroupedBackground))
                     .cornerRadius(15)
@@ -48,17 +73,20 @@ struct OnboardingVehicleStep: View {
                 }
 
                 Button {
-                    viewModel.nextStep()
+                    viewModel.vehicleFieldsTouched = true
+                    if viewModel.vehicleFormValid {
+                        viewModel.nextStep()
+                    }
                 } label: {
+                    let showAsInvalid = viewModel.vehicleFieldsTouched && !viewModel.vehicleFormValid
                     Text("Continue")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(viewModel.vehicleFormValid ? brandBlue : Color.gray.opacity(0.3))
-                        .foregroundColor(viewModel.vehicleFormValid ? .white : .gray)
+                        .background(showAsInvalid ? Color.gray.opacity(0.3) : brandBlue)
+                        .foregroundColor(showAsInvalid ? .gray : .white)
                         .cornerRadius(14)
                 }
-                .disabled(!viewModel.vehicleFormValid)
             }
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
@@ -72,16 +100,25 @@ private struct OnboardingTextField: View {
     var placeholder: String = ""
     var keyboardType: UIKeyboardType = .default
     var autocapitalization: TextInputAutocapitalization? = nil
+    var errorText: String? = nil
 
     var body: some View {
-        HStack {
-            Text(label)
-                .foregroundColor(.gray)
-                .frame(width: 110, alignment: .leading)
-            TextField(placeholder, text: $text)
-                .keyboardType(keyboardType)
-                .textInputAutocapitalization(autocapitalization)
-                .multilineTextAlignment(.trailing)
+        VStack(alignment: .trailing, spacing: 4) {
+            HStack {
+                Text(label)
+                    .foregroundColor(.gray)
+                    .frame(width: 110, alignment: .leading)
+                TextField(placeholder, text: $text)
+                    .keyboardType(keyboardType)
+                    .textInputAutocapitalization(autocapitalization)
+                    .multilineTextAlignment(.trailing)
+            }
+            if let errorText {
+                Text(errorText)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
         .padding()
     }
