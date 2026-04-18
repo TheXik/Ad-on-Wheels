@@ -38,6 +38,9 @@ public class CompletedRide {
     @Column(nullable = false)
     private String status;
 
+    @Column(nullable = false)
+    private Boolean verified = false;
+
     private Double startLat;
     private Double startLon;
     private Double endLat;
@@ -127,6 +130,14 @@ public class CompletedRide {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getVerified() {
+        return verified;
+    }
+
+    public void setVerified(Boolean verified) {
+        this.verified = verified;
     }
 
     public Double getStartLat() { return startLat; }

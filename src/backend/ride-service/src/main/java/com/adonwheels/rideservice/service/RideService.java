@@ -89,13 +89,14 @@ public class RideService {
         ride.setAverageSpeedKmh(averageSpeedKmh);
         ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
         ride.setStatus("COMPLETED");
+        ride.setVerified(false);
         extractGeoCoords(ride, session.getRouteHistory());
         ride.setRoutePointsJson(serializeRoute(session.getRouteHistory()));
-        historyRepository.save(ride);
+        CompletedRide saved = historyRepository.save(ride);
 
         repository.deleteById(rideId);
 
-        return new EndRideResponse(totalDistanceKm, durationSeconds);
+        return new EndRideResponse(saved.getId(), totalDistanceKm, durationSeconds);
     }
 
     @Transactional
@@ -132,11 +133,21 @@ public class RideService {
         ride.setAverageSpeedKmh(averageSpeedKmh);
         ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
         ride.setStatus("DEFERRED");
+        ride.setVerified(false);
         extractGeoCoords(ride, route);
         ride.setRoutePointsJson(serializeRoute(route));
-        historyRepository.save(ride);
+        CompletedRide saved = historyRepository.save(ride);
 
-        return new EndRideResponse(totalDistanceKm, durationSeconds);
+        return new EndRideResponse(saved.getId(), totalDistanceKm, durationSeconds);
+    }
+
+    @Transactional
+    public void verifyRide(Long rideId) {
+        CompletedRide ride = historyRepository.findById(rideId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "No completed ride found for id: " + rideId));
+        ride.setVerified(true);
+        historyRepository.save(ride);
     }
 
     public List<RideHistoryResponse> getHistory(Long driverId, int limit) {

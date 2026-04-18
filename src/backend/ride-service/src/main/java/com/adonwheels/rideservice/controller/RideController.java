@@ -49,6 +49,12 @@ public class RideController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PostMapping("/{completedRideId}/verify")
+    public ResponseEntity<Void> verifyRide(@PathVariable("completedRideId") Long completedRideId) {
+        rideService.verifyRide(completedRideId);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * UC013 – Deferred QR scan: logs a ride from buffered GPS data
      * when the driver forgot to scan the QR code at the start.
