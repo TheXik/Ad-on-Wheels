@@ -10,6 +10,7 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var distanceTravelled: Double = 0.0
     @Published var currentSpeed: Double = 0.0
     @Published var currentRideId: String?
+    @Published var lastCompletedRideId: Int64?
     @Published var currentRide: Ride?
     @Published var lastCompletedRide: Ride?
     @Published var isLoading: Bool = false
@@ -137,6 +138,7 @@ class RideViewModel: NSObject, ObservableObject {
 
             distanceTravelled = response.totalDistanceKm
             elapsedTime = TimeInterval(response.durationSeconds)
+            lastCompletedRideId = response.completedRideId
 
             isRiding = false
             currentRideId = nil
@@ -153,6 +155,15 @@ class RideViewModel: NSObject, ObservableObject {
         }
 
         isLoading = false
+    }
+
+    func verifyRide(completedRideId: Int64) async {
+        do {
+            let endpoint = Endpoint(path: "api/rides/\(completedRideId)/verify", method: .post, body: nil)
+            try await api.send(endpoint)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func trackPoint(lat: Double, lon: Double) {

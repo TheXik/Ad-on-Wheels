@@ -283,6 +283,8 @@ struct QRScanView: View {
             isScanning = false
             if isDeferredScan {
                 showDeferredPrompt = true
+            } else if let vm = rideViewModel, let rideId = vm.lastCompletedRideId {
+                Task { await vm.verifyRide(completedRideId: rideId) }
             }
         }
     }
