@@ -5,7 +5,7 @@ CONTEXT=lukbaos
 
 cd "$(dirname "$0")"
 
-mvn -q -DskipTests clean package
+mvn -DskipTests clean package
 
 
 docker --context "$CONTEXT" compose build
