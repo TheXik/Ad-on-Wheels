@@ -11,6 +11,7 @@ struct TrackRequest: Encodable {
 }
 
 struct EndRideResponse: Decodable {
+    let completedRideId: Int64?
     let totalDistanceKm: Double
     let durationSeconds: Int
 }
