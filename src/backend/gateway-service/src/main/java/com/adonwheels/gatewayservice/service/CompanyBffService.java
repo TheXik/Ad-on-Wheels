@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -146,7 +147,7 @@ public class CompanyBffService {
                    .append(r.getActiveDriverCount())
                    .append("\n");
             }
-            return csv.toString().getBytes();
+            return csv.toString().getBytes(StandardCharsets.UTF_8);
         });
     }
 }

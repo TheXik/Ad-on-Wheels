@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -170,8 +171,8 @@ public class CampaignController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv.toString().getBytes());
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     @PostMapping("/{id}/images")
@@ -222,7 +223,7 @@ public class CampaignController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"company_" + companyId + "_campaigns.csv\"")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(csv.toString().getBytes());
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
     }
-} 
+}

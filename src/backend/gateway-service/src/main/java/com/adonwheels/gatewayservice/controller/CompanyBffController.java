@@ -34,7 +34,7 @@ public class CompanyBffController {
                 .map(ApiResponseWrapper::success);
     }
 
-    @GetMapping(value = "/{companyId}/export-csv", produces = "text/csv")
+    @GetMapping(value = "/{companyId}/export-csv", produces = "text/csv; charset=UTF-8")
     public Mono<byte[]> exportEnrichedCsv(@PathVariable Long companyId) {
         return companyBffService.exportEnrichedCsv(companyId);
     }
