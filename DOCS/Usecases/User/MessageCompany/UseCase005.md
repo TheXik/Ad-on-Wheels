@@ -1,23 +1,51 @@
-## Use Case: View and Send Messages to the Company
+# UC05: Exchange Messages with a Company
 
-**Actor:** Registered Car Owner
+**Addresses:** FR.21, FR.22, FR.23. Complements FR.18 on the company
+side (UC07).
 
-**Description:** The user accesses the Company Messages section from the home screen, reads messages sent by companies, and has the option to send a reply or start a new message.
+A driver and a company exchange text messages within the context of a
+specific campaign. From the driver's perspective, this use case covers
+reading messages received from companies and sending replies or new
+messages.
 
-**Preconditions:**
-- User is logged in
-- User is participating in an active campaign
 
-**Flow:**
-1. The User is on the home screen.
-2. The User navigates on the Company Messages section.
-3. The system loads and displays a list of messages from companies.
-4. The User selects a message to read.
-5. The system displays the full message content.
-6. The User optionally taps on “Reply” or “New Message”.
-7. The User writes the message content and sends it.
-8. The system sends the message to the selected company and confirms delivery.
+## Actors
+Driver (primary). Company (secondary - initiates messages per FR.18).
 
-**Postconditions:**
-- User has viewed and optionally responded to or initiated a new message.
-- Message history is updated in the system.
+
+## Preconditions
+- The driver is logged in.
+- The driver has at least one campaign with `accepted` application
+  status; messaging is only available in the context of an accepted
+  campaign.
+
+
+## Basic Flow
+1. The driver opens the **Messages** entry point from the home screen
+   (with an unread-count badge, per FR.22).
+2. The system loads the list of conversation threads, one per campaign
+   in which the driver and the company have exchanged at least one
+   message, ordered chronologically by last activity.
+3. The driver selects a thread.
+4. The system marks incoming messages in that thread as read, updates
+   the unread counter, and renders the full chronological conversation
+   (per FR.23).
+5. The driver optionally composes a reply or a new message and sends
+   it.
+6. The system persists the message, delivers it to the company, and
+   appends it to the conversation view with its delivery status.
+
+
+## Alternative Flows
+
+**2a. No message threads yet.** The system shows an empty state.
+
+**6a. Send fails.** The message is marked as *failed* in the
+conversation view with a retry action. The unread counter is not
+updated.
+
+
+## Postconditions
+The conversation history is updated with any newly sent messages.
+Unread counters on both the driver and company home screens reflect
+the new read state.

@@ -1,63 +1,83 @@
 # Application Overview
 
-This mobile app connects **car owners** with **advertising companies**, allowing drivers to earn money by promoting ads on their vehicles.
+Ad-on-Wheels is a two-sided marketplace that connects **car owners** (drivers)
+who are willing to rent their vehicle's exterior as advertising space with
+**companies** seeking a mobile, per-kilometre alternative to billboard
+advertising. The platform measures how far a driver actually drives with a
+mounted advertisement, computes earnings from that measurement, and lets
+companies create and manage their own campaigns without going through a managed
+sales team.
 
-Drivers get paid for meeting campaign requirements like monthly mileage and geographic coverage. Companies get access to real-time campaign performance, reach analytics, and a pool of available drivers.
+The platform addresses gaps identified in the review of existing car-advertising
+services (Wrapify, Carvertise, Nickelytics, Brand Riders): no single existing
+platform combines self-service campaign creation, per-kilometre GPS-verified
+payouts, and a smartphone-only verification gesture without extra hardware.
 
-The app supports two primary roles:
 
-- **Car Owners** who want to earn extra income by driving with ads.
-- **Companies** that want to promote their brand through on-vehicle advertising.
+## Key Terms
 
----
+- **Campaign** - an advertising campaign created by a company, with a duration,
+  total budget, and maximum number of participating drivers.
+- **Ride** - a single driving session recorded for a driver. Each ride carries
+  a start and end time, a position trace, total distance, computed earnings,
+  and an explicit verification status (`unverified` or `verified`).
+- **Application** - a request submitted by a driver to join a specific
+  campaign; it is always in one of three states: `pending`, `accepted`, or
+  `declined`.
+- **QR Code Verification** - a lightweight, client-side verification gesture
+  performed at the end of a ride to confirm that the driver was actually
+  driving the campaign's vehicle.
+
 
 ## User Roles
 
-### Unregistered Users
-- Explore how the app works.
-- Access a demo in read-only mode.
-- Register as either a **Car Owner** or a **Company**.
+### Driver (Car Owner)
+Uses a personal vehicle daily and wants to earn extra income. Interacts with
+the platform from a phone, in short sessions, on the go. Primary tasks are
+discovering campaigns, starting and ending rides, and checking earnings.
 
-### Registered Car Owners
-- See live progress toward monthly mileage goals.
-- Get updates from advertisers (e.g., changes to conditions).
-- View current ad campaign details (duration, payout, etc.).
-- End or log rides manually; QR code verification for authenticity.
-- Track detailed statistics: distance, payout, history, and coverage area.
-- Read or receive feedback from advertisers.
-- Manage profile, banking info, and app preferences.
+### Company (Advertiser)
+A marketing manager or small-business owner. Tasks are analytical: creating
+campaigns, reviewing driver applications, monitoring campaign performance,
+and exporting statistics. Uses a dedicated web dashboard, but the same
+workflow is also available through the mobile application.
 
-### Registered Companies
-- View a dashboard with ad spend, driver payout totals, and estimated reach.
-- Manage multiple ad campaigns and view detailed analytics.
-- Browse incoming driver applications (with filters and profiles).
-- Access driver statistics and ride compliance.
-- Review past campaigns, download invoices, and issue payments/refunds.
+### Unregistered User
+Someone who opens the mobile application or the web dashboard without an
+existing account. The only actions available are selecting a role and
+completing the corresponding registration form.
 
----
+### Administrator (reserved for future scope)
+A moderator role for account review, flagged rides, and dispute resolution.
+Not part of the initial version, but the `ADMIN` value is reserved in the
+user-role enumeration so the role can be added later without schema changes.
 
-## Key Features
 
-### For Drivers
-- Progress dashboard with countdown and payout targets.
-- Messages from companies.
-- Campaign info box: company name, duration, reward.
-- Ratings from previous collaborations.
-- Statistics with area compliance, monthly summaries, and visual breakdowns.
+## Platform Components
 
-### For Companies
-- Home dashboard with total spend, reach, and active campaigns.
-- “Find Drivers” view showing applications to campaigns.
-- Stats tab with visual analytics and campaign KPIs.
-- Campaigns view for current/past campaign management.
-- Profile section with business info and settings.
+- **Mobile application** (iOS, Swift/SwiftUI) - used by both drivers and
+  company users. Exposes role picker on first launch.
+- **Web dashboard** - used by company users only; takes users straight to
+  a company registration / login flow.
+- **Backend** - a set of independently deployable services behind a single
+  API gateway. Each service owns its own database schema. The gateway is the
+  only public entry point; other services are only reachable from the
+  backend's internal network.
 
----
 
-## Design Philosophy
+## Architectural Rules (see `Requirements/constraints.md`)
 
-- Minimalist, mobile-first design (light mode with soft shadows and rounded corners).
-- Navigation bar tailored to each user role:
-  - For Car Owners: `HOME | ADS | STATS | PROFILE`
-  - For Companies: `HOME | FIND DRIVERS | CAMPAIGNS | STATS | PROFILE`
-- Emphasis on quick insights, real-time data, and simple workflows.
+- Single public entry point (gateway).
+- Each backend component owns its persistent data; cross-component access
+  only through network-visible interfaces.
+- Personal data is owned by a single component and must be deletable or
+  exportable without affecting unrelated data.
+- CSV exports are delivered in UTF-8.
+
+
+## Related Requirements Docs
+
+- [`Requirements/functional_requirements.md`](../Requirements/functional_requirements.md) - 22 functional requirements grouped by area.
+- [`Requirements/non_functional_requirements.md`](../Requirements/non_functional_requirements.md) - 6 non-functional requirements.
+- [`Requirements/constraints.md`](../Requirements/constraints.md) - external constraints the design must respect.
+- [`Usecases/`](../Usecases) - detailed use case descriptions.

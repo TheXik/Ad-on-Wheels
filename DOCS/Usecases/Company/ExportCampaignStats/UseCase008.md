@@ -1,29 +1,55 @@
-## Use Case: Export Campaign Stats
+# UC08: Export Campaign Statistics
 
-**Actor:** Registered Company User
+**Addresses:** FR.20, C.8 (CSV in UTF-8).
 
-**Description:** The company user exports the performance metrics of a selected ad campaign 
-into a dataset file for offline analysis, reporting and sharing with the company.
+A company user exports campaign statistics as a CSV file for offline
+analysis and reporting - either for a single campaign or across all
+campaigns of the company.
 
-**Preconditions:**
-- User is logged in with a Company account.
-- At least one campaign (active or past) exists and has collected performance data (reach, distance driven, driver activity).
 
-**Flow:**
-1. User navigates to the Stats page.
-2. The system displays overall stats for all the campaigns and selection box to choose the ad.
-3. User selects the desired campaign.
-4. The system loads and displays that campaign’s performance metrics.
-5. User clicks the Export button.
-6. The system generates a file(dataset) containing all key metrics.
-7. The system prompts the user to download the generated file.
-8. User saves the file to their device.
+## Actors
+Company.
 
-**Alternative Flows:**
-3a. User exports overall stats for all the campaigns past / active.
-4a. No data to export. The Export dataset button is disabled, and a tooltip reads “No data available to export.”
-6a. Export error. The system shows “Unable to generate Dataset. Please retry.” and offers a Retry action.
 
-**Postconditions:**
-- A Dataset file with the campaign’s performance data is downloaded to the user’s device.
+## Preconditions
+- The user is logged in with a Company account.
+- The company has at least one campaign with recorded activity
+  (drivers, rides, or applications).
 
+
+## Basic Flow
+1. The user navigates to the **Stats** or a campaign's detail screen.
+2. The user selects the export scope:
+    - **Single campaign** - export statistics for the currently
+      selected campaign only.
+    - **All campaigns** - export aggregate statistics across every
+      campaign owned by the company.
+3. The user clicks **Export**.
+4. The system generates a CSV document containing the campaign
+   metrics (name, state, date range, budget, drivers accepted,
+   kilometres driven, completed rides, earnings disbursed) encoded
+   in **UTF-8** (per C.8).
+5. The system delivers the CSV file to the user's browser for
+   download.
+
+
+## Alternative Flows
+
+**2a. No data to export.** The **Export** action is disabled with a
+tooltip "No data available to export."
+
+**4a. Export generation fails.** The system shows "Unable to generate
+export. Please retry." and offers a retry action. No file is
+downloaded.
+
+
+## Postconditions
+A CSV file encoded in UTF-8 is delivered to the user's device. No
+persistent state changes on the backend.
+
+
+## Design Notes
+The export format is constrained to CSV/UTF-8 by **C.8**, so that the
+file can be opened in standard spreadsheet software without additional
+tooling. Alternative formats (JSON, XLSX) are out of scope for the
+initial version.

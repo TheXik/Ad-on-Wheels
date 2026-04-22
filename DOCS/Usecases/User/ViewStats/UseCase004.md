@@ -1,19 +1,46 @@
-## Use Case: View Statistics and Earnings
+# UC04: View Driver Statistics and Earnings
 
-**Actor:** Registered Car Owner  
+**Addresses:** FR.13, FR.12.
 
-**Description:** The user checks their driving performance and earnings statistics related to active or past ad campaigns.
+A driver reviews their cumulative driving performance and earnings
+across all campaigns they have participated in.
 
-**Preconditions:**  
-- User is logged in  
-- User has driven at least one ride that was recorded  
 
-**Flow:**
-1. User opens the app and navigates to the **"Stats"** tab.
-2. The system loads key performance metrics.
-3. Visual elements such as graphs or progress bars provide insights.
-4. User optionally switches to past months or completed campaigns for historical data.
+## Actors
+Driver.
 
-**Postconditions:**  
-- User has a clear understanding of their progress and payout status.
-- User can adjust their driving behavior to meet campaign goals more effectively.
+
+## Preconditions
+- The driver is logged in.
+- The driver has completed at least one ride (verified, unverified,
+  or deferred).
+
+
+## Basic Flow
+1. The driver opens the **Stats** tab.
+2. The system fetches the driver's ride history and computes the
+   aggregate view:
+    - Total number of completed rides.
+    - Distance totals for the current week and current month.
+    - Earnings breakdown (per campaign and overall).
+    - Daily earnings chart covering a rolling window.
+3. The system renders graphs and progress bars that illustrate
+   progress toward the monthly distance goal shown on the home screen
+   (per FR.12).
+4. The driver optionally switches the time window (for example, to
+   a previous month) or filters by a specific campaign to see
+   historical breakdowns.
+
+
+## Alternative Flows
+
+**2a. No completed rides.** The system shows an empty state with an
+explanation and a link to the Find Ad flow (UC02).
+
+**3a. Data load fails.** The system surfaces the error and offers a
+retry action; the previous cached values (if any) remain visible.
+
+
+## Postconditions
+The driver has a clear view of their progress and payout status. No
+persistent state changes.
