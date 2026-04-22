@@ -1,35 +1,58 @@
-## Use Case: Find Drivers for Ad Campaign
+# UC07: Review Driver Applications
 
-**Actor:** Registered Company User
+**Addresses:** FR.17, FR.18.
 
-**Description:** The company user navigates to the Find Drivers page, reviews driver applications for a 
-specific ad campaign, and accepts suitable drivers to drive for them.
+A company user lists the pending driver applications for any of the
+company's campaigns and accepts or declines each one individually. An
+accepted driver appears in the campaign's participant list and becomes
+eligible to exchange messages with the company in the context of that
+campaign (per UC05 / FR.21).
 
 
-**Preconditions:**
-- User is logged in as a company
-- Company has at least one ad campaign exists 
-- One or more drivers have applied to the selected campaign
+## Actors
+Company.
 
-**Flow:**
-1. The User navigates to the Find Drivers page.
-2. The system retrieves and displays campaigns in Recruiting state.
-3. User selects the desired campaign.
-4. The system fetches all driver applications for that campaign.
-5. The system displays applications in a list with filters (location, rating, mileage) and sorting options.
-6. User applies filters or search to narrow down the list.
-7. User selects a driver to view the profile card.
-8. The system displays driver details (vehicle type, compliance history, ratings, projected reach).
-9. User clicks Accept or Reject on the driver profile.
-10. The system records the decision, updates the campaign’s “drivers needed” counter. (It could send a notification to the driver)
-11. Steps 6–10 repeat until the user finishes selecting drivers.
 
-**Alternative Flow:**
-2.a. If no campaigns are in Recruiting state.
-     The system shows “No recruiting campaigns available.” 
-4.a If no applications exist for the selected campaign. 
-    The system shows “No drivers have applied yet” and offers a **Share Campaign** action.
+## Preconditions
+- The user is logged in with a Company account.
+- The company has at least one campaign.
 
-**Postconditions:**
-- Acceptations (or rejections) are sent to selected drivers
-- Campaign’s “drivers needed” count is updated
+
+## Basic Flow
+1. The user navigates to the **Find Drivers** screen.
+2. The system fetches the company's campaigns that have at least one
+   pending application.
+3. The user selects a campaign.
+4. The system loads the pending applications for that campaign and
+   displays, for each application, the driver's name, vehicle
+   information, and rating.
+5. The user optionally applies filters (vehicle type, rating,
+   location) or sorting.
+6. The user selects a single application to review; the system shows
+   the driver's full profile (compliance history, projected reach).
+7. The user taps **Accept** or **Decline** on the application.
+8. The system persists the decision, updates the campaign's
+   participant list (on accept) or application log (on decline), and
+   decrements the remaining-driver-slots counter on accept.
+9. Steps 6–8 repeat until the user finishes the review session.
+
+
+## Alternative Flows
+
+**2a. No campaigns with pending applications.** The system shows
+"No recruiting campaigns available" and offers a shortcut to create a
+new campaign (FR.15).
+
+**4a. No applications yet for the selected campaign.** The system
+shows an empty state with a **Share Campaign** action.
+
+**8a. Accept or decline request fails.** The platform preserves the
+previous state (the application remains `pending`) and surfaces an
+error to the user. The remaining-driver-slots counter is not changed.
+
+
+## Postconditions
+Each processed application is persisted with its new status
+(`accepted` or `declined`). Accepted drivers are added to the
+campaign's participant list and become eligible for messaging (UC05)
+and for counting toward the campaign's participant cap.

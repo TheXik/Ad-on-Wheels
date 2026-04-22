@@ -1,22 +1,62 @@
-## Use Case: Deferred QR Scan to End Ride
+# UC13: Deferred Ride Reconstruction
 
-**Actor:** Registered Car Owner
+**Addresses:** FR.11. Extends **UC01** as a fallback ride-creation path.
 
-**Description:** The user forgot to scan the QR at ride start; at ride end they scan once and the app uses background‐tracked GPS data as the start.
+A driver who drove with an advertisement mounted but forgot to start a
+ride through UC01 must be able to recover the drive retroactively.
 
-**Preconditions:**
-- User is logged in and in an active campaign
-- App has been running background GPS & distance tracking since the drive began
 
-**Flow:**
-1. User returns to the app and taps **End Ride**.
-2. The System opens the QR scanner.
-3. User scans the QR code on the car.
-4. The System detects no prior “start” scan, and prompts:  
-   “No start scan found. Use tracked GPS data as ride start?”
-5. User confirms.
-6. The System calculates distance/time from the background GPS log, logs the ride, and updates campaign stats.
+## Actors
+Driver.
 
-**Postconditions:**
-- Ride is recorded using deferred start data.
-- Campaign mileage and earnings counters update accordingly.  
+
+## Preconditions
+- The driver is logged in and has at least one accepted campaign
+  application.
+- The mobile application has been *observable on the device* during the
+  drive (foreground or in a system-observable state), so that it was
+  able to sample position data.
+- No active ride session exists on the backend for the driver at the
+  moment of recovery.
+
+> The scope of the mechanism in the initial version is limited to
+> drives during which the application was observable on the device.
+> Covering true background collection is *not required* in this version.
+
+
+## Basic Flow
+1. The driver opens the mobile application.
+2. The system checks for an active ride session and finds none.
+3. The system inspects the bounded recent history of position samples
+   collected while the application was observable. If enough data has
+   been collected to make reconstruction meaningful, the system offers
+   to reconstruct a deferred ride.
+4. The driver confirms.
+5. The client submits the buffered position samples to the backend.
+6. The backend computes total distance, duration, average speed, and
+   earnings from the submitted samples and persists a new ride with
+   status **`DEFERRED`**.
+7. The system returns the driver to the updated home screen with the
+   new ride included in the cumulative statistics.
+
+
+## Alternative Flows
+
+**3a. Insufficient position data.** The system does not offer deferred
+reconstruction. The use case ends without creating a ride.
+
+**4a. Driver declines.** The buffered samples are discarded. The use
+case ends without creating a ride.
+
+
+## Postconditions
+A ride entry with status `DEFERRED` is persisted with the reconstructed
+distance, duration, average speed, and earnings; the driver's
+cumulative statistics include the new ride.
+
+
+## Design Notes
+Verification via QR scan is not part of this flow. Deferred rides are
+inherently unverified and may be treated differently by payout logic;
+the platform must retain the `DEFERRED` status column so this
+distinction is preserved in the data model.

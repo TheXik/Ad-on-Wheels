@@ -1,21 +1,40 @@
-## Use Case: View Active or Past Campaigns
+# UC06: View Active or Past Campaigns
 
-**Actor:** Registered Company User
+**Addresses:** FR.16, FR.19.
 
-**Description:** The company user navigates to the Stats page and selects one of their active or past campaigns to view its performance metrics such as reach, distance driven, and driver activity.
+A company user browses their own campaigns (active, recruiting, or
+past) and opens any of them for details.
 
-**Preconditions:**
-- User is logged in as a company
 
-**Flow:**
-1. User navigates to the Stats page.
-2. The system checks for existing campaigns (active or past).
-3. If campaigns are found, the system displays them.  (filter by  ("Active" and "Past")).
-4. User selects the desired campaign from the filtered list.
-5. The system loads and displays campaign statistics.
-**Alternative Flow:**
-- If no campaigns are found:
-  - The system shows a message: “No campaigns available.”
+## Actors
+Company.
 
-**Postconditions:**
-- User has successfully viewed the reach and performance data for the selected campaign (active or historical).
+
+## Preconditions
+- The user is logged in with a Company account.
+
+
+## Basic Flow
+1. The user navigates to the **Campaigns** or **Stats** screen.
+2. The system loads the list of the company's campaigns, grouped or
+   filterable by state (`recruiting`, `active`, `completed`).
+3. The user optionally applies a state filter or searches by name.
+4. The user selects a campaign.
+5. The system loads and displays the campaign's detail view:
+   description, date range, budget, participant list, current
+   per-campaign metrics (drivers accepted, kilometres driven,
+   completed rides, unread messages).
+
+
+## Alternative Flows
+
+**2a. No campaigns yet.** The system shows an empty state with a
+primary action to create the first campaign (UC: create campaign,
+FR.15).
+
+
+## Postconditions
+The user has viewed the campaign's performance data. No persistent
+state changes unless the user initiates a follow-up action from the
+detail view (review applications per UC07, export statistics per
+UC08, send a message per FR.18).
