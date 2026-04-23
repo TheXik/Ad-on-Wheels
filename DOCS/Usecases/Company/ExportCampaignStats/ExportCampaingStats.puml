@@ -1,25 +1,32 @@
 @startuml ExportCampaignStats
-actor CompanyUser
+actor Company
 
-CompanyUser -> App : Navigate to "Stats" page
-App -> App : Retrieve overall stats and campaign list
-App -> CompanyUser : Display stats and campaign selection box
+Company -> App : Navigate to "Stats" or campaign detail
+App -> Backend : Fetch campaign metrics
+Backend -> App : Metrics
 
-alt User selects a specific campaign
-  CompanyUser -> App : Select campaign
-  App -> App : Load campaign performance data
-  App -> CompanyUser : Display selected campaign stats
-else User exports overall stats
-  CompanyUser -> App : Leave default (all campaigns)
-end
+alt Data available
+    Company -> App : Choose export scope
 
-CompanyUser -> App : Click Export button
-App -> App : Generate file 
+    alt Single campaign
+        Company -> App : Select campaign + click Export
+    else All campaigns
+        Company -> App : Click Export on aggregate view
+    end
 
-alt Generation successful
-  App -> CompanyUser : Prompt download of file
-else Generation failed
-  App -> CompanyUser : Show “Unable to generate file. Please retry.” and Retry option
+    App -> Backend : Request CSV export (scope)
+    Backend -> Backend : Generate CSV encoded in UTF-8 (C.8)
+
+    alt Generation successful
+        Backend -> App : CSV file (text/csv; charset=UTF-8)
+        App -> Company : Deliver file for download
+    else Generation failed
+        Backend -> App : Error
+        App -> Company : Show "Unable to generate export. Please retry." + Retry
+    end
+
+else No data to export
+    App -> Company : Disable Export button with tooltip "No data available to export"
 end
 
 @enduml

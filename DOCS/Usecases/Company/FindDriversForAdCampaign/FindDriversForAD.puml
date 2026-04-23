@@ -1,26 +1,43 @@
 @startuml FindDriversForAdCampaign
-actor CompanyUser
+actor Company
 
-CompanyUser -> App : Navigate to "Find Drivers" page
-App -> App : Retrieve campaigns in Recruiting state
+Company -> App : Navigate to "Find Drivers"
+App -> Backend : Fetch campaigns with pending applications
+Backend -> App : Campaign list
 
 alt Campaigns available
-    CompanyUser -> App : Select campaign
-    App -> App : Fetch driver applications
+    Company -> App : Select campaign
+    App -> Backend : Fetch pending applications
+    Backend -> App : Applications (driver name, vehicle, rating)
 
     alt Applications exist
-        App -> CompanyUser : Display list with filters & sort
-        CompanyUser -> App : Apply filters / search
-        CompanyUser -> App : Select driver profile
-        App -> CompanyUser : Display driver details
-        CompanyUser -> App : Click Accept or Reject
-        App -> App : Record decision & update counter
+        App -> Company : Display list with filters & sort
+        Company -> App : Apply filters / search
+        Company -> App : Select a single application
+        App -> Company : Show full driver profile (compliance, projected reach)
+        Company -> App : Click Accept or Decline
+        App -> Backend : Persist decision
+
+        alt Success
+            Backend -> App : OK
+            note right
+                On accept:
+                - Driver added to participants
+                - Eligible for messaging (UC05 / FR.21)
+                - Decrement remaining-driver-slots counter
+            end note
+            App -> Company : Refresh list, continue review
+        else Failure
+            Backend -> App : Error
+            App -> Company : Preserve previous state, surface error
+        end
+
     else No applications
-        App -> CompanyUser : Show “No drivers have applied yet”
+        App -> Company : Show empty state + "Share Campaign" action
     end
 
-else No campaigns
-    App -> CompanyUser : Show “No recruiting campaigns available”
+else No campaigns with pending applications
+    App -> Company : Show empty state + shortcut to create campaign (FR.15)
 end
 
 @enduml

@@ -1,24 +1,35 @@
 @startuml RideDiagram
-actor CarOwner
-CarOwner -> App : Open Home Screen
-App -> CarOwner : Show possibility to start new ride
-CarOwner -> App : Navigate to Start Ride
-App -> App : Redirect to QR Scanner
+actor Driver
 
-CarOwner -> App : Scan QR Code (Start)
-App -> App : Confirm ride started
-App -> App : Begin tracking (time, distance)
+Driver -> App : Open Home Screen
+App -> Driver : Show "Start Ride" action
+Driver -> App : Tap "Start Ride"
+App -> Backend : Create ride session
+Backend -> App : Ride session created
+App -> Driver : Show riding screen (map, timer, speed, distance)
 
-... After some time driving ...
+loop every <=5s (NFR.4)
+    App -> Backend : Upload latest GPS sample
+    App -> Driver : Update distance display
+end
 
-CarOwner -> App : Open app again
-CarOwner -> App : Tap "End Ride"
-App -> App : Redirect to QR Scanner
+... Driver drives with advertisement mounted ...
 
-CarOwner -> App : Scan QR Code (End)
-App -> App : Calculate time + distance + calculate estimated reach and update
-App -> App : Log ride to database
-App -> App : Update campaign stats (km, earnings)
+Driver -> App : Tap "End Ride"
+App -> Backend : End ride session
+Backend -> Backend : Compute distance, duration, avg speed, earnings
+Backend -> App : Ride result + persisted ride (status = unverified)
 
-App -> CarOwner : Show ride summary + updated progress
+App -> Driver : Prompt to scan QR code on vehicle
+
+alt QR scanned successfully
+    Driver -> App : Scan QR code
+    App -> Backend : Verify ride (rideId)
+    Backend -> Backend : Set status = verified
+    Backend -> App : OK
+    App -> Driver : Confirm verified, return to home
+else Driver leaves before scan
+    App -> Driver : Return to home (ride remains unverified)
+end
+
 @enduml
