@@ -1,0 +1,45 @@
+@startuml CompanyRegistration
+actor "Unregistered User" as User
+
+alt Web dashboard
+    User -> WebApp : Open company landing page
+    WebApp -> User : Show company registration form directly (no role picker, FR.1)
+else Mobile application
+    User -> MobileApp : Tap "Sign Up"
+    MobileApp -> User : Show role picker
+    User -> MobileApp : Select "Company"
+    MobileApp -> User : Show company registration form
+end
+
+User -> App : Submit (name, business e-mail, password, company identifier)
+App -> App : Validate format (e-mail syntax, password strength, identifier)
+
+alt Invalid input
+    App -> User : Highlight invalid fields, prevent submission
+end
+
+App -> AuthService : Check e-mail uniqueness (FR.2)
+
+alt E-mail already registered
+    AuthService -> App : Conflict
+    App -> User : Show "E-mail already in use" + Log In link (UC12)
+else E-mail free
+    AuthService -> App : OK
+    App -> AuthService : Create auth record (BCrypt hash, NFR.1)
+    AuthService -> CompanyService : Create company profile
+    note right
+        SAGA: if any step fails,
+        compensating actions undo
+        partial records (FR.5)
+    end note
+    CompanyService -> AuthService : OK
+    AuthService -> App : Issue JWT (lifetime <=1h, NFR.2)
+end
+
+App -> User : Prompt to complete company profile (branding, contact)
+User -> App : Submit optional profile fields
+App -> CompanyService : Save additional profile details
+CompanyService -> App : OK
+App -> User : Navigate to company home dashboard
+
+@enduml

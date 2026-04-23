@@ -1,0 +1,30 @@
+@startuml CompanyLogin
+actor Company
+
+Company -> App : Tap "Log In" on welcome screen (web dashboard or mobile app)
+App -> Company : Show login form (e-mail + password)
+Company -> App : Submit credentials
+
+App -> AuthService : Authenticate (e-mail, password)
+AuthService -> AuthService : Compare BCrypt hash (NFR.1)
+
+alt Credentials valid
+    AuthService -> App : Issue JWT (lifetime <=1h, NFR.2)
+    App -> Company : Navigate to company home dashboard
+else Credentials invalid
+    AuthService -> App : Error
+    App -> Company : Show "e-mail or password is incorrect"
+end
+
+alt Forgot password
+    Company -> App : Tap "Forgot Password"
+    App -> AuthService : Request reset
+    AuthService -> Company : Send reset link (e-mail)
+end
+
+note right of App
+    Google OAuth (FR.4) is not offered
+    on the company login path.
+end note
+
+@enduml

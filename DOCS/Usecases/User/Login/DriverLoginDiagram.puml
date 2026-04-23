@@ -1,0 +1,42 @@
+@startuml DriverLogin
+actor Driver
+
+Driver -> App : Tap "Log In" on welcome screen
+App -> Driver : Show login form (e-mail + password, or Google sign-in)
+
+alt Password login
+    Driver -> App : Submit credentials
+    App -> AuthService : Authenticate (e-mail, password)
+    AuthService -> AuthService : Compare BCrypt hash (NFR.1)
+
+    alt Credentials valid
+        AuthService -> App : Issue JWT (lifetime <=1h, NFR.2)
+        App -> Driver : Navigate to driver home screen
+    else Credentials invalid
+        AuthService -> App : Error
+        App -> Driver : Show "e-mail or password is incorrect"
+    end
+
+else Google OAuth (FR.4)
+    Driver -> App : Tap "Sign in with Google"
+    App -> Google : OAuth flow
+    Google -> App : ID token + e-mail
+    App -> AuthService : Verify ID token
+
+    alt Account exists
+        AuthService -> App : Issue JWT (NFR.2)
+        App -> Driver : Navigate to driver home screen
+    else No account for e-mail
+        AuthService -> AuthService : Auto-provision driver account (FR.4)
+        AuthService -> App : Issue JWT (NFR.2)
+        App -> Driver : Navigate to driver home screen
+    end
+end
+
+alt Forgot password
+    Driver -> App : Tap "Forgot Password"
+    App -> AuthService : Request reset
+    AuthService -> Driver : Send reset link (e-mail)
+end
+
+@enduml

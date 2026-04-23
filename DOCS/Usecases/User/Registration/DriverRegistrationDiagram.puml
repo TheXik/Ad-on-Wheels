@@ -1,0 +1,53 @@
+@startuml DriverRegistration
+actor "Unregistered User" as User
+
+User -> App : Tap "Sign Up" on welcome screen
+App -> User : Show role picker (FR.1)
+User -> App : Select "Driver"
+
+alt Password registration
+    App -> User : Show driver registration form
+    User -> App : Submit (name, e-mail, password)
+    App -> App : Validate format (e-mail syntax, password strength)
+
+    alt Invalid input
+        App -> User : Highlight invalid fields, prevent submission
+    end
+
+    App -> AuthService : Check e-mail uniqueness (FR.2)
+
+    alt E-mail already registered
+        AuthService -> App : Conflict
+        App -> User : Show "E-mail already in use" + Log In link (UC10)
+    else E-mail free
+        AuthService -> App : OK
+        App -> AuthService : Create auth record (BCrypt hash, NFR.1)
+        AuthService -> DriverService : Create driver profile
+        note right
+            SAGA: if any step fails,
+            compensating actions undo
+            partial records (FR.5)
+        end note
+        DriverService -> AuthService : OK
+        AuthService -> App : Issue JWT (lifetime <=1h, NFR.2)
+    end
+
+else Google OAuth (FR.4)
+    User -> App : Tap "Sign in with Google"
+    App -> Google : OAuth flow
+    Google -> App : ID token + e-mail
+    App -> AuthService : Verify ID token, lookup e-mail
+    alt E-mail new
+        AuthService -> AuthService : Auto-create auth record
+        AuthService -> DriverService : Create driver profile
+    end
+    AuthService -> App : Issue JWT (NFR.2)
+end
+
+App -> User : Navigate to onboarding wizard
+User -> App : Enter vehicle info (make, model, year, plate) (FR.6)
+App -> DriverService : Save vehicle info
+DriverService -> App : OK
+App -> User : Navigate to driver home screen
+
+@enduml
