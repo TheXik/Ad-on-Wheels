@@ -1,21 +1,31 @@
 @startuml MessageCompany
-actor CarOwner
+actor Driver
 
-CarOwner -> App : Open Home Screen
-CarOwner -> App : Navigates Company Messages
-App -> App : Load list of messages
-App -> CarOwner : Display message previews
+Driver -> App : Tap "Messages" (with unread-count badge, FR.22)
+App -> Backend : Fetch conversation threads (one per campaign)
+Backend -> App : Thread list ordered by last activity
 
-CarOwner -> App : Select a message
-App -> App : Load message content
-App -> CarOwner : Display full message
+alt Threads exist
+    App -> Driver : Display thread list
+    Driver -> App : Select thread
+    App -> Backend : Mark incoming messages in thread as read
+    Backend -> App : OK (unread counter updated)
+    App -> Driver : Render chronological conversation (FR.23)
 
-alt Send a Reply or New Message
-    CarOwner -> App : Tap "Reply" or "New Message"
-    CarOwner -> App : Type message
-    CarOwner -> App : Send message
-    App -> App : Deliver message to company
-    App -> CarOwner : Show confirmation
+    alt Compose reply or new message
+        Driver -> App : Type and send message
+        App -> Backend : Persist + deliver
+        alt Delivery succeeds
+            Backend -> App : Delivered
+            App -> Driver : Append message to thread with status
+        else Delivery fails
+            Backend -> App : Error
+            App -> Driver : Mark message as "failed" + Retry action
+        end
+    end
+
+else No threads yet
+    App -> Driver : Show empty state
 end
 
 @enduml

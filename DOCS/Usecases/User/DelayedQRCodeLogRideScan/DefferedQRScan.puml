@@ -1,14 +1,31 @@
-@startuml DeferredEndRideScan
-actor CarOwner
+@startuml DeferredRideReconstruction
+actor Driver
 
-CarOwner -> App : Tap End Ride
-App -> App : Launch QR scanner
-CarOwner -> App : Scan QR at ride end
-App -> App : Detect missing start scan
-App -> CarOwner : Prompt “Use background GPS as start?” 
-CarOwner -> App : Confirm deferred start
-App -> App : Compute distance/time from GPS log
-App -> App : Log ride & update stats
-App -> CarOwner : Show ride summary
+... App has been observable on device during drive, buffering GPS samples ...
+
+Driver -> App : Open application
+App -> Backend : Check for active ride session
+Backend -> App : No active session
+
+App -> App : Inspect buffered GPS samples
+
+alt Sufficient data to reconstruct
+    App -> Driver : Prompt "Reconstruct deferred ride from buffered GPS?"
+
+    alt Driver confirms
+        Driver -> App : Confirm
+        App -> Backend : Submit buffered GPS samples
+        Backend -> Backend : Compute distance, duration, avg speed, earnings
+        Backend -> Backend : Persist ride with status = DEFERRED
+        Backend -> App : Ride created
+        App -> Driver : Show updated home with new ride
+    else Driver declines
+        App -> App : Discard buffered samples
+        App -> Driver : Return to home
+    end
+
+else Insufficient data
+    App -> Driver : Return to home (no prompt, no ride created)
+end
 
 @enduml

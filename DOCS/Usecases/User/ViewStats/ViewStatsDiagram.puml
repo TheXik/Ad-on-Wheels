@@ -1,14 +1,27 @@
 @startuml ViewStats
-actor CarOwner
+actor Driver
 
-CarOwner -> App : Navigate to Stats page
+Driver -> App : Open "Stats" tab
+App -> Backend : Fetch ride history + aggregates
+Backend -> App : Totals (rides, weekly/monthly distance, earnings breakdown, daily chart)
 
-App -> App : Load performance metrics
+alt Data available
+    App -> Driver : Render graphs + progress toward monthly goal (FR.12)
 
-App -> CarOwner : Display graphs, maps and progress bars
+    alt Switch time window
+        Driver -> App : Select previous month
+        App -> Backend : Fetch historical window
+        Backend -> App : Historical aggregates
+        App -> Driver : Display historical view
+    else Filter by campaign
+        Driver -> App : Select specific campaign
+        App -> Driver : Display per-campaign breakdown
+    end
 
-CarOwner -> App : Switch to previous month / campaign
-App -> App : Load historical stats
-App -> CarOwner : Display past data
+else No completed rides
+    App -> Driver : Show empty state + link to Find Ad (UC02)
+else Fetch fails
+    App -> Driver : Show error + Retry (cached values remain visible)
+end
 
 @enduml

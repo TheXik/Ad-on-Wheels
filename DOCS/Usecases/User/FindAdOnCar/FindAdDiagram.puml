@@ -1,24 +1,44 @@
 @startuml FindAd
-actor CarOwner
+actor Driver
 
-CarOwner -> App : Open "Find Ad" page
-App -> CarOwner : Show Ad preview (details + visual)
+Driver -> App : Navigate to "Find Ad" screen
+App -> Backend : Fetch recruiting campaigns
+Backend -> App : Campaign list
 
-CarOwner -> App : Review Ad
+loop until list exhausted
+    App -> Driver : Present one campaign (name, company, reward, duration, vehicle)
 
-alt Swipe Right (Interested)
-    CarOwner -> App : Swipe Right
-    App -> App : Record interest in campaign
-    App -> CarOwner : Show next available ad
-else Swipe Left (Not Interested)
-    CarOwner -> App : Swipe Left
-    App -> App : Skip ad
-    App -> CarOwner : Show next available ad
+    alt Affirmative gesture (apply)
+        Driver -> App : Single affirmative gesture
+        App -> Backend : Submit application (status = pending)
+        Backend -> App : OK
+        App -> Driver : Show next campaign
+    else Dismissive gesture (skip)
+        Driver -> App : Single dismissive gesture
+        App -> App : Mark campaign skipped (session-local)
+        App -> Driver : Show next campaign
+    else Open for details (UC03)
+        Driver -> App : Tap "Details"
+        App -> Driver : Open campaign detail view
+    else Reverse last action
+        Driver -> App : Tap "Undo"
+        alt Last action was skip
+            App -> Driver : Restore skipped campaign
+        else Last action was apply
+            App -> Backend : Withdraw application
+            Backend -> App : OK
+            App -> Driver : Campaign restored for action
+        end
+    end
 end
 
-alt Taps Back Arrow(return to previous ad) 
-    CarOwner -> App : Tap Back Arrow
-    App -> CarOwner : Show previous ad
+alt No recruiting campaigns / list exhausted
+    App -> Driver : Show empty state + "Refresh"
+end
+
+alt Application submission fails
+    Backend -> App : Error
+    App -> Driver : Show error, campaign remains available for retry
 end
 
 @enduml

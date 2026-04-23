@@ -1,16 +1,25 @@
 @startuml ViewCampaignStats
-actor CompanyUser
+actor Company
 
-CompanyUser -> App : Navigate to "Stats" page
-App -> App : Check for existing campaigns (active + past)
+Company -> App : Navigate to "Campaigns" / "Stats"
+App -> Backend : Fetch company's campaigns (grouped by state)
+Backend -> App : Campaigns (recruiting | active | completed)
 
 alt Campaigns exist
-    App -> CompanyUser : Show segmented list (Active | Past)
-    CompanyUser -> App : Select campaign from list
-    App -> App : Load campaign performance data
-    App -> CompanyUser : Display stats (reach, drivers, distance, budget)
+    App -> Company : Show list grouped by state
+
+    alt Filter or search
+        Company -> App : Apply state filter or search by name
+        App -> Company : Refresh filtered list
+    end
+
+    Company -> App : Select campaign
+    App -> Backend : Load campaign detail + metrics
+    Backend -> App : Details (description, date range, budget, participants, km, rides, unread messages)
+    App -> Company : Display campaign detail view
+
 else No campaigns
-    App -> CompanyUser : Display "No campaigns available"
+    App -> Company : Show empty state + "Create Campaign" action (FR.15)
 end
 
 @enduml

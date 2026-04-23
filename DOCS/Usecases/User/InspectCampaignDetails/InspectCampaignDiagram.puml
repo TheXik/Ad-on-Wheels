@@ -1,14 +1,31 @@
 @startuml DisplayCampaignDetails
-actor CarOwner
+actor Driver
 
-CarOwner -> App : Open Home Screen
-App -> CarOwner : Display active campaign summary
+alt Entry from home screen
+    Driver -> App : Tap active-campaign summary card
+else Entry from Find Ad (UC02)
+    Driver -> App : Tap "Details" on campaign card
+else Entry from applications list
+    Driver -> App : Open campaign from applications list
+end
 
-CarOwner -> App : Tap on campaign summary card
-App -> App : Load full campaign details
+App -> Backend : Load campaign record + driver's application status
+Backend -> App : Campaign details + status (pending | accepted | declined | not applied)
+App -> Driver : Display full details (company, dates, reward, budget, max drivers, reach, images) and status
 
-App -> CarOwner : Show campaign details
+alt Follow-up: apply (not yet applied, recruiting)
+    Driver -> App : Tap "Apply"
+    App -> Backend : Submit application
+else Follow-up: start ride (if accepted)
+    Driver -> App : Tap "Start Ride" (UC01)
+else Follow-up: message company (if accepted)
+    Driver -> App : Open message thread (UC05)
+else Close
+    Driver -> App : Close detail view
+end
 
-CarOwner -> App : Close detail view
+alt Campaign no longer available
+    App -> Driver : Show disabled state "No longer recruiting"
+end
 
 @enduml
