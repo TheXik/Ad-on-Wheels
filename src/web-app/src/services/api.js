@@ -71,6 +71,7 @@ export const campaigns = {
     request(`/api/campaigns/applications/${applicationId}/decline`, { method: 'POST' }),
   exportCsv: (companyId) => request(`/api/campaigns/company/${companyId}/export`),
   exportCampaignCsv: (campaignId) => request(`/api/campaigns/${campaignId}/export`),
+  getCoverage: (campaignId) => request(`/api/campaigns/${campaignId}/coverage`),
 };
 
 export const companies = {

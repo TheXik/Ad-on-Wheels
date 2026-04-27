@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats } from '../services/api';
+import CampaignCoverageMap from '../components/CampaignCoverageMap';
 
 export default function CampaignDetailPage() {
   const { id } = useParams();
@@ -138,6 +139,8 @@ export default function CampaignDetailPage() {
           </div>
         </div>
       )}
+
+      <CampaignCoverageMap campaignId={campaign.id} />
 
       <div className="detail-grid">
         <div className="detail-card">
