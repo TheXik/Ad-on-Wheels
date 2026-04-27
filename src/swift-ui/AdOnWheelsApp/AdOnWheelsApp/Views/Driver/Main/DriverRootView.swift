@@ -125,12 +125,12 @@ struct DriverRootView: View {
     }
 
     func startRideFlow() {
-        let campaignId = dashboardViewModel.activeCampaigns.first?.id
-        let campaignName = dashboardViewModel.activeCampaigns.first?.name ?? "Active Campaign"
-        rideViewModel.activeCampaignId = campaignId
-        rideViewModel.activeCampaignName = campaignName
+        let activeCampaign = dashboardViewModel.activeCampaigns.first
+        rideViewModel.activeCampaignId = activeCampaign?.id
+        rideViewModel.activeCampaignName = activeCampaign?.name ?? "Active Campaign"
+        rideViewModel.activeCampaignRatePerKm = activeCampaign?.ratePerKm
         Task {
-            await rideViewModel.startRide(campaignId: campaignId)
+            await rideViewModel.startRide(campaignId: activeCampaign?.id)
             if rideViewModel.errorMessage == nil {
                 showingRideSheet = true
             }

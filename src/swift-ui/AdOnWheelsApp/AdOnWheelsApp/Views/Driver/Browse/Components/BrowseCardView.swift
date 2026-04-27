@@ -71,6 +71,15 @@ struct BrowseCardView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
 
+                    HStack {
+                        Label(campaign.formattedRatePerKm, systemImage: "speedometer")
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Label("\(campaign.maxDrivers) drivers", systemImage: "person.2.fill")
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
                     Text(campaign.description)
                         .font(.body)
                         .foregroundColor(.gray)
@@ -102,7 +111,7 @@ struct BrowseCardView_Previews: PreviewProvider {
         BrowseCardView(campaign: Campaign(
             id: 1, name: "Test Campaign", description: "This is a test campaign description",
             companyId: 1, startDate: "2025-03-01", endDate: "2025-06-30",
-            budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING",
+            budget: 20000, maxDrivers: 38, ratePerKm: 0.15, estimatedReach: 120000, status: "RECRUITING",
             imageUrls: nil))
             .padding()
             .background(Color.gray.opacity(0.2))
