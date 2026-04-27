@@ -66,6 +66,7 @@ struct CampaignDetailView: View {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                             DetailInfoBox(label: "Duration", value: campaign.formattedDateRange, icon: "calendar")
                             DetailInfoBox(label: "Budget", value: campaign.formattedBudget, icon: "dollarsign.circle")
+                            DetailInfoBox(label: "Pay per km", value: campaign.formattedRatePerKm, icon: "speedometer")
                             DetailInfoBox(label: "Drivers", value: "\(campaign.maxDrivers)", icon: "person.2")
                             DetailInfoBox(label: "Est. Reach", value: campaign.formattedReach, icon: "eye")
                         }
@@ -163,7 +164,7 @@ struct CampaignDetailView_Previews: PreviewProvider {
             campaign: Campaign(
                 id: 1, name: "Test Campaign", description: "This is a test campaign with a longer description.",
                 companyId: 1, startDate: "2025-03-01", endDate: "2025-06-30",
-                budget: 20000, maxDrivers: 38, estimatedReach: 120000, status: "RECRUITING",
+                budget: 20000, maxDrivers: 38, ratePerKm: 0.15, estimatedReach: 120000, status: "RECRUITING",
                 imageUrls: nil),
             onApply: {}
         )

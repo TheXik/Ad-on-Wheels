@@ -34,6 +34,7 @@ class RideViewModel: NSObject, ObservableObject {
 
     var activeCampaignName: String = "Active Campaign"
     var activeCampaignId: Int?
+    var activeCampaignRatePerKm: Double?
 
     private var elapsedTimer: AnyCancellable?
     private var trackTimer: AnyCancellable?
@@ -87,7 +88,7 @@ class RideViewModel: NSObject, ObservableObject {
         errorMessage = nil
 
         do {
-            let body = try JSONEncoder().encode(StartRideRequest(driverId: String(driverId), campaignId: cid))
+            let body = try JSONEncoder().encode(StartRideRequest(driverId: String(driverId), campaignId: cid, ratePerKm: activeCampaignRatePerKm))
             let endpoint = Endpoint(path: "api/rides/start", method: .post, body: body)
             let response: StartRideResponse = try await api.send(endpoint)
 
@@ -243,6 +244,7 @@ class RideViewModel: NSObject, ObservableObject {
             let request = DeferredRideRequest(
                 driverId: String(driverId),
                 campaignId: activeCampaignId,
+                ratePerKm: activeCampaignRatePerKm,
                 locationPoints: gpsBuffer
             )
             let body = try JSONEncoder().encode(request)

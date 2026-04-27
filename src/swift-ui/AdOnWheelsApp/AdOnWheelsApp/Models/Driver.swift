@@ -43,6 +43,15 @@ struct Driver: Identifiable, Codable {
     var needsOnboarding: Bool {
         !(onboardingCompleted ?? false) && vehicleMake == nil
     }
+
+    var resolvedVehicleImageURL: URL? {
+        guard let path = vehicleImageUrl, !path.isEmpty else { return nil }
+        if path.hasPrefix("http") {
+            return URL(string: path)
+        }
+        let normalized = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        return AppConfig.baseURL.appendingPathComponent(normalized)
+    }
 }
 
 
