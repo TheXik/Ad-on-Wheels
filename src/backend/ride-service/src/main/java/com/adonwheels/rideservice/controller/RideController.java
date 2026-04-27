@@ -2,11 +2,13 @@ package com.adonwheels.rideservice.controller;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
 import com.adonwheels.rideservice.dto.CampaignRideStatsResponse;
+import com.adonwheels.rideservice.dto.CampaignRouteResponse;
 import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
 import com.adonwheels.rideservice.dto.RideStatisticsResponse;
+import com.adonwheels.rideservice.dto.RoutePointDto;
 import com.adonwheels.rideservice.dto.StartRideRequest;
 import com.adonwheels.rideservice.dto.StartRideResponse;
 import com.adonwheels.rideservice.dto.TrackRequest;
@@ -32,7 +34,7 @@ public class RideController {
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<StartRideResponse>> startRide(
             @Valid @RequestBody StartRideRequest request) {
-        StartRideResponse response = rideService.startRide(request.getDriverId(), request.getCampaignId());
+        StartRideResponse response = rideService.startRide(request.getDriverId(), request.getCampaignId(), request.getRatePerKm());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
@@ -53,6 +55,19 @@ public class RideController {
     public ResponseEntity<Void> verifyRide(@PathVariable("completedRideId") Long completedRideId) {
         rideService.verifyRide(completedRideId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * UC014 – Coverage / heat-map: returns the recorded GPS polyline for a
+     * completed ride owned by the caller. Caller identity is supplied by the
+     * gateway via {@code X-User-Id}.
+     */
+    @GetMapping("/{rideId}/route")
+    public ResponseEntity<ApiResponse<List<RoutePointDto>>> getRideRoute(
+            @PathVariable("rideId") Long rideId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerDriverId) {
+        List<RoutePointDto> route = rideService.getRoute(rideId, callerDriverId);
+        return ResponseEntity.ok(ApiResponse.success(route));
     }
 
     /**
@@ -98,6 +113,12 @@ public class RideController {
     public ResponseEntity<ApiResponse<CampaignRideStatsResponse>> getCampaignStatistics(
             @PathVariable("campaignId") Long campaignId) {
         return ResponseEntity.ok(ApiResponse.success(rideService.getCampaignStatistics(campaignId)));
+    }
+
+    @GetMapping("/campaign/{campaignId}/routes")
+    public ResponseEntity<ApiResponse<List<CampaignRouteResponse>>> getCampaignRoutes(
+            @PathVariable("campaignId") Long campaignId) {
+        return ResponseEntity.ok(ApiResponse.success(rideService.getCampaignRoutes(campaignId)));
     }
 
     @GetMapping("/campaigns/statistics")
