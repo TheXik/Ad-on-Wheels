@@ -3,6 +3,7 @@ package com.adonwheels.companyservice.controller;
 import com.adonwheels.companyservice.model.Company;
 import com.adonwheels.companyservice.service.CompanyService;
 import dto.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,11 +38,10 @@ public class CompanyController {
                 .body(ApiResponse.success(companyService.findById(id)));
     }
 
-    // POST /companies - Create a new company
     @PostMapping
-    public ResponseEntity<ApiResponse<Company>> createCompany(@RequestBody Company company) {
+    public ResponseEntity<ApiResponse<Company>> createCompany(@Valid @RequestBody Company company) {
         Company saved = companyService.addCompany(company);
-        return ResponseEntity //TODO Cross site scripting vulnerability sink
+        return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success(saved));
     }
