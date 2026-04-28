@@ -1,13 +1,17 @@
 import SwiftUI
 import PhotosUI
 
+@MainActor
 struct OnboardingPhotoStep: View {
     @ObservedObject var viewModel: OnboardingViewModel
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
 
     var body: some View {
-        VStack(spacing: 0) {
+        // Pre-read isolated VM properties so PhotosPicker's @Sendable label
+        // closure references local copies, not @MainActor state directly.
+        let currentImage = viewModel.vehicleImage
+        return VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 24) {
                     VStack(spacing: 6) {
@@ -22,7 +26,7 @@ struct OnboardingPhotoStep: View {
                     .padding(.top, 20)
 
                     PhotosPicker(selection: $viewModel.selectedPhotoItem, matching: .images) {
-                        if let image = viewModel.vehicleImage {
+                        if let image = currentImage {
                             Image(uiImage: image)
                                 .resizable()
                                 .scaledToFill()
@@ -58,7 +62,7 @@ struct OnboardingPhotoStep: View {
                         Task { await viewModel.loadSelectedPhoto() }
                     }
 
-                    if viewModel.vehicleImage != nil {
+                    if currentImage != nil {
                         Button {
                             viewModel.clearVehiclePhoto()
                         } label: {

@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 
+@MainActor
 struct CreateCampaignView: View {
     @StateObject private var viewModel: CreateCampaignViewModel
     @Environment(\.dismiss) private var dismiss
@@ -74,14 +75,16 @@ struct CreateCampaignView: View {
                             }
 
                             if viewModel.selectedImages.count < CreateCampaignViewModel.maxImages {
+                                let imagesEmpty = viewModel.selectedImages.isEmpty
+                                let remainingSlots = CreateCampaignViewModel.maxImages - viewModel.selectedImages.count
                                 PhotosPicker(
                                     selection: $photosPickerItems,
-                                    maxSelectionCount: CreateCampaignViewModel.maxImages - viewModel.selectedImages.count,
+                                    maxSelectionCount: remainingSlots,
                                     matching: .images
                                 ) {
                                     HStack {
                                         Image(systemName: "photo.on.rectangle.angled")
-                                        Text(viewModel.selectedImages.isEmpty ? "Add Photos" : "Add More")
+                                        Text(imagesEmpty ? "Add Photos" : "Add More")
                                     }
                                     .font(.subheadline)
                                     .foregroundColor(.accentBlue)
