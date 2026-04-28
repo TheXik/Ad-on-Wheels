@@ -90,7 +90,7 @@ struct CreateCampaignView: View {
                                     .background(Color.accentBlue.opacity(0.08))
                                     .cornerRadius(10)
                                 }
-                                .onChange(of: photosPickerItems) { items in
+                                .onChange(of: photosPickerItems) { _, items in
                                     viewModel.loadImages(from: items)
                                     photosPickerItems = []
                                 }
@@ -168,7 +168,7 @@ struct CreateCampaignView: View {
             }
             .dismissKeyboardOnTap()
             .keyboardDoneButton()
-            .onChange(of: viewModel.didCreate) { created in
+            .onChange(of: viewModel.didCreate) { _, created in
                 if created { onCreated() }
             }
         }

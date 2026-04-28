@@ -48,7 +48,7 @@ struct VehicleView: View {
                 }
             }
         }
-        .onChange(of: viewModel.vehicleSaveSuccess) { success in
+        .onChange(of: viewModel.vehicleSaveSuccess) { _, success in
             if success {
                 isEditing = false
             }

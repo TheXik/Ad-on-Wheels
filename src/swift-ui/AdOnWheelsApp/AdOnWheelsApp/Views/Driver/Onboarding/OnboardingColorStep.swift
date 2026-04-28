@@ -54,14 +54,13 @@ struct OnboardingPhotoStep: View {
                             .padding(.horizontal, 24)
                         }
                     }
-                    .onChange(of: viewModel.selectedPhotoItem) { _ in
+                    .onChange(of: viewModel.selectedPhotoItem) { _, _ in
                         Task { await viewModel.loadSelectedPhoto() }
                     }
 
                     if viewModel.vehicleImage != nil {
                         Button {
-                            viewModel.vehicleImage = nil
-                            viewModel.selectedPhotoItem = nil
+                            viewModel.clearVehiclePhoto()
                         } label: {
                             Label("Remove Photo", systemImage: "trash")
                                 .font(.subheadline)
