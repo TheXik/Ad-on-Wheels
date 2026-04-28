@@ -300,6 +300,7 @@ struct RideDetailView_Previews: PreviewProvider {
             duration: 3600,
             qrCodeData: nil,
             status: "COMPLETED",
+            verified: true,
             campaignName: "Test Campaign",
             distanceKm: 25.5,
             averageSpeedKmh: 45.0,

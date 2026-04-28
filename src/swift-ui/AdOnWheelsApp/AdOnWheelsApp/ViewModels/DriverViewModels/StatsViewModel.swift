@@ -119,15 +119,10 @@ class StatsViewModel: ObservableObject {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         var buckets = [Double](repeating: 0, count: 7)
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let fallbackFormatter = ISO8601DateFormatter()
-        fallbackFormatter.formatOptions = [.withInternetDateTime]
         for ride in recentRides {
-            guard ride.status.uppercased() == "VERIFIED" else { continue }
-            guard let endString = ride.endTime else { continue }
-            let endDate = isoFormatter.date(from: endString) ?? fallbackFormatter.date(from: endString)
-            guard let endDate = endDate else { continue }
+            guard ride.verified == true else { continue }
+            guard let endString = ride.endTime,
+                  let endDate = StatsViewModel.parseLocalDateTime(endString) else { continue }
             let rideDay = calendar.startOfDay(for: endDate)
             guard let daysAgo = calendar.dateComponents([.day], from: rideDay, to: today).day else { continue }
             guard daysAgo >= 0 && daysAgo < 7 else { continue }
@@ -135,5 +130,26 @@ class StatsViewModel: ObservableObject {
             buckets[index] += ride.earnings ?? 0
         }
         return buckets
+    }
+
+    /// Parses Spring's default `LocalDateTime` serialization, which has no
+    /// timezone and may or may not carry fractional seconds. iOS'
+    /// `ISO8601DateFormatter` requires a timezone so we use `DateFormatter`
+    /// pinned to the device's current timezone (matching what the server
+    /// emits for `LocalDateTime`).
+    static func parseLocalDateTime(_ value: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        for format in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS",
+                       "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+                       "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                       "yyyy-MM-dd'T'HH:mm:ss"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: value) {
+                return date
+            }
+        }
+        return nil
     }
 }
