@@ -13,7 +13,7 @@ import com.adonwheels.rideservice.dto.StartRideRequest;
 import com.adonwheels.rideservice.dto.StartRideResponse;
 import com.adonwheels.rideservice.dto.TrackRequest;
 import com.adonwheels.rideservice.service.RideService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +87,7 @@ public class RideController {
         return rideService.getActiveRide(driverId)
                 .map(ride -> ResponseEntity.ok(ApiResponse.success(ride)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error(dto.AppErrorCode.RIDE_NOT_ACTIVE)));
+                        .body(ApiResponse.error(com.adonwheels.dto.AppErrorCode.RIDE_NOT_ACTIVE)));
     }
 
     @DeleteMapping("/{driverId}/history")

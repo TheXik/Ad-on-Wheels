@@ -1,7 +1,7 @@
 package com.adonwheels.companyservice.exception;
 
-import dto.ApiResponse;
-import dto.AppErrorCode;
+import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.AppErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;

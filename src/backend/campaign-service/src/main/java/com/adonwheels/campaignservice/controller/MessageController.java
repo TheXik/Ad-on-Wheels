@@ -2,7 +2,7 @@ package com.adonwheels.campaignservice.controller;
 
 import com.adonwheels.campaignservice.model.Message;
 import com.adonwheels.campaignservice.service.MessageService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

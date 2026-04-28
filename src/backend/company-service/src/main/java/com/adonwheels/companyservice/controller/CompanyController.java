@@ -2,7 +2,7 @@ package com.adonwheels.companyservice.controller;
 
 import com.adonwheels.companyservice.model.Company;
 import com.adonwheels.companyservice.service.CompanyService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

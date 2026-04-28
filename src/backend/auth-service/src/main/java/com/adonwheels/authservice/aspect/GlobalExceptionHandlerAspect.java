@@ -1,8 +1,8 @@
 package com.adonwheels.authservice.aspect;
 
-import dto.ApiResponse;
-import dto.AppErrorCode;
-import dto.exception.BusinessException;
+import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

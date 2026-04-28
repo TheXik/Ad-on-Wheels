@@ -3,8 +3,8 @@ package com.adonwheels.authservice.service;
 import com.adonwheels.authservice.dto.RegistrationRequest;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
-import dto.AppErrorCode;
-import dto.exception.BusinessException;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 
 import java.util.Optional;
 import org.slf4j.Logger;

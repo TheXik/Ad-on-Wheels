@@ -217,8 +217,8 @@ public class RideService {
 
     /**
      * Returns the recorded GPS polyline for a single completed ride.
-     * Caller must own the ride: throws {@link dto.exception.BusinessException}
-     * with {@link dto.AppErrorCode#ACCESS_DENIED} when {@code callerDriverId}
+     * Caller must own the ride: throws {@link com.adonwheels.dto.exception.BusinessException}
+     * with {@link com.adonwheels.dto.AppErrorCode#ACCESS_DENIED} when {@code callerDriverId}
      * does not match the ride's driver. Used by the coverage / heat-map
      * feature on the driver app (UC014).
      */
@@ -228,7 +228,7 @@ public class RideService {
                         HttpStatus.NOT_FOUND, "No completed ride found for id: " + rideId));
 
         if (callerDriverId == null || !callerDriverId.equals(ride.getDriverId())) {
-            throw new dto.exception.BusinessException(dto.AppErrorCode.ACCESS_DENIED);
+            throw new com.adonwheels.dto.exception.BusinessException(com.adonwheels.dto.AppErrorCode.ACCESS_DENIED);
         }
 
         return deserializeRoute(ride.getRoutePointsJson()).stream()
