@@ -3,6 +3,8 @@ package com.adonwheels.companyservice.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Company {
@@ -11,10 +13,13 @@ public class Company {
     private Long id;
 
     @NotBlank
+    @Size(max = 120)
+    @Pattern(regexp = "[^<>\"'`\\\\]+", message = "Company name contains forbidden characters")
     private String name;
 
     @Email
     @NotBlank
+    @Size(max = 254)
     private String email;
 
     public Company() {
