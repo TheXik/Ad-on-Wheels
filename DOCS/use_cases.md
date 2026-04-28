@@ -9,7 +9,7 @@ alternates between actor and system steps without UI jargon.
 The use case diagram is in [`diagrams/use-case-diagram.svg`](diagrams/use-case-diagram.svg).
 
 The five use cases described in full in the thesis (UC01, UC02, UC07, UC09,
-UC13) are reproduced verbatim from Chapter 1; the remaining eight are
+UC13) are reproduced verbatim from Chapter 1; the remaining eleven are
 described here in the same format because the thesis cites the diagram for
 them but does not detail them.
 
@@ -458,7 +458,46 @@ a. The driver is signed in and on the driver home screen.
 b. An authentication token with a bounded lifetime is on the device.
 
 
-## UC11: Company Registration
+## UC11: View Ride Route
+
+A driver opens any of their completed rides and sees the route as a polyline
+on a map. It addresses **FR.15**.
+
+**Actors.** Driver.
+
+**Preconditions.**
+a. The driver is signed in.
+b. The driver has at least one completed ride (verified, unverified, or
+   deferred) with a recorded position trace.
+c. The driver needs to inspect the geographic path of a past ride.
+
+**Basic Flow.**
+1. The driver chooses a completed ride from the ride history.
+2. The system retrieves the position trace recorded for that ride.
+3. The system renders the trace as a polyline on a map, fits the map's
+   viewport to the trace bounds, and shows the ride's headline metrics
+   (distance, duration, average speed, earnings, verification status)
+   alongside the map.
+4. The driver chooses to close the route view or to return to the ride
+   list.
+
+**Alternative Flows.**
+
+- **2a. The ride has no recorded position trace** (a deferred ride
+  reconstructed from too few samples, or a ride for which the device
+  produced no usable points). The system tells the driver the route
+  cannot be drawn and shows the headline metrics only.
+- **3a. The trace cannot be fetched.** The system tells the driver the
+  request failed and offers to retry; previously cached values, if any,
+  remain visible.
+
+**Postconditions.**
+a. The driver has seen the geographic path the system recorded for the
+   chosen ride.
+b. No persistent state changes.
+
+
+## UC12: Company Registration
 
 A new company user creates a company account on the platform. Registration
 can start either from the web dashboard, which goes directly to the company
@@ -509,7 +548,94 @@ a. A company account exists with credentials and a matching company
 b. The user is signed in to the company home dashboard.
 
 
-## UC12: Company Sign-In
+## UC14: Create Campaign
+
+A company user creates a new advertising campaign with all the parameters
+that drivers see when discovering it and that the platform uses to compute
+payouts and capacity. It addresses **FR.16**.
+
+**Actors.** Company user.
+
+**Preconditions.**
+a. The company user is signed in.
+b. The company has been created (per **UC12**).
+c. The company user needs to recruit drivers and run a new advertising
+   campaign.
+
+**Basic Flow.**
+1. The company user chooses to create a campaign.
+2. The system asks for the campaign parameters: name, description, start
+   date, end date, total budget, per-kilometer driver payout rate, and
+   maximum number of participating drivers.
+3. The company user submits the parameters and may optionally attach an
+   estimated audience reach value and one or more visual assets
+   (campaign images).
+4. The system validates the parameters (start date before end date,
+   non-negative budget and rate, positive maximum drivers) and creates
+   the campaign in the *recruiting* state.
+5. The system shows the company user the new campaign's detail view.
+
+**Alternative Flows.**
+
+- **3a. The company user provides invalid parameters.** The system
+  highlights the invalid fields and prevents submission until they are
+  corrected.
+- **3b. The company user attaches more images than the platform
+  accepts** (limit per **FR.16** policy). The system rejects the excess
+  images and asks the company user to remove some.
+- **4a. The campaign cannot be created.** The system tells the company
+  user the operation failed and offers to retry; submitted parameters
+  remain in the form.
+
+**Postconditions.**
+a. A new campaign exists, owned by the company, in the *recruiting*
+   state, with the submitted parameters and any uploaded images.
+b. Drivers can discover the campaign through **UC02**.
+
+
+## UC15: View Campaign Coverage
+
+A company user opens any of their campaigns and sees a coverage map that
+overlays the routes of every completed ride contributed by accepted drivers.
+It addresses **FR.22**.
+
+**Actors.** Company user.
+
+**Preconditions.**
+a. The company user is signed in.
+b. The campaign exists, belongs to the company, and has at least one
+   accepted driver who has completed at least one ride with a recorded
+   position trace.
+c. The company user needs to see the geographic distribution of the
+   campaign's exposure.
+
+**Basic Flow.**
+1. The company user chooses to open the coverage map for one of the
+   company's campaigns.
+2. The system retrieves the position traces of every completed ride
+   recorded against that campaign.
+3. The system renders all traces on a single map, distinguishing
+   verified rides (solid polyline) from unverified rides (dashed
+   polyline), and fits the viewport to the union of the trace bounds.
+4. The company user reviews the map and may toggle between showing
+   verified rides only and showing all rides.
+
+**Alternative Flows.**
+
+- **2a. The campaign has no completed rides yet.** The system tells the
+  company user the coverage map is empty and offers to open the
+  application list (**UC07**) or the campaign details (**UC06**).
+- **3a. The traces cannot be fetched.** The system tells the company
+  user the request failed and offers to retry; previously cached
+  traces, if any, remain visible.
+
+**Postconditions.**
+a. The company user has seen the geographic distribution of every
+   completed ride contributed to the campaign.
+b. No persistent state changes.
+
+
+## UC16: Company Sign-In
 
 A registered company user signs in to the web dashboard or the mobile
 application. It addresses **FR.3**, **FR.4**, **NFR.1**, and **NFR.2**.
@@ -518,7 +644,7 @@ application. It addresses **FR.3**, **FR.4**, **NFR.1**, and **NFR.2**.
 
 **Preconditions.**
 a. The company user has previously registered as a company (per
-   **UC11**).
+   **UC12**).
 b. No session is currently active on the client.
 c. The company user needs to access the features of the company role.
 
