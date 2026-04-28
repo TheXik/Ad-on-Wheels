@@ -1,4 +1,4 @@
-package dto;
+package com.adonwheels.dto;
 
 import org.springframework.http.HttpStatus;
 

@@ -1,4 +1,4 @@
-package dto;
+package com.adonwheels.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

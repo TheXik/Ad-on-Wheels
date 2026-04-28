@@ -5,7 +5,7 @@ import com.adonwheels.driverservice.dto.VehicleRequest;
 import com.adonwheels.driverservice.model.Driver;
 import com.adonwheels.driverservice.service.DriverService;
 import com.adonwheels.driverservice.service.VehicleImageService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

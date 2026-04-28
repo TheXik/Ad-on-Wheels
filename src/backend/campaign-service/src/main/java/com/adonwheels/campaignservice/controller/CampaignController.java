@@ -8,7 +8,7 @@ import com.adonwheels.campaignservice.service.CampaignService;
 import com.adonwheels.campaignservice.service.ApplicationService;
 import com.adonwheels.campaignservice.service.ImageStorageService;
 import com.adonwheels.campaignservice.dto.ApplicationWithCampaign;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -127,8 +127,8 @@ public class CampaignController {
         Application app = switch (update.status()) {
             case ACCEPTED -> applicationService.accept(id);
             case DECLINED -> applicationService.decline(id);
-            case APPLIED -> throw new dto.exception.BusinessException(
-                    dto.AppErrorCode.VALIDATION_ERROR,
+            case APPLIED -> throw new com.adonwheels.dto.exception.BusinessException(
+                    com.adonwheels.dto.AppErrorCode.VALIDATION_ERROR,
                     "Application status can only be transitioned to ACCEPTED or DECLINED.");
         };
         return ResponseEntity.ok(ApiResponse.success(app));

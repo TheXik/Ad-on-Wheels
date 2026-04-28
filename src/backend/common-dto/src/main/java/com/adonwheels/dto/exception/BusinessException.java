@@ -1,6 +1,6 @@
-package dto.exception;
+package com.adonwheels.dto.exception;
 
-import dto.AppErrorCode;
+import com.adonwheels.dto.AppErrorCode;
 
 public class BusinessException extends RuntimeException {
     private final AppErrorCode errorCode;
