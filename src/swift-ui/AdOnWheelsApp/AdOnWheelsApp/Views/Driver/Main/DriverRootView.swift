@@ -8,6 +8,7 @@ struct DriverRootView: View {
     @State private var selectedTab: Int = 0
     @State private var showingRideSheet = false
     @State private var showingQRSheet = false
+    @State private var showingNoCampaignAlert = false
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
 
@@ -74,6 +75,15 @@ struct DriverRootView: View {
         } message: {
             Text(rideViewModel.errorMessage ?? "")
         }
+        .alert("No accepted campaign", isPresented: $showingNoCampaignAlert) {
+            Button("Find a campaign") {
+                showingNoCampaignAlert = false
+                selectedTab = 1
+            }
+            Button("Cancel", role: .cancel) { showingNoCampaignAlert = false }
+        } message: {
+            Text("You need at least one accepted campaign before you can record a ride. Browse the available campaigns and apply to one to get started.")
+        }
     }
 
     var customTabBar: some View {
@@ -125,12 +135,15 @@ struct DriverRootView: View {
     }
 
     func startRideFlow() {
-        let activeCampaign = dashboardViewModel.activeCampaigns.first
-        rideViewModel.activeCampaignId = activeCampaign?.id
-        rideViewModel.activeCampaignName = activeCampaign?.name ?? "Active Campaign"
-        rideViewModel.activeCampaignRatePerKm = activeCampaign?.ratePerKm
+        guard let activeCampaign = dashboardViewModel.activeCampaigns.first else {
+            showingNoCampaignAlert = true
+            return
+        }
+        rideViewModel.activeCampaignId = activeCampaign.id
+        rideViewModel.activeCampaignName = activeCampaign.name
+        rideViewModel.activeCampaignRatePerKm = activeCampaign.ratePerKm
         Task {
-            await rideViewModel.startRide(campaignId: activeCampaign?.id)
+            await rideViewModel.startRide(campaignId: activeCampaign.id)
             if rideViewModel.errorMessage == nil {
                 showingRideSheet = true
             }
