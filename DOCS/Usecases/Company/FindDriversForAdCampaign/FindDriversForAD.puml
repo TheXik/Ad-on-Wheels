@@ -23,7 +23,7 @@ alt Campaigns available
             note right
                 On accept:
                 - Driver added to participants
-                - Eligible for messaging (UC05 / FR.21)
+                - Eligible for messaging (UC05 / FR.23)
                 - Decrement remaining-driver-slots counter
             end note
             App -> Company : Refresh list, continue review
@@ -37,7 +37,7 @@ alt Campaigns available
     end
 
 else No campaigns with pending applications
-    App -> Company : Show empty state + shortcut to create campaign (FR.15)
+    App -> Company : Show empty state + shortcut to create campaign (FR.16)
 end
 
 @enduml

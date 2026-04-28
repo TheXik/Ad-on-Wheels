@@ -2,7 +2,7 @@
 
 A company user exports campaign statistics as a downloadable file for
 offline analysis and reporting, either for a single campaign or across
-all campaigns of the company. It addresses **FR.20** and **C.3**.
+all campaigns of the company. It addresses **FR.21** and **C.3**.
 
 
 ## Actors

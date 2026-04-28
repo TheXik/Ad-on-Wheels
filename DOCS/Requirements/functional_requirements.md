@@ -53,36 +53,41 @@ groupings, matching the thesis (Chapter 1, Section 1.5).
   daily earnings chart.
 - **FR.14** — Drivers must be able to attach a photo of their vehicle decal
   to their driver profile.
+- **FR.15** — Drivers must be able to visualise the route of any completed
+  ride on a map.
 
 
 ## Company-Specific Requirements
 
-- **FR.15** — Companies must be able to create advertising campaigns. Each
+- **FR.16** — Companies must be able to create advertising campaigns. Each
   campaign must carry a name, a description, a start and end date, a total
   budget, a per-kilometer driver payout rate, and a maximum number of
   participating drivers, and may carry an estimated audience reach and visual
   assets.
-- **FR.16** — Companies must be able to view the list of their campaigns and
+- **FR.17** — Companies must be able to view the list of their campaigns and
   open any campaign for details, including its application list and current
   statistics.
-- **FR.17** — Companies must be able to review driver applications for their
+- **FR.18** — Companies must be able to review driver applications for their
   campaigns and accept or decline each application individually.
-- **FR.18** — Once a driver has been accepted for a campaign, the company
+- **FR.19** — Once a driver has been accepted for a campaign, the company
   must be able to send them a direct message within the context of that
   campaign.
-- **FR.19** — Companies must be able to see aggregate metrics across all
+- **FR.20** — Companies must be able to see aggregate metrics across all
   their campaigns: total campaigns, number of active campaigns, total
   kilometers driven, and total number of completed rides.
-- **FR.20** — Companies must be able to export campaign statistics as a
+- **FR.21** — Companies must be able to export campaign statistics as a
   downloadable file, either for a single campaign or across all campaigns of
   the company.
+- **FR.22** — Companies must be able to view a coverage map for any of
+  their campaigns. The map must overlay the routes of every completed ride
+  contributed by accepted drivers.
 
 
 ## Communication
 
-- **FR.21** — Drivers and companies must be able to exchange text messages
+- **FR.23** — Drivers and companies must be able to exchange text messages
   within the context of a specific campaign.
-- **FR.22** — The system must track which messages have been read. Drivers
+- **FR.24** — The system must track which messages have been read. Drivers
   and companies must be able to see the count of unread messages.
-- **FR.23** — Drivers and companies must be able to read their per-campaign
+- **FR.25** — Drivers and companies must be able to read their per-campaign
   message history.

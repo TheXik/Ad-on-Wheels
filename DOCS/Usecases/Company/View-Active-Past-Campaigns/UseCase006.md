@@ -1,8 +1,8 @@
 # UC06: View Active or Past Campaigns
 
 A company user browses the company's own campaigns (recruiting, active,
-or completed) and opens any of them for details. It addresses **FR.16**
-and **FR.19**.
+or completed) and opens any of them for details. It addresses **FR.17**
+and **FR.20**.
 
 
 ## Actors
@@ -33,7 +33,7 @@ b. The company user needs to see how their campaigns are performing.
 
 **2a. The company has no campaigns yet.** The system tells the company
 user the list is empty and offers to create the first campaign
-(**FR.15**).
+(**FR.16**).
 
 
 ## Postconditions
@@ -41,4 +41,4 @@ user the list is empty and offers to create the first campaign
 a. The company user has seen the campaign's current performance data.
 b. No persistent state changes unless the company user triggers a
    follow-up action (review applications per **UC07**, export
-   statistics per **UC08**, or send a message per **FR.18**).
+   statistics per **UC08**, or send a message per **FR.19**).
