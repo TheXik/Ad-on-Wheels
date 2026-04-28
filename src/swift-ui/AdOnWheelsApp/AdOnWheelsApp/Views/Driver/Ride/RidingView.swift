@@ -10,9 +10,11 @@ struct RidingView: View {
     @ObservedObject var viewModel: RideViewModel
     var onEndRide: () -> Void
 
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378),
-        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
     )
     @State private var hasInitializedRegion = false
 
@@ -28,19 +30,24 @@ struct RidingView: View {
         return items
     }
 
+    private static func centeredRegion(on coord: CLLocationCoordinate2D) -> MKCoordinateRegion {
+        MKCoordinateRegion(
+            center: coord,
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
-            Map(
-                coordinateRegion: $region,
-                showsUserLocation: false,
-                annotationItems: allAnnotations
-            ) { item in
-                MapAnnotation(coordinate: item.coordinate) {
-                    Circle()
-                        .fill(Color.blue)
-                        .frame(width: 16, height: 16)
-                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                        .shadow(radius: 4)
+            Map(position: $cameraPosition) {
+                ForEach(allAnnotations) { item in
+                    Annotation("", coordinate: item.coordinate) {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 16, height: 16)
+                            .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                            .shadow(radius: 4)
+                    }
                 }
             }
             .edgesIgnoringSafeArea(.all)
@@ -48,24 +55,18 @@ struct RidingView: View {
             .onAppear {
                 viewModel.requestLocationPermission()
                 if let coord = viewModel.currentLocation, !hasInitializedRegion {
-                    region = MKCoordinateRegion(
-                        center: coord,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    )
+                    cameraPosition = .region(Self.centeredRegion(on: coord))
                     hasInitializedRegion = true
                 }
             }
-            .onChange(of: viewModel.locationVersion) { _ in
+            .onChange(of: viewModel.locationVersion) { _, _ in
                 guard let coord = viewModel.currentLocation else { return }
                 if !hasInitializedRegion {
-                    region = MKCoordinateRegion(
-                        center: coord,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    )
+                    cameraPosition = .region(Self.centeredRegion(on: coord))
                     hasInitializedRegion = true
                 } else {
                     withAnimation(.easeInOut(duration: 0.5)) {
-                        region.center = coord
+                        cameraPosition = .region(Self.centeredRegion(on: coord))
                     }
                 }
             }

@@ -84,6 +84,11 @@ class OnboardingViewModel: ObservableObject {
         }
     }
 
+    func clearVehiclePhoto() {
+        vehicleImage = nil
+        selectedPhotoItem = nil
+    }
+
     func nextStep() {
         withAnimation(.easeInOut(duration: 0.3)) {
             currentStep += 1

@@ -99,7 +99,7 @@ struct CompanyStatsView: View {
         .refreshable {
             await dashboard.loadAll()
         }
-        .onChange(of: dashboard.exportedFileURL) { url in
+        .onChange(of: dashboard.exportedFileURL) { _, url in
             if url != nil {
                 showShareSheet = true
             }

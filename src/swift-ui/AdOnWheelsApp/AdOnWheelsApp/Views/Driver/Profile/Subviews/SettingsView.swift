@@ -41,7 +41,7 @@ struct SettingsView: View {
                 .onAppear {
                     goalText = String(format: "%.0f", monthlyGoalKm)
                 }
-                .onChange(of: goalText) { newValue in
+                .onChange(of: goalText) { _, newValue in
                     if let goal = Double(newValue), goal > 0 {
                         monthlyGoalKm = goal
                     }
