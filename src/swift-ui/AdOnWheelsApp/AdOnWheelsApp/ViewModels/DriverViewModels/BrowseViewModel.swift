@@ -32,9 +32,19 @@ class BrowseViewModel: ObservableObject {
         errorMessage = nil
         defer { isLoading = false }
 
-        do {
-            await fetchAppliedCampaignIds()
+        // UC02: discovery must hide campaigns the driver already applied to
+        // (any status, including DECLINED) per the postcondition that
+        // "applied" campaigns are not offered again. We refuse to populate
+        // the swipe deck if we cannot reliably determine that set, otherwise
+        // a network blip would silently turn the deck into a fresh list of
+        // campaigns the driver has already been declined for.
+        guard await fetchAppliedCampaignIds() else {
+            self.errorMessage = "Couldn't load your application history. Pull to retry."
+            self.campaigns = []
+            return
+        }
 
+        do {
             let endpoint = Endpoint(path: "api/campaigns", queryItems: [
                 URLQueryItem(name: "status", value: "RECRUITING")
             ])
@@ -50,16 +60,16 @@ class BrowseViewModel: ObservableObject {
         }
     }
 
-    private func fetchAppliedCampaignIds() async {
+    private func fetchAppliedCampaignIds() async -> Bool {
         do {
             let endpoint = Endpoint(path: "api/campaigns/driver/\(driverId)/applications")
             let apps: [ApplicationWithCampaign] = try await api.send(endpoint)
             for app in apps {
                 seenCampaignIds.insert(app.campaignId)
             }
+            return true
         } catch {
-            // Non-fatal: worst case we show campaigns the driver already applied to,
-            // but the backend will reject duplicates with 409
+            return false
         }
     }
 
