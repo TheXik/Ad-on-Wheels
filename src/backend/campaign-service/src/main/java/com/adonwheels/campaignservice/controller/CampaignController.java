@@ -114,17 +114,27 @@ public class CampaignController {
         return ResponseEntity.ok(ApiResponse.success(applications));
     }
 
-    @PostMapping("/applications/{id}/accept")
-    public ResponseEntity<ApiResponse<Application>> acceptApplication(@PathVariable Long id) {
-        Application app = applicationService.accept(id);
+    /**
+     * UC07 — partial update of an application's status. Accepted bodies:
+     * <pre>{ "status": "ACCEPTED" }</pre> or <pre>{ "status": "DECLINED" }</pre>.
+     * Modelled as PATCH on the application resource (Richardson Level 2 REST)
+     * so the verb communicates the state transition without a verb in the URL.
+     */
+    @PatchMapping("/applications/{id}")
+    public ResponseEntity<ApiResponse<Application>> updateApplicationStatus(
+            @PathVariable Long id,
+            @RequestBody ApplicationStatusUpdate update) {
+        Application app = switch (update.status()) {
+            case ACCEPTED -> applicationService.accept(id);
+            case DECLINED -> applicationService.decline(id);
+            case APPLIED -> throw new dto.exception.BusinessException(
+                    dto.AppErrorCode.VALIDATION_ERROR,
+                    "Application status can only be transitioned to ACCEPTED or DECLINED.");
+        };
         return ResponseEntity.ok(ApiResponse.success(app));
     }
 
-    @PostMapping("/applications/{id}/decline")
-    public ResponseEntity<ApiResponse<Application>> declineApplication(@PathVariable Long id) {
-        Application app = applicationService.decline(id);
-        return ResponseEntity.ok(ApiResponse.success(app));
-    }
+    public record ApplicationStatusUpdate(com.adonwheels.campaignservice.model.ApplicationStatus status) {}
 
     /**
      * UC008 – Export campaign stats as CSV.

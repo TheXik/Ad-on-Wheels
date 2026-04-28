@@ -66,9 +66,15 @@ export const campaigns = {
   getApplications: (companyId) =>
     request(`/api/campaigns/${companyId}/applications`),
   acceptApplication: (applicationId) =>
-    request(`/api/campaigns/applications/${applicationId}/accept`, { method: 'POST' }),
+    request(`/api/campaigns/applications/${applicationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'ACCEPTED' }),
+    }),
   declineApplication: (applicationId) =>
-    request(`/api/campaigns/applications/${applicationId}/decline`, { method: 'POST' }),
+    request(`/api/campaigns/applications/${applicationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'DECLINED' }),
+    }),
   exportCsv: (companyId) => request(`/api/campaigns/company/${companyId}/export`),
   exportCampaignCsv: (campaignId) => request(`/api/campaigns/${campaignId}/export`),
   getCoverage: (campaignId) => request(`/api/campaigns/${campaignId}/coverage`),
