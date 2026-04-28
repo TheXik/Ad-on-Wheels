@@ -291,6 +291,7 @@ public class RideService {
         response.setEndLat(ride.getEndLat());
         response.setEndLon(ride.getEndLon());
         response.setTrackPoints(deserializeRoute(ride.getRoutePointsJson()));
+        response.setVerified(Boolean.TRUE.equals(ride.getVerified()));
         return response;
     }
 

@@ -23,6 +23,7 @@ public class RideHistoryResponse {
     private Double endLat;
     private Double endLon;
     private List<LatLng> trackPoints;
+    private Boolean verified;
 
     public RideHistoryResponse() {
     }
@@ -188,5 +189,13 @@ public class RideHistoryResponse {
 
     public void setTrackPoints(List<LatLng> trackPoints) {
         this.trackPoints = trackPoints;
+    }
+
+    public Boolean getVerified() {
+        return verified;
+    }
+
+    public void setVerified(Boolean verified) {
+        this.verified = verified;
     }
 }
