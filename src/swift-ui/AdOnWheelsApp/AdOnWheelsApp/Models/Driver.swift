@@ -5,14 +5,12 @@ struct Driver: Identifiable, Codable {
     let name: String
     let email: String
     
-    // Vehicle info
+    // Vehicle info (FR.6 — make, model, year, license plate; FR.14 — decal photo)
     let vehicleMake: String?
     let vehicleModel: String?
     let vehicleYear: String?
     let vehiclePlate: String?
-    let vehicleColor: String?
     let vehicleImageUrl: String?
-    let vehicleVerified: Bool?
     
     // Driver info
     let rating: Double?
@@ -36,10 +34,6 @@ struct Driver: Identifiable, Codable {
         return String(format: "%.1f", rating)
     }
     
-    var isVehicleVerified: Bool {
-        vehicleVerified ?? false
-    }
-
     var needsOnboarding: Bool {
         !(onboardingCompleted ?? false) && vehicleMake == nil
     }

@@ -103,11 +103,7 @@ export default function CompanyProfilePage() {
                 <div className="driver-details">
                   <div><strong>Email:</strong> {app.driver?.email || 'N/A'}</div>
                   <div><strong>Vehicle:</strong> {[app.driver?.vehicleYear, app.driver?.vehicleMake, app.driver?.vehicleModel].filter(Boolean).join(' ') || 'N/A'}</div>
-                  <div><strong>Color:</strong> {app.driver?.vehicleColor || 'N/A'}</div>
                   <div><strong>Plate:</strong> {app.driver?.vehiclePlate || 'N/A'}</div>
-                  <div><strong>Verified:</strong> {app.driver?.vehicleVerified ? 'Yes' : 'No'}</div>
-                  <div><strong>Rating:</strong> {app.driver?.rating ?? 'N/A'}</div>
-                  <div><strong>Member Since:</strong> {app.driver?.memberSince ? new Date(app.driver.memberSince).toLocaleDateString() : 'N/A'}</div>
                 </div>
                 {app.status === 'APPLIED' && (
                   <div className="application-actions">

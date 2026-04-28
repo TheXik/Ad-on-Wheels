@@ -9,13 +9,11 @@ struct CompanyApplicationsView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
     @State private var selectedFilter = 0
     @State private var searchText = ""
-    @State private var verifiedOnly = false
     @State private var sortOption: DriverSortOption = .newest
     @State private var showFilters = false
 
     var activeFilterCount: Int {
         var count = 0
-        if verifiedOnly { count += 1 }
         if !searchText.isEmpty { count += 1 }
         if sortOption != .newest { count += 1 }
         return count
@@ -40,10 +38,6 @@ struct CompanyApplicationsView: View {
                 $0.driver.vehicleDisplayName.lowercased().contains(query) ||
                 $0.campaignName.lowercased().contains(query)
             }
-        }
-
-        if verifiedOnly {
-            result = result.filter { $0.driver.isVehicleVerified }
         }
 
         switch sortOption {
@@ -108,17 +102,6 @@ struct CompanyApplicationsView: View {
 
                 if showFilters {
                     VStack(alignment: .leading, spacing: 14) {
-                        Toggle(isOn: $verifiedOnly) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                                Text("Verified vehicles only")
-                                    .font(.subheadline)
-                            }
-                        }
-                        .toggleStyle(SwitchToggleStyle(tint: .green))
-
                         // Sort picker
                         HStack {
                             Text("Sort by")
@@ -149,7 +132,6 @@ struct CompanyApplicationsView: View {
 
                         if activeFilterCount > 0 {
                             Button(action: {
-                                verifiedOnly = false
                                 searchText = ""
                                 sortOption = .newest
                             }) {

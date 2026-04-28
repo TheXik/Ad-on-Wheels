@@ -180,13 +180,7 @@ export default function CampaignDetailPage() {
                       <div><strong>Vehicle:</strong> {app.driver.vehicleMake && app.driver.vehicleModel
                         ? `${app.driver.vehicleYear || ''} ${app.driver.vehicleMake} ${app.driver.vehicleModel}`.trim()
                         : 'Not set'}</div>
-                      <div><strong>Color:</strong> {app.driver.vehicleColor || 'N/A'}</div>
                       <div><strong>Plate:</strong> {app.driver.vehiclePlate || 'N/A'}</div>
-                      <div><strong>Rating:</strong> {app.driver.rating ? `${app.driver.rating.toFixed(1)} / 5` : 'New driver'}</div>
-                      <div><strong>Verified:</strong> {app.driver.vehicleVerified ? 'Yes' : 'No'}</div>
-                      {app.driver.memberSince && (
-                        <div><strong>Member since:</strong> {new Date(app.driver.memberSince).toLocaleDateString()}</div>
-                      )}
                     </div>
                   )}
                   <div className="application-actions">
