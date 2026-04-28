@@ -116,6 +116,7 @@ struct CreateCampaignView: View {
                         VStack(spacing: 14) {
                             FormField(icon: "eurosign.circle", placeholder: "Total Budget", text: $viewModel.budget, keyboardType: .decimalPad)
                             FormField(icon: "person.2", placeholder: "Max Drivers", text: $viewModel.maxDrivers, keyboardType: .numberPad)
+                            FormField(icon: "speedometer", placeholder: "Driver Pay per km (€)", text: $viewModel.ratePerKm, keyboardType: .decimalPad)
                             FormField(icon: "eye", placeholder: "Estimated Reach (optional)", text: $viewModel.estimatedReach, keyboardType: .numberPad)
                         }
                     }

@@ -9,6 +9,8 @@ public class StartRideRequest {
 
     private Long campaignId;
 
+    private Double ratePerKm;
+
     public StartRideRequest() {
     }
 
@@ -26,5 +28,13 @@ public class StartRideRequest {
 
     public void setCampaignId(Long campaignId) {
         this.campaignId = campaignId;
+    }
+
+    public Double getRatePerKm() {
+        return ratePerKm;
+    }
+
+    public void setRatePerKm(Double ratePerKm) {
+        this.ratePerKm = ratePerKm;
     }
 }

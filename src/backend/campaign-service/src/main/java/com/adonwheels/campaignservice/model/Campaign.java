@@ -40,6 +40,11 @@ public class Campaign {
     @Positive
     private Integer maxDrivers;
 
+    @NotNull
+    @Positive
+    @Column(precision = 10, scale = 4)
+    private BigDecimal ratePerKm;
+
     private Long estimatedReach;
 
     @Enumerated(EnumType.STRING)
@@ -95,6 +100,9 @@ public class Campaign {
 
     public Integer getMaxDrivers() { return maxDrivers; }
     public void setMaxDrivers(Integer maxDrivers) { this.maxDrivers = maxDrivers; }
+
+    public BigDecimal getRatePerKm() { return ratePerKm; }
+    public void setRatePerKm(BigDecimal ratePerKm) { this.ratePerKm = ratePerKm; }
 
     public Long getEstimatedReach() { return estimatedReach; }
     public void setEstimatedReach(Long estimatedReach) { this.estimatedReach = estimatedReach; }
