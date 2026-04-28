@@ -84,8 +84,10 @@ class AuthenticationService: ObservableObject {
         return Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
     }
     
-    // TODO: Verify JWT signature and claims using your servers public key
-
+    /// Decodes a JWT segment (base64url) into its JSON payload. The signature is
+    /// not verified on the device: the gateway re-validates the HMAC on every
+    /// request, and the iOS client only reads the payload to drive UI routing
+    /// (role, profile id). See \texttt{chap04} \emph{Networking} for the rationale.
     private func decodeJWTPart(_ value: String) -> [String: Any]? {
         guard let bodyData = base64UrlDecode(value),
               let json = try? JSONSerialization.jsonObject(with: bodyData, options: []),

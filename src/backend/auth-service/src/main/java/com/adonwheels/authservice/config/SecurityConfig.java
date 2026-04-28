@@ -27,7 +27,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
-    // TODO research why am i using this cypher (i need to be able to explain the cypher why is it the best in my use case
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, HttpSession httpSession) throws Exception {
@@ -38,7 +37,7 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login", "/auth/google")
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/google", "/actuator/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated()
