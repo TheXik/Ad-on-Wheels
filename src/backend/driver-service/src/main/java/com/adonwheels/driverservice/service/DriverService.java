@@ -58,15 +58,6 @@ public class DriverService {
     }
 
     @Transactional
-    public Driver submitVerification(Long id, String photoBase64) {
-        Driver driver = repository.findById(id)
-                .orElseThrow(() -> new DriverNotFoundException(id));
-        driver.setVehicleVerified(true);
-        driver.setLastVerificationDate(java.time.LocalDateTime.now());
-        return repository.save(driver);
-    }
-
-    @Transactional
     public Driver completeOnboarding(Long id, com.adonwheels.driverservice.dto.OnboardingRequest request) {
         Driver driver = repository.findById(id)
                 .orElseThrow(() -> new DriverNotFoundException(id));

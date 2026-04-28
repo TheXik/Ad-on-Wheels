@@ -53,14 +53,6 @@ class ProfileViewModel: ObservableObject {
         driver?.vehiclePlate ?? ""
     }
     
-    var vehicleColor: String {
-        driver?.vehicleColor ?? ""
-    }
-    
-    var isVehicleVerified: Bool {
-        driver?.vehicleVerified ?? false
-    }
-    
     private let api: APIClientProtocol
     private let authService: AuthenticationService
     
@@ -102,7 +94,7 @@ class ProfileViewModel: ObservableObject {
     @Published var isSavingVehicle = false
     @Published var vehicleSaveSuccess = false
 
-    func saveVehicle(make: String, model: String, year: String, plate: String, color: String) async {
+    func saveVehicle(make: String, model: String, year: String, plate: String) async {
         guard let driverId = authService.userId else { return }
 
         isSavingVehicle = true
@@ -115,8 +107,7 @@ class ProfileViewModel: ObservableObject {
                 "make": make,
                 "model": model,
                 "year": year,
-                "licensePlate": plate,
-                "color": color
+                "licensePlate": plate
             ]
             let data = try JSONEncoder().encode(body)
             let endpoint = Endpoint(

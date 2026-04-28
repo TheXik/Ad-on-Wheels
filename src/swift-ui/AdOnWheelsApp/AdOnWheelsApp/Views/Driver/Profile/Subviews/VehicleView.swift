@@ -7,7 +7,6 @@ struct VehicleView: View {
     @State private var model = ""
     @State private var year = ""
     @State private var plate = ""
-    @State private var color = ""
 
     var body: some View {
         ZStack {
@@ -66,8 +65,6 @@ struct VehicleView: View {
             VehicleFormField(label: "Year", text: $year, placeholder: "e.g. 2020", keyboardType: .numberPad)
             Divider()
             VehicleFormField(label: "License Plate", text: $plate, placeholder: "e.g. AB 123 CD", autocapitalization: .characters)
-            Divider()
-            VehicleFormField(label: "Color", text: $color, placeholder: "e.g. White")
         }
         .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(15)
@@ -77,7 +74,7 @@ struct VehicleView: View {
             Task {
                 await viewModel.saveVehicle(
                     make: make, model: model, year: year,
-                    plate: plate, color: color
+                    plate: plate
                 )
             }
         } label: {
@@ -116,36 +113,10 @@ struct VehicleView: View {
                 InfoRow(label: "Year", value: viewModel.vehicleYear)
                 Divider()
                 InfoRow(label: "License Plate", value: viewModel.vehiclePlate)
-                Divider()
-                InfoRow(label: "Color", value: viewModel.vehicleColor)
             }
             .background(Color(UIColor.secondarySystemGroupedBackground))
             .cornerRadius(15)
             .padding(.horizontal)
-
-            if viewModel.isVehicleVerified {
-                HStack {
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundColor(.green)
-                    Text("Verified Vehicle")
-                        .font(.headline)
-                        .foregroundColor(.green)
-                }
-                .padding()
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(10)
-            } else {
-                HStack {
-                    Image(systemName: "clock.fill")
-                        .foregroundColor(.orange)
-                    Text("Pending Verification")
-                        .font(.headline)
-                        .foregroundColor(.orange)
-                }
-                .padding()
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(10)
-            }
         }
     }
 
@@ -181,7 +152,6 @@ struct VehicleView: View {
         model = viewModel.vehicleModel
         year = viewModel.vehicleYear
         plate = viewModel.vehiclePlate
-        color = viewModel.vehicleColor
     }
 }
 

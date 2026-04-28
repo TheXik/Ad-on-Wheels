@@ -87,14 +87,6 @@ public class DriverController {
                 .body(ApiResponse.success(updatedDriver));
     }
 
-    @PostMapping("/{id}/verify-decal")
-    public ResponseEntity<ApiResponse<Driver>> verifyDecal(
-            @PathVariable Long id,
-            @RequestParam String photoBase64) {
-        Driver driver = service.submitVerification(id, photoBase64);
-        return ResponseEntity.ok(ApiResponse.success(driver));
-    }
-
     @PostMapping("/{id}/vehicle-image")
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadVehicleImage(
             @PathVariable Long id,
