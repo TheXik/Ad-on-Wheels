@@ -168,9 +168,11 @@ class CompanyDashboardViewModel: ObservableObject {
         actionInProgress = applicationId
         defer { actionInProgress = nil }
         do {
+            let body = try JSONSerialization.data(withJSONObject: ["status": "ACCEPTED"])
             let endpoint = Endpoint(
-                path: "api/campaigns/applications/\(applicationId)/accept",
-                method: .post
+                path: "api/campaigns/applications/\(applicationId)",
+                method: .patch,
+                body: body
             )
             let _: Application = try await api.send(endpoint)
             if let idx = applications.firstIndex(where: { $0.id == applicationId }) {
@@ -189,9 +191,11 @@ class CompanyDashboardViewModel: ObservableObject {
         actionInProgress = applicationId
         defer { actionInProgress = nil }
         do {
+            let body = try JSONSerialization.data(withJSONObject: ["status": "DECLINED"])
             let endpoint = Endpoint(
-                path: "api/campaigns/applications/\(applicationId)/decline",
-                method: .post
+                path: "api/campaigns/applications/\(applicationId)",
+                method: .patch,
+                body: body
             )
             let _: Application = try await api.send(endpoint)
             if let idx = applications.firstIndex(where: { $0.id == applicationId }) {
