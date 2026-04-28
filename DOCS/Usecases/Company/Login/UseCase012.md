@@ -1,47 +1,50 @@
-# UC12: Company Login
+# UC12: Company Sign-In
 
-**Addresses:** FR.3, NFR.1, NFR.2.
-
-A registered company user authenticates into the web dashboard or
-the mobile application.
+A registered company user signs in to the web dashboard or the mobile
+application. It addresses **FR.3**, **FR.4**, **NFR.1**, and **NFR.2**.
 
 
 ## Actors
-Company.
+
+Company user.
 
 
 ## Preconditions
-- The user has previously registered as a company (per UC11).
-- No session is currently active on the client.
+
+a. The company user has previously registered as a company (per
+   **UC11**).
+b. No session is currently active on the client.
+c. The company user needs to access the features of the company role.
 
 
 ## Basic Flow
-1. The user taps **Log In** on the welcome screen of the web
-   dashboard or the mobile application.
-2. The system displays the login form (e-mail + password).
-3. The user supplies credentials and submits.
-4. The system verifies the credentials by comparing the BCrypt-hashed
-   password (NFR.1).
-5. On success the system issues a fresh authentication token with a
-   lifetime bounded by **NFR.2** (at most one hour) and navigates the
-   client to the company home dashboard.
+
+1. The company user chooses to sign in.
+2. The system asks the company user to provide credentials, either as
+   e-mail and password or by signing in with Google (**FR.4**).
+3. The company user provides the credentials.
+4. The system verifies the credentials (against the stored hash for
+   password sign-in, or by validating the returned identity token for
+   Google sign-in) and issues an authentication token whose lifetime is
+   bounded by **NFR.2**.
+5. The system shows the company user the company home dashboard.
 
 
 ## Alternative Flows
 
-**4a. Credentials invalid.** The system displays a generic "e-mail or
-password is incorrect" error and leaves the form ready for retry.
+**4a. The credentials are invalid.** The system tells the company user
+the e-mail or password is incorrect and lets them retry.
 
-**5a. Forgot password.** The user taps **Forgot Password**; the
-system sends a reset link and follows the password-reset flow.
+**4b. The Google sign-in returns an e-mail registered under a different
+role.** The system tells the company user the e-mail belongs to the
+other role and does not sign them in.
+
+**4c. The company user has forgotten their password.** The system sends
+a password-reset link to the company user's e-mail address and the use
+case ends.
 
 
 ## Postconditions
-The user is authenticated and landed on the company home dashboard.
-A fresh authentication token with a bounded lifetime is persisted on
-the client.
 
-
-## Design Notes
-Google OAuth (FR.4) is not offered on the company login path because
-the thesis limits OAuth to the mobile application's driver flow.
+a. The company user is signed in and on the company home dashboard.
+b. An authentication token with a bounded lifetime is on the client.

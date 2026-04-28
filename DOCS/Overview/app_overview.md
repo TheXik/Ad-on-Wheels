@@ -2,7 +2,7 @@
 
 Ad-on-Wheels is a two-sided marketplace that connects **car owners** (drivers)
 who are willing to rent their vehicle's exterior as advertising space with
-**companies** seeking a mobile, per-kilometre alternative to billboard
+**companies** seeking a mobile, per-kilometer alternative to billboard
 advertising. The platform measures how far a driver actually drives with a
 mounted advertisement, computes earnings from that measurement, and lets
 companies create and manage their own campaigns without going through a managed
@@ -10,7 +10,7 @@ sales team.
 
 The platform addresses gaps identified in the review of existing car-advertising
 services (Wrapify, Carvertise, Nickelytics, Brand Riders): no single existing
-platform combines self-service campaign creation, per-kilometre GPS-verified
+platform combines self-service campaign creation, per-kilometer GPS-verified
 payouts, and a smartphone-only verification gesture without extra hardware.
 
 

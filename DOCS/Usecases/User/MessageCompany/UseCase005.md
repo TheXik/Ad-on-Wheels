@@ -1,51 +1,52 @@
 # UC05: Exchange Messages with a Company
 
-**Addresses:** FR.21, FR.22, FR.23. Complements FR.18 on the company
-side (UC07).
-
 A driver and a company exchange text messages within the context of a
 specific campaign. From the driver's perspective, this use case covers
-reading messages received from companies and sending replies or new
-messages.
+reading messages received from companies and sending replies. It
+addresses **FR.21**, **FR.22**, and **FR.23**, and complements **FR.18**
+on the company side (**UC07**).
 
 
 ## Actors
-Driver (primary). Company (secondary - initiates messages per FR.18).
+
+Driver (primary). Company (secondary, initiates messages per **FR.18**).
 
 
 ## Preconditions
-- The driver is logged in.
-- The driver has at least one campaign with `accepted` application
-  status; messaging is only available in the context of an accepted
-  campaign.
+
+a. The driver is signed in.
+b. The driver has at least one campaign with *accepted* application
+   status; messaging is only available in the context of an accepted
+   campaign.
+c. The driver needs to read or send messages to the company that
+   accepted them.
 
 
 ## Basic Flow
-1. The driver opens the **Messages** entry point from the home screen
-   (with an unread-count badge, per FR.22).
-2. The system loads the list of conversation threads, one per campaign
-   in which the driver and the company have exchanged at least one
-   message, ordered chronologically by last activity.
-3. The driver selects a thread.
-4. The system marks incoming messages in that thread as read, updates
-   the unread counter, and renders the full chronological conversation
-   (per FR.23).
-5. The driver optionally composes a reply or a new message and sends
-   it.
-6. The system persists the message, delivers it to the company, and
-   appends it to the conversation view with its delivery status.
+
+1. The driver chooses to open the inbox; the system shows the
+   unread-count badge per **FR.22**.
+2. The system shows the driver's per-campaign message threads, each
+   marked as read or unread.
+3. The driver chooses a thread to open.
+4. The system marks all messages in that thread as read on the backend
+   and shows the full chronological conversation.
+5. The driver chooses to reply or to close the thread.
+6. On reply, the system records the new message under the same campaign
+   context and shows it in the conversation.
 
 
 ## Alternative Flows
 
-**2a. No message threads yet.** The system shows an empty state.
+**2a. The driver has no message threads yet.** The system tells the
+driver the inbox is empty.
 
-**6a. Send fails.** The message is marked as *failed* in the
-conversation view with a retry action. The unread counter is not
-updated.
+**6a. The reply cannot be sent.** The system tells the driver the
+message failed and keeps the draft visible so the driver can retry.
 
 
 ## Postconditions
-The conversation history is updated with any newly sent messages.
-Unread counters on both the driver and company home screens reflect
-the new read state.
+
+a. Messages opened by the driver are marked as read.
+b. Any reply submitted during the session is recorded and the
+   per-campaign message history reflects the new entry.

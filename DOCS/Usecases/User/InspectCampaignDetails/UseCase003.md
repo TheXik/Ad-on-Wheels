@@ -1,51 +1,51 @@
 # UC03: Inspect Campaign Details
 
-**Addresses:** FR.8, FR.12.
-
-A driver views the full details of a campaign - either a campaign they
-are already participating in, or one they are evaluating from the
-discovery flow (UC02).
+A driver opens a campaign for full details, either one they are already
+participating in or one they are evaluating from the discovery flow
+(**UC02**). It addresses **FR.8** and **FR.12**.
 
 
 ## Actors
+
 Driver.
 
 
 ## Preconditions
-- The driver is logged in.
-- The campaign exists and is visible to the driver (currently
-  recruiting, or one the driver has applied to / been accepted for).
+
+a. The driver is signed in.
+b. The campaign exists and is visible to the driver — currently
+   recruiting, or one the driver has applied to or been accepted for.
+c. The driver needs full information about the campaign before
+   committing to it or while participating in it.
 
 
 ## Basic Flow
-1. The driver reaches the campaign detail screen via one of:
-    - Tapping the active-campaign summary card on the home screen.
-    - Tapping **Details** on a campaign shown in the discovery flow
-      (UC02).
-    - Opening a campaign from the applications list.
-2. The system loads the campaign record and displays its full
-   details: company, description, date range, reward model, budget,
-   maximum number of drivers, estimated audience reach, optional
-   images, and the driver's own application status with respect to
-   the campaign (`pending`, `accepted`, `declined`, or *not applied*).
-3. The driver reviews the information and optionally initiates a
-   follow-up action:
-    - Apply to the campaign (if not yet applied and the campaign is
-      recruiting).
-    - Start a ride (UC01), if accepted and eligible.
-    - Open the messaging thread with the company (UC05), if accepted.
-4. The driver closes the detail view.
+
+1. The driver chooses to open a campaign for details, either from the
+   home screen, from the discovery flow (**UC02**), or from the
+   applications list.
+2. The system shows the campaign's full details: company name, campaign
+   name, date range, total budget, per-kilometer rate, maximum number
+   of drivers, estimated audience reach, description, and any uploaded
+   images, together with the driver's own application status if one
+   exists.
+3. The driver reviews the information.
+4. The driver chooses to close the detail view, to apply (if not yet
+   applied), to start a ride (**UC01**, if accepted and eligible), or
+   to open the messaging thread with the company (**UC05**, if
+   accepted).
 
 
 ## Alternative Flows
 
-**2a. Campaign no longer available.** If the campaign has been
-withdrawn by the company, the system shows a disabled state with a
-message indicating the campaign is no longer recruiting.
+**2a. The campaign has been withdrawn since the driver opened it.** The
+system tells the driver the campaign is no longer recruiting and
+disables the apply action.
 
 
 ## Postconditions
-The driver has complete information about the campaign's requirements
-and conditions. No persistent state changes unless the driver takes a
-follow-up action, in which case the corresponding use case (UC02, UC01,
-or UC05) applies.
+
+a. The driver has full information about the campaign's parameters.
+b. No persistent state changes unless the driver triggers a follow-up
+   action, in which case the corresponding use case (**UC02**, **UC01**,
+   or **UC05**) applies.

@@ -1,68 +1,18 @@
 @startuml use-case-diagram
-left to right direction
+top to bottom direction
 skinparam packageStyle rectangle
 skinparam shadowing false
-skinparam defaultFontName "Latin Modern Roman"
-skinparam defaultFontSize 12
-skinparam actorStyle awesome
+skinparam defaultFontName "Helvetica"
+skinparam ArrowColor #333333
+skinparam UsecaseBorderColor #333333
+skinparam ActorBorderColor #333333
 
-' ACTORS
-actor "Unregistered\nUser" as UU
-actor Driver as D
-actor Company as C
-actor "Administrator\n(future scope)" as A #lightgray;line:gray;line.dashed
+actor "Administrator\n(future scope)" as Admin #white;line.dashed
+actor "Unregistered\nUser" as Guest
+actor "Driver"  as DriverActor
+actor "Company" as CompanyActor
 
-rectangle "Ad-on-Wheels Platform" {
-
-    package "Accounts" {
-        usecase "UC09 Register" as UC09
-        usecase "UC10/12 Log In" as UC10
-    }
-
-    package "Driver" {
-        usecase "UC02 Browse Campaigns" as UC02
-        usecase "UC02a Apply to Campaign" as UC02a
-        usecase "UC03 Inspect Campaign Details" as UC03
-        usecase "UC01 Log a Ride\n(QR verification)" as UC01
-        usecase "UC13 Reconstruct\nDeferred Ride" as UC13
-        usecase "UC04 View Earnings\n& Statistics" as UC04
-        usecase "Upload Weekly\nVerification Photo" as UC_Photo
-    }
-
-    package "Company" {
-        usecase "UC06 View Active /\nPast Campaigns" as UC06
-        usecase "Create Campaign" as UC_Create
-        usecase "UC07 Review Driver\nApplications" as UC07
-        usecase "UC08 Export\nCampaign Statistics" as UC08
-    }
-
-    usecase "UC05 Exchange Messages\n(per campaign)" as UC05
-}
-
-UU --> UC09
-UU --> UC10
-
-D --> UC10
-D --> UC02
-D --> UC03
-D --> UC01
-D --> UC13
-D --> UC04
-D --> UC_Photo
-D --> UC05
-
-C --> UC10
-C --> UC06
-C --> UC_Create
-C --> UC07
-C --> UC08
-C --> UC05
-
-UC02a .> UC02 : <<extend>>
-UC03 .> UC02 : <<extend>>
-UC13 .> UC01 : <<extend>>\n(fallback when ride\nwas not started)
-
-note bottom of A
+note right of Admin
   Reserved for future scope.
   The backend already defines
   Role.ADMIN in its user-role
@@ -70,5 +20,74 @@ note bottom of A
   use cases are implemented
   in this thesis.
 end note
+
+rectangle "Ad-on-Wheels Platform" {
+
+  package "Accounts" {
+    usecase "UC09 Register"  as UC09
+    usecase "UC10/12 Log In" as UC10
+  }
+
+  package "Driver" {
+    usecase "UC02 Browse Campaigns"                  as UC02
+    usecase "UC02a Apply to Campaign"                as UC02a
+    usecase "UC03 Inspect Campaign Details"          as UC03
+    usecase "UC13 Reconstruct\nDeferred Ride"        as UC13
+    usecase "UC01 Log a Ride\n(QR verification)"     as UC01
+    usecase "UC04 View Earnings\n& Statistics"       as UC04
+    usecase "UC11 Upload Weekly\nVerification Photo" as UC11
+  }
+
+  usecase "UC05 Exchange Messages\n(per campaign)" as UC05
+
+  package "Company" {
+    usecase "UC06 View Active /\nPast Campaigns" as UC06
+    usecase "UC14 Create Campaign"               as UC14
+    usecase "UC07 Review Driver\nApplications"   as UC07
+    usecase "UC08 Export\nCampaign Statistics"   as UC08
+  }
+}
+
+Guest   --> UC09
+Guest   --> UC10
+
+DriverActor --> UC10
+DriverActor --> UC02
+DriverActor --> UC02a
+DriverActor --> UC03
+DriverActor --> UC13
+DriverActor --> UC01
+DriverActor --> UC04
+DriverActor --> UC11
+DriverActor --> UC05
+
+CompanyActor --> UC10
+CompanyActor --> UC06
+CompanyActor --> UC14
+CompanyActor --> UC07
+CompanyActor --> UC08
+CompanyActor --> UC05
+
+UC02a ..> UC02 : <<extend>>
+UC03  ..> UC02 : <<extend>>
+UC13  ..> UC01 : <<extend>>\n(fallback when ride\nwas not started)
+
+Admin -[hidden]down-> Guest
+UC03  -[hidden]right- DriverActor
+UC07  -[hidden]right- CompanyActor
+
+UC09  -[hidden]down-> UC10
+UC10  -[hidden]down-> UC02
+UC02  -[hidden]down-> UC02a
+UC02a -[hidden]down-> UC03
+UC03  -[hidden]down-> UC13
+UC13  -[hidden]down-> UC01
+UC01  -[hidden]down-> UC04
+UC04  -[hidden]down-> UC11
+UC11  -[hidden]down-> UC05
+UC05  -[hidden]down-> UC06
+UC06  -[hidden]down-> UC14
+UC14  -[hidden]down-> UC07
+UC07  -[hidden]down-> UC08
 
 @enduml
