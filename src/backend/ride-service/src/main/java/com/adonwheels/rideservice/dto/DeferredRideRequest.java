@@ -17,6 +17,8 @@ public class DeferredRideRequest {
 
     private Long campaignId;
 
+    private Double ratePerKm;
+
     @NotEmpty(message = "locationPoints must not be empty")
     private List<LocationPointDto> locationPoints;
 
@@ -37,6 +39,14 @@ public class DeferredRideRequest {
 
     public void setCampaignId(Long campaignId) {
         this.campaignId = campaignId;
+    }
+
+    public Double getRatePerKm() {
+        return ratePerKm;
+    }
+
+    public void setRatePerKm(Double ratePerKm) {
+        this.ratePerKm = ratePerKm;
     }
 
     public List<LocationPointDto> getLocationPoints() {

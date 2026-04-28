@@ -13,6 +13,7 @@ public class Campaign {
     private LocalDate endDate;
     private BigDecimal budget;
     private Integer maxDrivers;
+    private BigDecimal ratePerKm;
     private Long estimatedReach;
     private String status;
     private List<String> imageUrls;
@@ -43,6 +44,9 @@ public class Campaign {
 
     public Integer getMaxDrivers() { return maxDrivers; }
     public void setMaxDrivers(Integer maxDrivers) { this.maxDrivers = maxDrivers; }
+
+    public BigDecimal getRatePerKm() { return ratePerKm; }
+    public void setRatePerKm(BigDecimal ratePerKm) { this.ratePerKm = ratePerKm; }
 
     public Long getEstimatedReach() { return estimatedReach; }
     public void setEstimatedReach(Long estimatedReach) { this.estimatedReach = estimatedReach; }

@@ -2,11 +2,13 @@ package com.adonwheels.rideservice.service;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
 import com.adonwheels.rideservice.dto.CampaignRideStatsResponse;
+import com.adonwheels.rideservice.dto.CampaignRouteResponse;
 import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.LatLng;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
 import com.adonwheels.rideservice.dto.RideStatisticsResponse;
+import com.adonwheels.rideservice.dto.RoutePointDto;
 import com.adonwheels.rideservice.dto.StartRideResponse;
 import com.adonwheels.rideservice.model.CompletedRide;
 import com.adonwheels.rideservice.model.LocationPoint;
@@ -35,8 +37,13 @@ import java.util.stream.Collectors;
 @Service
 public class RideService {
 
-    // TODO: replace with campaign-based pricing
-    private static final double EARNINGS_RATE_PER_KM = 0.10;
+    /**
+     * Fallback rate used when a ride is started or reconstructed without a
+     * campaign-supplied rate (legacy clients, deferred rides without a
+     * recorded campaign). Per-campaign rates set on the Campaign entity
+     * override this constant.
+     */
+    private static final double DEFAULT_EARNINGS_RATE_PER_KM = 0.10;
 
     private final RideRepository repository;
     private final RideHistoryRepository historyRepository;
@@ -55,9 +62,9 @@ public class RideService {
                 .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
     }
 
-    public StartRideResponse startRide(String driverId, Long campaignId) {
+    public StartRideResponse startRide(String driverId, Long campaignId, Double ratePerKm) {
         String rideId = UUID.randomUUID().toString();
-        RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId);
+        RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId, ratePerKm);
         repository.save(session);
         return new StartRideResponse(rideId);
     }
@@ -87,7 +94,8 @@ public class RideService {
         ride.setDuration((int) durationSeconds);
         ride.setDistanceKm(totalDistanceKm);
         ride.setAverageSpeedKmh(averageSpeedKmh);
-        ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
+        double rate = session.getRatePerKm() != null ? session.getRatePerKm() : DEFAULT_EARNINGS_RATE_PER_KM;
+        ride.setEarnings(totalDistanceKm * rate);
         ride.setStatus("COMPLETED");
         ride.setVerified(false);
         extractGeoCoords(ride, session.getRouteHistory());
@@ -131,7 +139,8 @@ public class RideService {
         ride.setDuration((int) durationSeconds);
         ride.setDistanceKm(totalDistanceKm);
         ride.setAverageSpeedKmh(averageSpeedKmh);
-        ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
+        double rate = request.getRatePerKm() != null ? request.getRatePerKm() : DEFAULT_EARNINGS_RATE_PER_KM;
+        ride.setEarnings(totalDistanceKm * rate);
         ride.setStatus("DEFERRED");
         ride.setVerified(false);
         extractGeoCoords(ride, route);
@@ -179,11 +188,18 @@ public class RideService {
                 .filter(r -> r.getStartTime().isAfter(monthAgo))
                 .mapToDouble(CompletedRide::getDistanceKm).sum();
 
-        double totalEarnings = allRides.stream().mapToDouble(CompletedRide::getEarnings).sum();
-        double weeklyEarnings = allRides.stream()
+        // Earnings: only verified rides contribute (UC01 postcondition).
+        // Ride counts and distance totals above are NOT filtered — they
+        // count every completed ride regardless of verification, since an
+        // unverified ride still represents real driving activity.
+        java.util.function.Predicate<CompletedRide> isVerified =
+                r -> Boolean.TRUE.equals(r.getVerified());
+        double totalEarnings = allRides.stream().filter(isVerified)
+                .mapToDouble(CompletedRide::getEarnings).sum();
+        double weeklyEarnings = allRides.stream().filter(isVerified)
                 .filter(r -> r.getStartTime().isAfter(weekAgo))
                 .mapToDouble(CompletedRide::getEarnings).sum();
-        double monthlyEarnings = allRides.stream()
+        double monthlyEarnings = allRides.stream().filter(isVerified)
                 .filter(r -> r.getStartTime().isAfter(monthAgo))
                 .mapToDouble(CompletedRide::getEarnings).sum();
 
@@ -197,6 +213,39 @@ public class RideService {
                 totalEarnings, weeklyEarnings, monthlyEarnings,
                 avgSpeed, null
         );
+    }
+
+    /**
+     * Returns the recorded GPS polyline for a single completed ride.
+     * Caller must own the ride: throws {@link dto.exception.BusinessException}
+     * with {@link dto.AppErrorCode#ACCESS_DENIED} when {@code callerDriverId}
+     * does not match the ride's driver. Used by the coverage / heat-map
+     * feature on the driver app (UC014).
+     */
+    public List<RoutePointDto> getRoute(Long rideId, Long callerDriverId) {
+        CompletedRide ride = historyRepository.findById(rideId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "No completed ride found for id: " + rideId));
+
+        if (callerDriverId == null || !callerDriverId.equals(ride.getDriverId())) {
+            throw new dto.exception.BusinessException(dto.AppErrorCode.ACCESS_DENIED);
+        }
+
+        return deserializeRoute(ride.getRoutePointsJson()).stream()
+                .map(p -> new RoutePointDto(p.lat(), p.lon(), null))
+                .toList();
+    }
+
+    public List<CampaignRouteResponse> getCampaignRoutes(Long campaignId) {
+        return historyRepository.findByCampaignId(campaignId).stream()
+                .map(ride -> new CampaignRouteResponse(
+                        ride.getId(),
+                        ride.getDriverId(),
+                        ride.getDistanceKm(),
+                        ride.getStatus(),
+                        ride.getVerified(),
+                        deserializeRoute(ride.getRoutePointsJson())))
+                .toList();
     }
 
     public CampaignRideStatsResponse getCampaignStatistics(Long campaignId) {
@@ -218,7 +267,10 @@ public class RideService {
         long totalRides = rides.size();
         double totalDistance = rides.stream().mapToDouble(CompletedRide::getDistanceKm).sum();
         long totalDuration = rides.stream().mapToLong(CompletedRide::getDuration).sum();
-        double totalEarnings = rides.stream().mapToDouble(CompletedRide::getEarnings).sum();
+        // Earnings: only verified rides contribute (UC01 postcondition).
+        double totalEarnings = rides.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getVerified()))
+                .mapToDouble(CompletedRide::getEarnings).sum();
         long driverCount = rides.stream().map(CompletedRide::getDriverId).distinct().count();
 
         return new CampaignRideStatsResponse(
