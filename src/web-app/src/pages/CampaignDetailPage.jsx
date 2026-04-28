@@ -148,6 +148,7 @@ export default function CampaignDetailPage() {
           <p>{campaign.description}</p>
           <div className="detail-meta">
             <div><strong>Budget:</strong> €{campaign.budget}</div>
+            <div><strong>Pay per km:</strong> €{campaign.ratePerKm != null ? Number(campaign.ratePerKm).toFixed(2) : '—'}</div>
             <div><strong>Max Drivers:</strong> {campaign.maxDrivers}</div>
             <div><strong>Start:</strong> {new Date(campaign.startDate).toLocaleDateString()}</div>
             <div><strong>End:</strong> {new Date(campaign.endDate).toLocaleDateString()}</div>
