@@ -22,7 +22,7 @@ payouts, and a smartphone-only verification gesture without extra hardware.
   a start and end time, a position trace, total distance, computed earnings,
   and an explicit verification status (`unverified` or `verified`).
 - **Application** - a request submitted by a driver to join a specific
-  campaign; it is always in one of three states: `pending`, `accepted`, or
+  campaign; it is always in one of three states: `applied`, `accepted`, or
   `declined`.
 - **QR Code Verification** - a lightweight, client-side verification gesture
   performed at the end of a ride to confirm that the driver was actually
@@ -77,7 +77,7 @@ user-role enumeration so the role can be added later without schema changes.
 
 ## Related Requirements Docs
 
-- [`Requirements/functional_requirements.md`](../Requirements/functional_requirements.md) - 22 functional requirements grouped by area.
-- [`Requirements/non_functional_requirements.md`](../Requirements/non_functional_requirements.md) - 6 non-functional requirements.
+- [`Requirements/functional_requirements.md`](../Requirements/functional_requirements.md) - 25 functional requirements grouped by area.
+- [`Requirements/non_functional_requirements.md`](../Requirements/non_functional_requirements.md) - 5 non-functional requirements.
 - [`Requirements/constraints.md`](../Requirements/constraints.md) - external constraints the design must respect.
 - [`Usecases/`](../Usecases) - detailed use case descriptions.

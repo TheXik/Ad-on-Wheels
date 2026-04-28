@@ -22,7 +22,7 @@ App -> AuthService : Check e-mail uniqueness (FR.2)
 
 alt E-mail already registered
     AuthService -> App : Conflict
-    App -> User : Show "E-mail already in use" + Log In link (UC12)
+    App -> User : Show "E-mail already in use" + Log In link (UC16)
 else E-mail free
     AuthService -> App : OK
     App -> AuthService : Create auth record (BCrypt hash, NFR.1)

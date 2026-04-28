@@ -1,4 +1,4 @@
-# UC11: Company Registration
+# UC12: Company Registration
 
 A new company user creates a company account on the platform.
 Registration can start either from the web dashboard, which goes
