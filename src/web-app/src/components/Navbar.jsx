@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -13,7 +13,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <span className="logo">AoW</span>
+        <img src="/app-icon.png" alt="Ad on Wheels" className="logo" />
         <span className="brand-text">Ad on Wheels</span>
       </div>
       {user && (
