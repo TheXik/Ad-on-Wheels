@@ -192,11 +192,14 @@ Edit `Info.plist`:
 |---------|------|--------|
 | **Gateway (API)** | 8080 | **http://localhost:8080** ← Use this in iOS app |
 | Eureka Dashboard | 8761 | http://localhost:8761 |
-| Auth Service | 8085 | Internal only (via Gateway) |
+| Auth Service | 8081 | Internal only (via Gateway) |
 | Driver Service | 8082 | Internal only |
 | Company Service | 8083 | Internal only |
 | Campaign Service | 8084 | Internal only |
+| Ride Service | 8085 | Internal only |
 | MySQL | 3306 | Internal only |
+| Cassandra | 9042 | Internal only |
+| MinIO (S3) | 9000 / 9001 | Internal only |
 
 **iOS app should ONLY connect to Gateway (port 8080).**
 

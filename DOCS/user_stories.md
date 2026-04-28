@@ -45,6 +45,11 @@ complete set the thesis refers to.
   earnings, messages, and application history are preserved across sessions.
   → drives **UC10**.
 
+- **US11 — Re-trace a past ride.** As a driver, I want to open any of my
+  completed rides on a map and see the path I drove so that I can verify
+  the route the platform recorded for me.
+  → drives **UC11**.
+
 - **US13 — Recover a forgotten drive.** As a driver, I want to reconstruct
   a drive I forgot to formally start in the application so that I am not
   penalized for honestly driving with an advertisement on my car.
@@ -69,10 +74,21 @@ complete set the thesis refers to.
   stakeholders who prefer working in spreadsheets.
   → drives **UC08**.
 
-- **US12 — Return to the platform (company).** As a returning company
+- **US14 — Run my own campaign.** As a company, I want to create
+  advertising campaigns with budget, dates, per-kilometer rate, and
+  optional creative assets so that I can recruit drivers without going
+  through a managed sales team.
+  → drives **UC14**.
+
+- **US15 — See where my campaign drove.** As a company, I want to see a
+  coverage map that overlays every completed ride for one of my campaigns
+  so that I can judge where the campaign's advertising actually reached.
+  → drives **UC15**.
+
+- **US16 — Return to the platform (company).** As a returning company
   user, I want to log in securely so that my campaigns, applications, and
   messages are preserved across sessions.
-  → drives **UC12**.
+  → drives **UC16**.
 
 
 ## Unregistered User Stories
@@ -82,10 +98,10 @@ complete set the thesis refers to.
   role.
   → drives **UC09**.
 
-- **US11 — Join the platform as a company.** As a new company user, I want
+- **US12 — Join the platform as a company.** As a new company user, I want
   to sign up from either the web dashboard or the mobile application and
   create a company profile so that I can start running campaigns.
-  → drives **UC11**.
+  → drives **UC12**.
 
 
 ## The Five Stories Quoted in the Thesis
