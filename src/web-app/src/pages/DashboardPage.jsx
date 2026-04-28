@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { campaigns, companies, campaignStats } from '../services/api';
 
 export default function DashboardPage() {
@@ -38,7 +38,6 @@ export default function DashboardPage() {
   if (error) return <div className="error-message">{error}</div>;
 
   const active = campaignList.filter((c) => c.status === 'RECRUITING' || c.status === 'ONGOING');
-  const completed = campaignList.filter((c) => c.status === 'COMPLETED');
 
   return (
     <div className="dashboard">

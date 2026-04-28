@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { campaigns } from '../services/api';
 
 const MAX_IMAGES = 5;
@@ -61,8 +61,9 @@ export default function CreateCampaignPage() {
   }
 
   useEffect(() => {
-    return () => images.forEach((img) => URL.revokeObjectURL(img.preview));
-  }, []);
+    const previews = images.map((img) => img.preview);
+    return () => previews.forEach(URL.revokeObjectURL);
+  }, [images]);
 
   function handlePaste(e) {
     const files = e.clipboardData?.files;
