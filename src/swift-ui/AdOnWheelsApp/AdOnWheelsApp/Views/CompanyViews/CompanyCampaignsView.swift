@@ -158,6 +158,7 @@ struct CampaignDetailCard: View {
     let campaign: Campaign
     let hiredCount: Int
     var onDelete: (() -> Void)? = nil
+    @State private var showCoverageSheet = false
 
     var statusColor: Color {
         switch campaign.status {
@@ -224,6 +225,21 @@ struct CampaignDetailCard: View {
                     .frame(height: 6)
                 }
             }
+
+            Button(action: { showCoverageSheet = true }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "map")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("View coverage map")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.accentBlue)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color.accentBlue.opacity(0.08))
+                .cornerRadius(10)
+            }
         }
         .padding(16)
         .background(Color.cardBackground)
@@ -234,6 +250,9 @@ struct CampaignDetailCard: View {
                     Label("Delete Campaign", systemImage: "trash")
                 }
             }
+        }
+        .sheet(isPresented: $showCoverageSheet) {
+            CampaignCoverageView(campaign: campaign)
         }
     }
 
