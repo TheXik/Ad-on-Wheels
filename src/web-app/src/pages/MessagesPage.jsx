@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { useAuth } from '../context/useAuth';
 import { messages, drivers } from '../services/api';
 
 export default function MessagesPage() {
@@ -12,7 +12,7 @@ export default function MessagesPage() {
   const [driverNames, setDriverNames] = useState({});
   const pollRef = useRef(null);
 
-  async function loadInbox() {
+  const loadInbox = useCallback(async () => {
     try {
       const data = await messages.getInbox(user.profileId);
       const msgs = Array.isArray(data) ? data : [];
@@ -36,7 +36,7 @@ export default function MessagesPage() {
     } catch {
       setInbox([]);
     }
-  }
+  }, [user.profileId]);
 
   useEffect(() => {
     async function init() {
@@ -47,7 +47,7 @@ export default function MessagesPage() {
 
     pollRef.current = setInterval(() => loadInbox(), 15000);
     return () => clearInterval(pollRef.current);
-  }, [user.profileId]);
+  }, [loadInbox]);
 
   async function handleReply() {
     if (!replyText.trim() || !selected) return;
