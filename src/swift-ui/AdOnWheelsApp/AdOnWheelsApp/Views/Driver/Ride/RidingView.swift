@@ -6,18 +6,6 @@ private struct MapAnnotationItem: Identifiable {
     let coordinate: CLLocationCoordinate2D
 }
 
-private struct MockCompany: Identifiable {
-    let id: UUID
-    let name: String
-    let coordinate: CLLocationCoordinate2D
-
-    init(_ name: String, _ latitude: Double, _ longitude: Double) {
-        self.id = UUID()
-        self.name = name
-        self.coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-    }
-}
-
 struct RidingView: View {
     @ObservedObject var viewModel: RideViewModel
     var onEndRide: () -> Void
@@ -32,17 +20,8 @@ struct RidingView: View {
     @State private var isSimulating = false
     #endif
 
-    private static let mockCompanies: [MockCompany] = [
-        MockCompany("Tesco", 50.0780, 14.4350),
-        MockCompany("Lidl", 50.0730, 14.4420),
-        MockCompany("Billa", 50.0810, 14.4480),
-        MockCompany("Kaufland", 50.0760, 14.4530),
-    ]
-
     private var allAnnotations: [MapAnnotationItem] {
-        var items = Self.mockCompanies.map {
-            MapAnnotationItem(id: $0.name, coordinate: $0.coordinate)
-        }
+        var items: [MapAnnotationItem] = []
         if let loc = viewModel.currentLocation {
             items.append(MapAnnotationItem(id: "user", coordinate: loc))
         }
@@ -57,28 +36,11 @@ struct RidingView: View {
                 annotationItems: allAnnotations
             ) { item in
                 MapAnnotation(coordinate: item.coordinate) {
-                    if item.id == "user" {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 16, height: 16)
-                            .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                            .shadow(radius: 4)
-                    } else {
-                        VStack(spacing: 2) {
-                            Image(systemName: "building.2.fill")
-                                .foregroundColor(.blue)
-                                .padding(6)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(radius: 2)
-                            Text(item.id)
-                                .font(.system(size: 10, weight: .medium))
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
-                                .background(Color.white.opacity(0.9))
-                                .cornerRadius(4)
-                        }
-                    }
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 16, height: 16)
+                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                        .shadow(radius: 4)
                 }
             }
             .edgesIgnoringSafeArea(.all)
