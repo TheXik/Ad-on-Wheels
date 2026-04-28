@@ -56,16 +56,11 @@ body {
 }
 
 .logo {
-  background: var(--primary);
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
   width: 36px;
   height: 36px;
   border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: cover;
+  display: block;
 }
 
 .brand-text {
