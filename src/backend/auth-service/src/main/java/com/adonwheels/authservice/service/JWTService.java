@@ -24,22 +24,7 @@ public class JWTService {
 
     @Autowired
     private AuthRepository authRepository;
-// Commented out cuz i am now using a one secret key thats stored in the .env files TODO review this approach later
-//    public JWTService() {
-//        try {
-//            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-//            SecretKey sk = keyGenerator.generateKey();
-//            secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
-//            System.out.println("SECRET KEY " + secretKey);
-//
-//        } catch (NoSuchAlgorithmException e) {
-//            throw new RuntimeException(e);
-//
-//        }
-//    }
 
-
-    // TODO IS it correct to return as a string ?
     public String generateToken(String email) {
 
         User user = authRepository.findByEmail(email)
