@@ -3,13 +3,13 @@
 A driver and a company exchange text messages within the context of a
 specific campaign. From the driver's perspective, this use case covers
 reading messages received from companies and sending replies. It
-addresses **FR.21**, **FR.22**, and **FR.23**, and complements **FR.18**
+addresses **FR.23**, **FR.24**, and **FR.25**, and complements **FR.19**
 on the company side (**UC07**).
 
 
 ## Actors
 
-Driver (primary). Company (secondary, initiates messages per **FR.18**).
+Driver (primary). Company (secondary, initiates messages per **FR.19**).
 
 
 ## Preconditions
@@ -25,7 +25,7 @@ c. The driver needs to read or send messages to the company that
 ## Basic Flow
 
 1. The driver chooses to open the inbox; the system shows the
-   unread-count badge per **FR.22**.
+   unread-count badge per **FR.24**.
 2. The system shows the driver's per-campaign message threads, each
    marked as read or unread.
 3. The driver chooses a thread to open.

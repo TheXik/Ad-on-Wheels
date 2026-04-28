@@ -19,7 +19,7 @@ alt Campaigns exist
     App -> Company : Display campaign detail view
 
 else No campaigns
-    App -> Company : Show empty state + "Create Campaign" action (FR.15)
+    App -> Company : Show empty state + "Create Campaign" action (FR.16)
 end
 
 @enduml

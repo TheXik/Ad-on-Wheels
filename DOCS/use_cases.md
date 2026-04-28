@@ -193,11 +193,11 @@ b. No persistent state changes.
 A driver and a company exchange text messages within the context of a
 specific campaign. From the driver's perspective, this use case covers
 reading messages received from companies and sending replies. It addresses
-**FR.21**, **FR.22**, and **FR.23**, and complements **FR.18** on the
+**FR.23**, **FR.24**, and **FR.25**, and complements **FR.19** on the
 company side (**UC07**).
 
 **Actors.** Driver (primary). Company (secondary, initiates messages per
-**FR.18**).
+**FR.19**).
 
 **Preconditions.**
 a. The driver is signed in.
@@ -209,7 +209,7 @@ c. The driver needs to read or send messages to the company that
 
 **Basic Flow.**
 1. The driver chooses to open the inbox; the system shows the
-   unread-count badge per **FR.22**.
+   unread-count badge per **FR.24**.
 2. The system shows the driver's per-campaign message threads, each
    marked as read or unread.
 3. The driver chooses a thread to open.
@@ -235,8 +235,8 @@ b. Any reply submitted during the session is recorded and the
 ## UC06: View Active or Past Campaigns
 
 A company user browses the company's own campaigns (recruiting, active, or
-completed) and opens any of them for details. It addresses **FR.16** and
-**FR.19**.
+completed) and opens any of them for details. It addresses **FR.17** and
+**FR.20**.
 
 **Actors.** Company user.
 
@@ -259,21 +259,21 @@ b. The company user needs to see how their campaigns are performing.
 
 - **2a. The company has no campaigns yet.** The system tells the
   company user the list is empty and offers to create the first
-  campaign (**FR.15**).
+  campaign (**FR.16**).
 
 **Postconditions.**
 a. The company user has seen the campaign's current performance data.
 b. No persistent state changes unless the company user triggers a
    follow-up action (review applications per **UC07**, export
-   statistics per **UC08**, or send a message per **FR.18**).
+   statistics per **UC08**, or send a message per **FR.19**).
 
 
 ## UC07: Review Driver Applications
 
 Application review lets a company user staff one of its campaigns by going
 through the applications drivers have submitted to it. It addresses
-**FR.17** and **FR.18**, and it is the entry point into the per-campaign
-messaging flow defined by **FR.21**.
+**FR.18** and **FR.19**, and it is the entry point into the per-campaign
+messaging flow defined by **FR.23**.
 
 **Actors.** Company user.
 
@@ -319,7 +319,7 @@ c. No driver is accepted on more than one campaign at the same time.
 
 A company user exports campaign statistics as a downloadable file for
 offline analysis and reporting, either for a single campaign or across all
-campaigns of the company. It addresses **FR.20** and **C.3**.
+campaigns of the company. It addresses **FR.21** and **C.3**.
 
 **Actors.** Company user.
 

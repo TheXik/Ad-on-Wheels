@@ -2,8 +2,8 @@
 
 Application review lets a company user staff one of its campaigns by
 going through the applications drivers have submitted to it. It
-addresses **FR.17** and **FR.18**, and it is the entry point into the
-per-campaign messaging flow defined by **FR.21**.
+addresses **FR.18** and **FR.19**, and it is the entry point into the
+per-campaign messaging flow defined by **FR.23**.
 
 
 ## Actors

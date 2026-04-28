@@ -1,7 +1,7 @@
 @startuml MessageCompany
 actor Driver
 
-Driver -> App : Tap "Messages" (with unread-count badge, FR.22)
+Driver -> App : Tap "Messages" (with unread-count badge, FR.24)
 App -> Backend : Fetch conversation threads (one per campaign)
 Backend -> App : Thread list ordered by last activity
 
@@ -10,7 +10,7 @@ alt Threads exist
     Driver -> App : Select thread
     App -> Backend : Mark incoming messages in thread as read
     Backend -> App : OK (unread counter updated)
-    App -> Driver : Render chronological conversation (FR.23)
+    App -> Driver : Render chronological conversation (FR.25)
 
     alt Compose reply or new message
         Driver -> App : Type and send message
