@@ -336,7 +336,7 @@ public class RideService {
                         HttpStatus.NOT_FOUND, "No active ride found for id: " + rideId));
     }
 
-    private double calculateTotalDistance(List<LocationPoint> route) {
+    static double calculateTotalDistance(List<LocationPoint> route) {
         if (route == null || route.size() < 2) {
             return 0.0;
         }
@@ -365,7 +365,7 @@ public class RideService {
         return total;
     }
 
-    private double haversineKm(LocationPoint a, LocationPoint b) {
+    static double haversineKm(LocationPoint a, LocationPoint b) {
         final double R = 6371.0;
         double dLat = Math.toRadians(b.getLat() - a.getLat());
         double dLon = Math.toRadians(b.getLon() - a.getLon());
