@@ -24,6 +24,9 @@
         <spring-boot.version>3.4.3</spring-boot.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
 
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <mysql-connector.version>9.1.0</mysql-connector.version>
         <snakeyaml.version>2.3</snakeyaml.version>
         <logback.version>1.5.16</logback.version>
