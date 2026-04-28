@@ -1,4 +1,4 @@
-# UC12: Company Sign-In
+# UC16: Company Sign-In
 
 A registered company user signs in to the web dashboard or the mobile
 application. It addresses **FR.3**, **FR.4**, **NFR.1**, and **NFR.2**.
@@ -12,7 +12,7 @@ Company user.
 ## Preconditions
 
 a. The company user has previously registered as a company (per
-   **UC11**).
+   **UC12**).
 b. No session is currently active on the client.
 c. The company user needs to access the features of the company role.
 

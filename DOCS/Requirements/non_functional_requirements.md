@@ -8,8 +8,9 @@ obligations — are listed separately in
 
 
 - **NFR.1 — Password storage.** User passwords must never be stored or
-  logged in clear text. They must be stored in a non-reversible hashed form,
-  so that the original password cannot be recovered from the database.
+  logged in clear text. They must be stored in a non-reversible
+  bcrypt-hashed form with a work factor of at least 12, so that the original
+  password cannot be recovered from the database.
 
 - **NFR.2 — Authentication lifetime.** Authentication tokens issued by the
   system must expire within at most one hour of being issued, so that a
