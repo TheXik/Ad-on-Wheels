@@ -3,3 +3,5 @@
 As a driver, I want to exchange messages with the company that
 accepted me so that I can ask about decal placement, schedule, or
 payout details within the campaign context.
+
+Implements UC05, FR.21, FR.22, FR.23.

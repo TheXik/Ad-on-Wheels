@@ -1,58 +1,55 @@
 # UC07: Review Driver Applications
 
-**Addresses:** FR.17, FR.18.
-
-A company user lists the pending driver applications for any of the
-company's campaigns and accepts or declines each one individually. An
-accepted driver appears in the campaign's participant list and becomes
-eligible to exchange messages with the company in the context of that
-campaign (per UC05 / FR.21).
+Application review lets a company user staff one of its campaigns by
+going through the applications drivers have submitted to it. It
+addresses **FR.17** and **FR.18**, and it is the entry point into the
+per-campaign messaging flow defined by **FR.21**.
 
 
 ## Actors
-Company.
+
+Company user.
 
 
 ## Preconditions
-- The user is logged in with a Company account.
-- The company has at least one campaign.
+
+a. The company user is signed in.
+b. The company owns at least one campaign.
+c. The company user needs to choose which drivers to accept for one of
+   their campaigns.
 
 
 ## Basic Flow
-1. The user navigates to the **Find Drivers** screen.
-2. The system fetches the company's campaigns that have at least one
-   pending application.
-3. The user selects a campaign.
-4. The system loads the pending applications for that campaign and
-   displays, for each application, the driver's name, vehicle
-   information, and rating.
-5. The user optionally applies filters (vehicle type, rating,
-   location) or sorting.
-6. The user selects a single application to review; the system shows
-   the driver's full profile (compliance history, projected reach).
-7. The user taps **Accept** or **Decline** on the application.
-8. The system persists the decision, updates the campaign's
-   participant list (on accept) or application log (on decline), and
-   decrements the remaining-driver-slots counter on accept.
-9. Steps 6–8 repeat until the user finishes the review session.
+
+1. The company user chooses to review applications for one of their
+   campaigns.
+2. The system shows the campaign's applications, each with the driver's
+   name and vehicle information (make, model, year).
+3. For each pending application, the company user accepts or declines
+   it.
+4. On accept, the system marks the application as *accepted*, adds the
+   driver to the campaign's participants, and declines any other
+   still-pending applications by the same driver so that an accepted
+   driver runs only one campaign at a time.
+5. On decline, the system marks only the chosen application as
+   *declined*.
 
 
 ## Alternative Flows
 
-**2a. No campaigns with pending applications.** The system shows
-"No recruiting campaigns available" and offers a shortcut to create a
-new campaign (FR.15).
+**2a. The campaign has no pending applications.** The system tells the
+company user the application list is empty and offers to share the
+campaign or edit its parameters.
 
-**4a. No applications yet for the selected campaign.** The system
-shows an empty state with a **Share Campaign** action.
-
-**8a. Accept or decline request fails.** The platform preserves the
-previous state (the application remains `pending`) and surfaces an
-error to the user. The remaining-driver-slots counter is not changed.
+**3a. The accept or decline cannot be recorded.** The system keeps the
+application in its previous state and lets the company user retry.
 
 
 ## Postconditions
-Each processed application is persisted with its new status
-(`accepted` or `declined`). Accepted drivers are added to the
-campaign's participant list and become eligible for messaging (UC05)
-and for counting toward the campaign's participant cap.
+
+a. Every application the company user acted on is in the *accepted* or
+   *declined* state.
+b. Accepted drivers appear in the campaign's participants list and can
+   exchange messages with the company within the context of that
+   campaign.
+c. No driver is accepted on more than one campaign at the same time.

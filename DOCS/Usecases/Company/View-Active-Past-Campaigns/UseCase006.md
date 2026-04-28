@@ -1,40 +1,44 @@
 # UC06: View Active or Past Campaigns
 
-**Addresses:** FR.16, FR.19.
-
-A company user browses their own campaigns (active, recruiting, or
-past) and opens any of them for details.
+A company user browses the company's own campaigns (recruiting, active,
+or completed) and opens any of them for details. It addresses **FR.16**
+and **FR.19**.
 
 
 ## Actors
-Company.
+
+Company user.
 
 
 ## Preconditions
-- The user is logged in with a Company account.
+
+a. The company user is signed in.
+b. The company user needs to see how their campaigns are performing.
 
 
 ## Basic Flow
-1. The user navigates to the **Campaigns** or **Stats** screen.
-2. The system loads the list of the company's campaigns, grouped or
-   filterable by state (`recruiting`, `active`, `completed`).
-3. The user optionally applies a state filter or searches by name.
-4. The user selects a campaign.
-5. The system loads and displays the campaign's detail view:
-   description, date range, budget, participant list, current
-   per-campaign metrics (drivers accepted, kilometres driven,
-   completed rides, unread messages).
+
+1. The company user chooses to open the list of the company's
+   campaigns.
+2. The system shows the campaigns grouped or filterable by state
+   (recruiting, active, completed).
+3. The company user chooses a campaign.
+4. The system shows the campaign's detail view: description, date
+   range, budget, per-kilometer rate, participants list, and current
+   per-campaign metrics (drivers accepted, kilometers driven, completed
+   rides, unread messages).
 
 
 ## Alternative Flows
 
-**2a. No campaigns yet.** The system shows an empty state with a
-primary action to create the first campaign (UC: create campaign,
-FR.15).
+**2a. The company has no campaigns yet.** The system tells the company
+user the list is empty and offers to create the first campaign
+(**FR.15**).
 
 
 ## Postconditions
-The user has viewed the campaign's performance data. No persistent
-state changes unless the user initiates a follow-up action from the
-detail view (review applications per UC07, export statistics per
-UC08, send a message per FR.18).
+
+a. The company user has seen the campaign's current performance data.
+b. No persistent state changes unless the company user triggers a
+   follow-up action (review applications per **UC07**, export
+   statistics per **UC08**, or send a message per **FR.18**).
