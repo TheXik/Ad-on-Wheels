@@ -81,10 +81,11 @@ class StatsViewModel: ObservableObject {
             let stats: RideStatistics = try await api.send(statsEndpoint)
             self.statistics = stats
             
-            // Fetch recent rides
+            // Fetch recent rides (limit covers a typical week of activity, used by the
+            // 7-day earnings chart in dailyEarnings)
             let ridesEndpoint = Endpoint(
                 path: "api/drivers/\(driverId)/rides",
-                queryItems: [URLQueryItem(name: "limit", value: "10")]
+                queryItems: [URLQueryItem(name: "limit", value: "100")]
             )
             let rides: [Ride] = try await api.send(ridesEndpoint)
             self.recentRides = rides
@@ -110,13 +111,29 @@ class StatsViewModel: ObservableObject {
         String(format: "%.1f km", distance(for: period))
     }
     
-    // Daily earnings (placeholder - would need daily aggregation endpoint)
+    /// Earnings grouped by day for the last seven days, oldest first.
+    /// Rides are bucketed by their end-time calendar day in the user's
+    /// current timezone. Only verified rides contribute to earnings totals
+    /// (matches the postcondition of UC01).
     var dailyEarnings: [Double] {
-        // TODO: Add daily aggregation endpoint to backend
-        // For now return estimated split
-        let weekly = weeklyEarnings
-        if weekly == 0 { return Array(repeating: 0, count: 7) }
-        let daily = weekly / 7.0
-        return Array(repeating: daily, count: 7)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        var buckets = [Double](repeating: 0, count: 7)
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let fallbackFormatter = ISO8601DateFormatter()
+        fallbackFormatter.formatOptions = [.withInternetDateTime]
+        for ride in recentRides {
+            guard ride.status.uppercased() == "VERIFIED" else { continue }
+            guard let endString = ride.endTime else { continue }
+            let endDate = isoFormatter.date(from: endString) ?? fallbackFormatter.date(from: endString)
+            guard let endDate = endDate else { continue }
+            let rideDay = calendar.startOfDay(for: endDate)
+            guard let daysAgo = calendar.dateComponents([.day], from: rideDay, to: today).day else { continue }
+            guard daysAgo >= 0 && daysAgo < 7 else { continue }
+            let index = 6 - daysAgo
+            buckets[index] += ride.earnings ?? 0
+        }
+        return buckets
     }
 }
