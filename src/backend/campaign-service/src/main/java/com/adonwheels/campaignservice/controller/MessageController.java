@@ -3,6 +3,7 @@ package com.adonwheels.campaignservice.controller;
 import com.adonwheels.campaignservice.model.Message;
 import com.adonwheels.campaignservice.service.MessageService;
 import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -100,7 +101,7 @@ public class MessageController {
         @NotBlank public String senderRole;
         @NotNull public Long recipientId;
         @NotBlank public String recipientRole;
-        @NotBlank public String subject;
-        @NotBlank public String body;
+        @NotBlank @NoHtml public String subject;
+        @NotBlank @NoHtml public String body;
     }
 }

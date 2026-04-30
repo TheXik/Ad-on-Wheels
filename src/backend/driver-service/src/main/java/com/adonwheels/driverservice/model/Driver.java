@@ -1,5 +1,6 @@
 package com.adonwheels.driverservice.model;
 
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,18 +20,21 @@ public class Driver {
 
     @Column(nullable = false)
     @NotBlank
+    @NoHtml
     private String name;
 
     @Column(nullable = false)
     @Email
     @NotBlank
     private String email;
-    
+
     // Vehicle info
     @Column(nullable = true)
+    @NoHtml
     private String vehicleMake;
-    
+
     @Column(nullable = true)
+    @NoHtml
     private String vehicleModel;
     
     @Column(nullable = true)
