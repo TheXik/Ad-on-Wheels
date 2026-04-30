@@ -48,10 +48,16 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     Object profileIdRaw = claims.get("profileID");
                     String profileId = profileIdRaw != null ? profileIdRaw.toString() : null;
 
+                    String trustedRole = role;
+                    String trustedProfileId = profileId;
                     mutatedExchange = exchange.mutate()
                             .request(r -> r
-                                    .header("X-User-Role", role)
-                                    .header("X-User-Id", profileId))
+                                    .headers(h -> {
+                                        h.remove("X-User-Role");
+                                        h.remove("X-User-Id");
+                                    })
+                                    .header("X-User-Role", trustedRole)
+                                    .header("X-User-Id", trustedProfileId))
                             .build();
 
                 } catch (ExpiredJwtException e) {

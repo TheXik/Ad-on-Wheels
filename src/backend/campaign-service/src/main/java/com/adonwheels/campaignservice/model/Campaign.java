@@ -1,5 +1,6 @@
 package com.adonwheels.campaignservice.model;
 
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,9 +18,11 @@ public class Campaign {
     private Long id;
 
     @NotBlank
+    @NoHtml
     private String name;
 
     @NotBlank
+    @NoHtml
     @Column(length = 2000)
     private String description;
 

@@ -1,5 +1,6 @@
 package com.adonwheels.driverservice.dto;
 
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,9 +10,11 @@ import jakarta.validation.constraints.Size;
 public class OnboardingRequest {
 
     @NotBlank(message = "Vehicle make must not be blank")
+    @NoHtml
     private String make;
 
     @NotBlank(message = "Vehicle model must not be blank")
+    @NoHtml
     private String model;
 
     @NotBlank(message = "Vehicle year must not be blank")

@@ -1,6 +1,7 @@
 package com.adonwheels.authservice.dto;
 
 import com.adonwheels.authservice.model.Role;
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +18,7 @@ public record RegistrationRequest(
         String password,
 
         @NotBlank(message = "Name cannot be empty")
+        @NoHtml
         String name,
 
         @NotNull(message = "Role must be specified")

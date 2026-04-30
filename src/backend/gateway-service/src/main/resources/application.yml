@@ -30,6 +30,7 @@ spring:
           filters:
             - StripPrefix=1
             - name: AuthenticationFilter
+            - name: RoleAuthorizationFilter
 
         # -----------------------------------------------------------------------
         # Ride Service    →  POST /api/rides/track     (port 8085 internally)
@@ -43,6 +44,7 @@ spring:
           filters:
             - StripPrefix=1
             - name: AuthenticationFilter
+            - name: RoleAuthorizationFilter
 
         # -----------------------------------------------------------------------
         # Company / Campaign Services
@@ -54,6 +56,7 @@ spring:
           filters:
             - StripPrefix=1
             - name: AuthenticationFilter
+            - name: RoleAuthorizationFilter
 
         - id: campaign-service
           uri: lb://campaign-service
@@ -62,6 +65,7 @@ spring:
           filters:
             - StripPrefix=1
             - name: AuthenticationFilter
+            - name: RoleAuthorizationFilter
 
         # -----------------------------------------------------------------------
         # Messages (UC005) — lives in campaign-service at /messages
@@ -73,6 +77,7 @@ spring:
           filters:
             - StripPrefix=1
             - name: AuthenticationFilter
+            - name: RoleAuthorizationFilter
 
 jwt:
   secret: ${JWT_SECRET_KEY}
