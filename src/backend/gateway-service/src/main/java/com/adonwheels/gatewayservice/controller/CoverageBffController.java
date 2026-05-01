@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.controller;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.CampaignCoverage;
 import com.adonwheels.gatewayservice.service.CoverageBffService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +33,8 @@ public class CoverageBffController {
     }
 
     @GetMapping(value = "/{campaignId}/coverage", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<CampaignCoverage>> getCoverage(@PathVariable Long campaignId) {
+    public Mono<ApiResponse<CampaignCoverage>> getCoverage(@PathVariable Long campaignId) {
         return coverageBffService.getCampaignCoverage(campaignId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
 }

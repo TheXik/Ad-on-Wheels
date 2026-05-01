@@ -15,7 +15,6 @@ public class Ride {
     private String qrCodeData;
     private String status;
 
-    // New fields
     private Double distanceKm;
     private Double averageSpeedKmh;
     private Double earnings;
@@ -43,7 +42,6 @@ public class Ride {
         this.status = status;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -123,8 +121,7 @@ public class Ride {
     public void setStatus(String status) {
         this.status = status;
     }
-    
-    // New getters and setters
+
     public Double getDistanceKm() {
         return distanceKm;
     }

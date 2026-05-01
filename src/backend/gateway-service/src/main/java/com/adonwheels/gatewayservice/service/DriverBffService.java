@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.service;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.Campaign;
 import com.adonwheels.gatewayservice.dto.Driver;
 import com.adonwheels.gatewayservice.dto.DriverHomePageResponse;
@@ -35,23 +35,23 @@ public class DriverBffService {
         return driverClient.get()
                 .uri("/drivers/{id}", driverId)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Driver>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
+                .map(ApiResponse::getData)
                 .flatMap(driver -> {
                     Mono<Ride> activeRideMono = rideClient.get()
                             .uri("/rides/{driverId}/active", driverId)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Ride>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<Ride>>() {})
+                            .map(ApiResponse::getData)
                             .onErrorResume(e -> Mono.empty());
 
                     Mono<RideStatistics> statisticsMono = rideClient.get()
                             .uri("/rides/{driverId}/statistics", driverId)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<RideStatistics>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
+                            .map(ApiResponse::getData)
                             .onErrorResume(e -> Mono.empty());
 
                     return Mono.zip(
@@ -66,8 +66,8 @@ public class DriverBffService {
                                     .uri("/campaigns/{id}", activeRide.getCampaignId())
                                     .retrieve()
                                     .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                                    .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Campaign>>() {})
-                                    .map(ApiResponseWrapper::getData)
+                                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Campaign>>() {})
+                                    .map(ApiResponse::getData)
                                     .map(campaign -> new DriverHomePageResponse(driver, activeRide, campaign, statistics))
                                     .onErrorReturn(new DriverHomePageResponse(driver, activeRide, null, statistics))
                                     .defaultIfEmpty(new DriverHomePageResponse(driver, activeRide, null, statistics));
@@ -83,8 +83,8 @@ public class DriverBffService {
                 .uri("/rides/{driverId}/statistics", driverId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<RideStatistics>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
+                .map(ApiResponse::getData)
                 .onErrorReturn(createEmptyStatistics())
                 .defaultIfEmpty(createEmptyStatistics());
     }
@@ -97,8 +97,8 @@ public class DriverBffService {
                         .build(driverId))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Ride>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Ride>>>() {})
+                .map(ApiResponse::getData)
                 .onErrorReturn(Collections.emptyList())
                 .defaultIfEmpty(Collections.emptyList());
     }

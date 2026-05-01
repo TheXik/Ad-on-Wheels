@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.service;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.CampaignCoverage;
 import com.adonwheels.gatewayservice.dto.LatLng;
 import com.adonwheels.gatewayservice.dto.RideRoute;
@@ -21,7 +21,7 @@ import java.util.List;
  * embedded track points, then reshapes it into the
  * {@link CampaignCoverage} DTO consumed by the iOS and web clients.
  *
- * Reads only — fully idempotent, fully non-blocking.
+ * Reads only - fully idempotent, fully non-blocking.
  */
 @Service
 public class CoverageBffService {
@@ -36,8 +36,8 @@ public class CoverageBffService {
         return rideClient.get()
                 .uri("/rides/campaign/{campaignId}/routes", campaignId)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<CampaignRouteEntry>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<CampaignRouteEntry>>>() {})
+                .map(ApiResponse::getData)
                 .map(entries -> {
                     if (entries == null || entries.isEmpty()) {
                         return new CampaignCoverage(campaignId, Collections.emptyList());

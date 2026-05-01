@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.service;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.Application;
 import com.adonwheels.gatewayservice.dto.ApplicationWithDriver;
 import com.adonwheels.gatewayservice.dto.Campaign;
@@ -39,8 +39,8 @@ public class CompanyBffService {
         return campaignClient.get()
                 .uri("/campaigns")
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Campaign>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
+                .map(ApiResponse::getData)
                 .flatMapMany(campaigns -> {
                     List<Campaign> companyCampaigns = campaigns.stream()
                             .filter(c -> c.getCompanyId() != null && c.getCompanyId().equals(companyId))
@@ -53,8 +53,8 @@ public class CompanyBffService {
                     return campaignClient.get()
                             .uri("/campaigns/{companyId}/applications", companyId)
                             .retrieve()
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Application>>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Application>>>() {})
+                            .map(ApiResponse::getData)
                             .flatMapMany(applications -> {
                                 List<Long> campaignIds = companyCampaigns.stream()
                                         .map(Campaign::getId)
@@ -71,8 +71,8 @@ public class CompanyBffService {
                                             return driverClient.get()
                                                     .uri("/drivers/{id}", app.getDriverId())
                                                     .retrieve()
-                                                    .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Driver>>() {})
-                                                    .map(ApiResponseWrapper::getData)
+                                                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
+                                                    .map(ApiResponse::getData)
                                                     .map(driver -> new ApplicationWithDriver(
                                                             app.getId(),
                                                             app.getCampaignId(),
@@ -91,8 +91,8 @@ public class CompanyBffService {
         return campaignClient.get()
                 .uri("/campaigns/company/{companyId}", companyId)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Campaign>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
+                .map(ApiResponse::getData)
                 .flatMap(campaigns -> {
                     if (campaigns.isEmpty()) {
                         return Mono.just(Collections.<CampaignWithStats>emptyList());
@@ -108,8 +108,8 @@ public class CompanyBffService {
                                     .queryParam("ids", ids)
                                     .build())
                             .retrieve()
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<CampaignRideStats>>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<CampaignRideStats>>>() {})
+                            .map(ApiResponse::getData)
                             .map(statsList -> {
                                 Map<Long, CampaignRideStats> statsMap = statsList.stream()
                                         .collect(Collectors.toMap(CampaignRideStats::getCampaignId, s -> s));
