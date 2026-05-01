@@ -40,9 +40,10 @@ public enum AppErrorCode {
     RIDE_NOT_ACTIVE(5003, "No active ride found to end", HttpStatus.NOT_FOUND),
     RIDE_TOO_SHORT(5004, "Ride duration or distance was too short to be monetized", HttpStatus.BAD_REQUEST),
 
-    // System and validation (400, 500, 503)
+    // System and validation (400, 409, 500, 503)
     VALIDATION_ERROR(9001, "Input validation failed", HttpStatus.BAD_REQUEST),
     SERVICE_UNAVAILABLE(9002, "External service is currently unavailable", HttpStatus.SERVICE_UNAVAILABLE),
+    RESOURCE_CONFLICT(9003, "Resource conflict", HttpStatus.CONFLICT),
     INTERNAL_SERVER_ERROR(9999, "An unexpected internal server error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
