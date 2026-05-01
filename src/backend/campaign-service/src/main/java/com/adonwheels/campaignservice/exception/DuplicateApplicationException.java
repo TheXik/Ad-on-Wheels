@@ -1,7 +1,11 @@
 package com.adonwheels.campaignservice.exception;
 
-public class DuplicateApplicationException extends RuntimeException {
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
+
+public class DuplicateApplicationException extends BusinessException {
     public DuplicateApplicationException(Long driverId, Long campaignId) {
-        super("Driver " + driverId + " has already applied to campaign " + campaignId);
+        super(AppErrorCode.ALREADY_APPLIED,
+                "Driver " + driverId + " has already applied to campaign " + campaignId);
     }
 }
