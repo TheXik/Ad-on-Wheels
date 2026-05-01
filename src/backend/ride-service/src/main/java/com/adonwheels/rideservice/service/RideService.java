@@ -189,7 +189,7 @@ public class RideService {
                 .mapToDouble(CompletedRide::getDistanceKm).sum();
 
         // Earnings: only verified rides contribute (UC01 postcondition).
-        // Ride counts and distance totals above are NOT filtered — they
+        // Ride counts and distance totals above are NOT filtered - they
         // count every completed ride regardless of verification, since an
         // unverified ride still represents real driving activity.
         java.util.function.Predicate<CompletedRide> isVerified =

@@ -16,7 +16,7 @@ class BrowseViewModel: ObservableObject {
     /// True when the driver has seen all available campaigns this session
     @Published var allCampaignsSeen = false
 
-    /// IDs the driver already interacted with (skipped or applied) — survives refresh
+    /// IDs the driver already interacted with (skipped or applied) - survives refresh
     private var seenCampaignIds: Set<Int> = []
 
     private let api: APIClientProtocol
@@ -118,7 +118,7 @@ class BrowseViewModel: ObservableObject {
         }
     }
 
-    /// Skip a campaign (swipe left) — pushes it onto the undo stack
+    /// Skip a campaign (swipe left) - pushes it onto the undo stack
     func skipCampaign(_ campaign: Campaign) {
         guard let index = campaigns.firstIndex(where: { $0.id == campaign.id }) else { return }
         campaigns.remove(at: index)
@@ -126,7 +126,7 @@ class BrowseViewModel: ObservableObject {
         seenCampaignIds.insert(campaign.id)
     }
 
-    /// Undo the last skip — pops from the undo stack and re-inserts at the front
+    /// Undo the last skip - pops from the undo stack and re-inserts at the front
     func undoLastSkip() {
         guard let lastSkipped = skippedCampaigns.popLast() else { return }
         campaigns.insert(lastSkipped, at: 0)

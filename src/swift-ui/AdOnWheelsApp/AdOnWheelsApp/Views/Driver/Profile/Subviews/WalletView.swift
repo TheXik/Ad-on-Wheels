@@ -7,7 +7,6 @@ struct WalletView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 25) {
-                // Balance Card
                 VStack(spacing: 10) {
                     Text("Total Earnings")
                         .font(.subheadline)
@@ -34,7 +33,6 @@ struct WalletView: View {
                 .padding()
                 .shadow(radius: 5)
                 
-                // Summary Stats from Backend
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Earnings Summary")
                         .font(.headline)
@@ -55,7 +53,6 @@ struct WalletView: View {
                     .padding(.horizontal)
                 }
                 
-                // Additional Stats
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Performance Stats")
                         .font(.headline)

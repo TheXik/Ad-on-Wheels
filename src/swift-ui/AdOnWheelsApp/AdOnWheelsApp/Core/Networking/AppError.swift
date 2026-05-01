@@ -1,7 +1,5 @@
 import Foundation
 
-
-// App error representation and mapping from backend errors
 enum AppError: LocalizedError, Equatable {
     
     case invalidCredentials // 1001 - Wrong email or password
@@ -10,14 +8,12 @@ enum AppError: LocalizedError, Equatable {
     case profileIncomplete // 2003, 2004 - Navigate to profile setup
     case roleMismatch(existingRole: UserRole) // 2007 - Email registered under a different role
 
-    // messages from the server for dynamic errors
     case serverMessage(String)
-    
+
     case validation([String: String])
     case networking(String)
     case unknown
-    
-    // Mapping Backend Codes
+
     init(backendError: ErrorResponse) {
         // Validation Errors (9001) - Check for detailed map first
         if let validationMap = backendError.validationErrors, !validationMap.isEmpty {
@@ -47,8 +43,7 @@ enum AppError: LocalizedError, Equatable {
             self = .serverMessage(backendError.message)
         }
     }
-    
-    // Computed property for the UI
+
     var errorDescription: String? {
         switch self {
         case .invalidCredentials:

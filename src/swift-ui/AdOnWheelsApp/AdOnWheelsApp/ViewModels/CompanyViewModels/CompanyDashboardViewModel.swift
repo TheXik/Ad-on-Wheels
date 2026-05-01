@@ -103,7 +103,7 @@ class CompanyDashboardViewModel: ObservableObject {
             let fetched: Company = try await api.send(endpoint)
             self.company = fetched
         } catch {
-            // Non-critical — we still have the ID
+            // Non-critical - we still have the ID
         }
     }
 
@@ -133,7 +133,7 @@ class CompanyDashboardViewModel: ObservableObject {
             let fetched: [CampaignRideStat] = try await api.send(endpoint)
             self.campaignRideStats = fetched
         } catch {
-            // Non-critical — stats may not be available yet
+            // Non-critical - stats may not be available yet
         }
     }
 
@@ -210,7 +210,6 @@ class CompanyDashboardViewModel: ObservableObject {
         }
     }
 
-    // MARK: - CSV Export (UC008)
 
     /// Export a single campaign's stats as CSV.
     func exportCampaignCSV(campaignId: Int) async {

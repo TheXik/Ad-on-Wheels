@@ -7,8 +7,7 @@ class ProfileViewModel: ObservableObject {
     @Published var statistics: RideStatistics?
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // Computed properties from backend data
+
     var driverName: String {
         driver?.name ?? "Driver"
     }
@@ -36,7 +35,6 @@ class ProfileViewModel: ObservableObject {
         statistics?.totalEarnings ?? 0
     }
     
-    // Vehicle info from backend
     var vehicleMake: String {
         driver?.vehicleMake ?? ""
     }
@@ -73,7 +71,6 @@ class ProfileViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            // Fetch driver info and statistics via home endpoint
             let endpoint = Endpoint(path: "api/drivers/\(driverId)/home")
             let response: DriverHomePageResponse = try await api.send(endpoint)
             

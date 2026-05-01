@@ -1,7 +1,7 @@
 import SwiftUI
 import MapKit
 
-/// UC014 — Coverage / heat-map (company, multi-ride).
+/// UC014: Coverage / heat-map (company, multi-ride).
 /// Calls the coverage aggregator at `/api/campaigns/{id}/coverage` and
 /// overlays one `MapPolyline` per completed ride. Verified rides are drawn
 /// solid; unverified rides are drawn dashed in a lighter tone, mirroring
@@ -165,7 +165,6 @@ struct CampaignCoverageView: View {
     }
 }
 
-// MARK: - DTOs (match the gateway's CampaignCoverage / RideRoute / RoutePoint)
 
 private struct CoverageResponse: Codable {
     let campaignId: Int

@@ -19,7 +19,6 @@ public class CompanyController {
         this.companyService = companyService;
     }
 
-    // GET /companies - List all companies
     @GetMapping
     public ResponseEntity<ApiResponse<List<Company>>> getAllCompanies() {
 
@@ -29,7 +28,6 @@ public class CompanyController {
                 .body(ApiResponse.success(companies));
     }
 
-    // GET /companies/{id} - Get a company by ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Company>> getCompanyById(@PathVariable Long id) {
 
@@ -46,7 +44,6 @@ public class CompanyController {
                 .body(ApiResponse.success(saved));
     }
 
-    // DELETE /companies/{id} - Delete a company by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> deleteCompany(@PathVariable Long id) {
 

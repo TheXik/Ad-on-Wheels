@@ -327,7 +327,6 @@ final class StreetRouteSimulator {
         return total
     }
 
-    // MARK: - Geometry Helpers
 
     private func randomDestination(from origin: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
         let bearing = Double.random(in: 0..<360) * .pi / 180.0

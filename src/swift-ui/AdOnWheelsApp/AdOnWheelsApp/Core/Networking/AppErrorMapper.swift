@@ -1,13 +1,11 @@
 import Foundation
 
-// Converts technical errors into UI errors
 enum AppErrorMapper {
     static func map(_ error: Error) -> AppError {
         if let appError = error as? AppError {
             return appError
         }
-        
-        // Handle NetworkError
+
         if let networkError = error as? NetworkError {
             switch networkError {
             case .serverError(let response):
@@ -30,8 +28,7 @@ enum AppErrorMapper {
                 return .networking("Invalid request configuration")
             }
         }
-        
-        // Fallback for any other error type
+
         return .unknown
     }
 }

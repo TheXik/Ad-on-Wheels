@@ -5,7 +5,7 @@ struct Driver: Identifiable, Codable {
     let name: String
     let email: String
     
-    // Vehicle info (FR.6 — make, model, year, license plate; FR.14 — decal photo)
+    // Vehicle info (FR.6: make, model, year, license plate; FR.14: decal photo)
     let vehicleMake: String?
     let vehicleModel: String?
     let vehicleYear: String?

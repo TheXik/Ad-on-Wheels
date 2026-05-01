@@ -56,7 +56,7 @@ public class CassandraSchemaMigrator {
             log.info("Cassandra migration: added column {}.{} ({})",
                     addition.table(), addition.column(), addition.cqlType());
         } catch (InvalidQueryException e) {
-            log.debug("Cassandra migration skipped for {}.{} — {}",
+            log.debug("Cassandra migration skipped for {}.{} - {}",
                     addition.table(), addition.column(), e.getMessage());
         }
     }

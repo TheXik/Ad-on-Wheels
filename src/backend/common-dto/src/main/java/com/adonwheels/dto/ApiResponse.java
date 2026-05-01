@@ -11,7 +11,7 @@ public class ApiResponse<T> {
 
     public ApiResponse() {
         success = false;
-    } // Empty constructor for Jackson deserialization
+    }
 
     private ApiResponse(boolean success) {
         this.success = success;
@@ -38,7 +38,6 @@ public class ApiResponse<T> {
         return response;
     }
 
-    // Getters and Setters...
     public boolean isSuccess() {
         return success;
     }

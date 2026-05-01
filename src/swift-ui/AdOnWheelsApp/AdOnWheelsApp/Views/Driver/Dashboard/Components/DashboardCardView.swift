@@ -9,21 +9,19 @@ struct DashboardCardView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Icon Background
             ZStack {
                 Circle()
                     .fill(Color(UIColor.systemGray6))
                     .frame(width: 48, height: 48)
-                
+
                 Image(systemName: iconName)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)
-                    .foregroundColor(.blue) // Accent color
+                    .foregroundColor(.blue)
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                // Header
                 if let subtitle = subtitle {
                     Text(subtitle.uppercased())
                         .font(.caption2)
@@ -31,15 +29,13 @@ struct DashboardCardView: View {
                         .foregroundColor(.secondary)
                         .tracking(0.5)
                 }
-                
-                // Title
+
                 Text(title)
-                    .font(.body) // Slightly smaller than headline for better hierarchy
+                    .font(.body)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                     .lineLimit(2)
-                
-                // Content
+
                 if let subContent = subContent {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(content)
@@ -62,8 +58,7 @@ struct DashboardCardView: View {
             }
             
             Spacer(minLength: 0)
-            
-            // Optional Chevron for interactivity hint
+
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.gray.opacity(0.5))
@@ -76,7 +71,6 @@ struct DashboardCardView: View {
     }
 }
 
-// Preview Provider
 struct DashboardCardView_Previews: PreviewProvider {
     static var previews: some View {
         ZStack {
