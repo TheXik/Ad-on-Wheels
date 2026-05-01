@@ -43,7 +43,7 @@ struct DashboardView: View {
                                         Text("Forgot to Start a Ride?")
                                             .font(.headline)
                                             .foregroundColor(.primary)
-                                        Text("\(rideViewModel.gpsBuffer.count) GPS points recorded — scan to log your ride")
+                                        Text("\(rideViewModel.gpsBuffer.count) GPS points recorded - scan to log your ride")
                                             .font(.subheadline)
                                             .foregroundColor(.secondary)
                                     }
@@ -61,7 +61,6 @@ struct DashboardView: View {
                             .buttonStyle(PlainButtonStyle())
                         }
 
-                        // Action Required (Verification)
                         Button(action: {
                             if !isVerified {
                                 showingVerification = true
@@ -101,8 +100,7 @@ struct DashboardView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                         .disabled(isVerified)
-                        
-                        // Active Campaigns
+
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Active Campaigns")
                                 .font(.headline)
@@ -133,7 +131,6 @@ struct DashboardView: View {
                             }
                         }
 
-                        // My Applications
                         if !viewModel.myApplications.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("My Applications")
@@ -203,7 +200,6 @@ struct DashboardView: View {
                             }
                         }
 
-                        // Messages
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Messages")
                                 .font(.headline)

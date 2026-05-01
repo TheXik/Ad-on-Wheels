@@ -92,9 +92,7 @@ struct BrowseView: View {
             }
             .frame(maxHeight: .infinity)
 
-            // Action buttons: Skip, Undo, Apply
             HStack(spacing: 30) {
-                // Skip button (swipe left)
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
                         withAnimation { viewModel.skipCampaign(topCard) }
@@ -109,7 +107,6 @@ struct BrowseView: View {
                         .shadow(radius: 5)
                 }
 
-                // Undo button (back arrow — restores last skipped ad)
                 Button(action: {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                         viewModel.undoLastSkip()
@@ -125,7 +122,6 @@ struct BrowseView: View {
                 }
                 .disabled(!viewModel.canUndo)
 
-                // Apply button (swipe right / express interest)
                 Button(action: {
                     if let topCard = viewModel.campaigns.first {
                         Task { await viewModel.applyToCampaign(topCard) }

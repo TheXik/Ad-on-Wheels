@@ -95,7 +95,7 @@ public class AuthService {
         } else {
             throw new BusinessException(AppErrorCode.VALIDATION_ERROR, "Invalid role provided: " + role);
         }
-        logger.info("Creating profile with body {}", requestBody);
+
         ApiResponse<ProfileResponse> apiResponse = webClientBuilder.build().post()
                 .uri(url)
                 .bodyValue(requestBody)
@@ -103,12 +103,9 @@ public class AuthService {
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<ProfileResponse>>() {})
                 .block();
 
-        logger.info("Profile response {}", apiResponse);
         if (apiResponse != null && apiResponse.isSuccess() && apiResponse.getData() != null && apiResponse.getData().id() != null) {
-            logger.info("Profile created with id {}", apiResponse.getData().id());
             return apiResponse.getData().id();
         } else {
-            logger.info("Profile creation failed");
             throw new BusinessException(AppErrorCode.SERVICE_UNAVAILABLE, "Profile creation failed in remote service");
         }
     }
@@ -134,8 +131,8 @@ public class AuthService {
                 .toBodilessEntity()
                 .doOnSuccess(response -> logger.info("Successfully rolled back profile for ID: {}", profileId))
                 .doOnError(error -> logger.error("CRITICAL: Failed to roll back profile for ID: {}. Reason: {}", profileId, error.getMessage()))
-                .retry(3) // retry on failure
-                .block(); // Block to ensure completion in the saga pattern
+                .retry(3)
+                .block();
     }
 
 

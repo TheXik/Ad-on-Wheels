@@ -46,12 +46,12 @@ struct Campaign: Identifiable, Codable, Hashable {
     }
 
     var formattedRatePerKm: String {
-        guard let rate = ratePerKm else { return "—" }
+        guard let rate = ratePerKm else { return "-" }
         return String(format: "€ %.2f / km", rate)
     }
 
     var formattedReach: String {
-        guard let reach = estimatedReach else { return "—" }
+        guard let reach = estimatedReach else { return "-" }
         if reach >= 1000 {
             return "\(reach / 1000)k people"
         }

@@ -18,7 +18,6 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var locationVersion: Int = 0
 
-    // MARK: - UC013 Deferred Ride Properties
 
     /// Whether background GPS buffering is active (always on when user has a campaign)
     @Published var isBufferingGPS: Bool = false
@@ -74,7 +73,6 @@ class RideViewModel: NSObject, ObservableObject {
         locationManager.startUpdatingLocation()
     }
 
-    // MARK: - Normal Ride Flow
 
     func startRide(campaignId: Int? = nil) async {
         guard let driverId = authService.userId else {
@@ -181,7 +179,6 @@ class RideViewModel: NSObject, ObservableObject {
         }
     }
 
-    // MARK: - UC013 Deferred Ride (Background GPS Buffering)
 
     /// Start buffering GPS points in the background.
     /// Called when the driver has an active campaign but hasn't started a ride.
@@ -269,7 +266,6 @@ class RideViewModel: NSObject, ObservableObject {
         isLoading = false
     }
 
-    // MARK: - Timers
 
     private func startElapsedTimer() {
         elapsedTimer = Timer.publish(every: 1.0, on: .main, in: .common)
@@ -327,7 +323,6 @@ class RideViewModel: NSObject, ObservableObject {
 
 }
 
-// MARK: - CLLocationManagerDelegate
 
 extension RideViewModel: CLLocationManagerDelegate {
 
@@ -369,11 +364,11 @@ extension RideViewModel: CLLocationManagerDelegate {
                     self.currentSpeed = location.speed >= 0 ? location.speed * 3.6 : impliedSpeedKmh
                     self.lastLocation = location
                 } else {
-                    // Standing still or GPS jitter — zero out speed
+                    // Standing still or GPS jitter - zero out speed
                     self.currentSpeed = 0
                 }
             } else {
-                // First reading ever — just anchor, no distance/speed yet
+                // First reading ever - just anchor, no distance/speed yet
                 self.lastLocation = location
                 self.currentSpeed = 0
             }

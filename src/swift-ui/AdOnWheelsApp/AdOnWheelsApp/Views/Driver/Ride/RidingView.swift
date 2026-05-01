@@ -71,7 +71,6 @@ struct RidingView: View {
                 }
             }
 
-            // Top HUD
             VStack {
                 HStack {
                     VStack(alignment: .leading) {
@@ -107,7 +106,6 @@ struct RidingView: View {
                 Spacer()
             }
 
-            // Bottom Stats Sheet
             VStack(spacing: 20) {
                 HStack(spacing: 40) {
                     VStack {

@@ -21,7 +21,6 @@ struct CompanyApplicationsView: View {
 
     var filteredApplications: [ApplicationWithDriver] {
         var result: [ApplicationWithDriver]
-        // Status filter
         switch selectedFilter {
         case 0: result = dashboard.applications
         case 1: result = dashboard.applications.filter { $0.status.uppercased() == "APPLIED" }
@@ -102,7 +101,6 @@ struct CompanyApplicationsView: View {
 
                 if showFilters {
                     VStack(alignment: .leading, spacing: 14) {
-                        // Sort picker
                         HStack {
                             Text("Sort by")
                                 .font(.caption)
@@ -390,7 +388,6 @@ struct ApplicationCard: View {
                 }
             }
 
-            // Message button for accepted drivers
             if application.status.uppercased() == "ACCEPTED" {
                 Button(action: { showComposeMessage = true }) {
                     HStack {

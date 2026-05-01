@@ -7,8 +7,7 @@ class StatsViewModel: ObservableObject {
     @Published var recentRides: [Ride] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // Computed properties from backend stats
+
     var weeklyEarnings: Double {
         statistics?.weeklyEarnings ?? 0
     }
@@ -76,7 +75,6 @@ class StatsViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            // Fetch statistics
             let statsEndpoint = Endpoint(path: "api/drivers/\(driverId)/statistics")
             let stats: RideStatistics = try await api.send(statsEndpoint)
             self.statistics = stats

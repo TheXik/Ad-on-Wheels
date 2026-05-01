@@ -376,7 +376,6 @@ struct CompanyStatsView: View {
     }
 }
 
-// MARK: - Share Sheet (UC008)
 
 struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]

@@ -2,7 +2,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-/// UC014 — Coverage / heat-map (driver, single ride).
+/// UC014: Coverage / heat-map (driver, single ride).
 /// Fetches the recorded GPS polyline for one completed ride from
 /// `/api/rides/{rideId}/route` and draws it as a `MapPolyline`. The camera
 /// is fitted to the bounding box of the route plus ~10 % padding, so the

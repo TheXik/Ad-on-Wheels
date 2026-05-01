@@ -28,7 +28,6 @@ public class DriverController {
         this.imageService = imageService;
     }
 
-    // GET /drivers — list all drivers
     @GetMapping
     public ResponseEntity<ApiResponse<List<Driver>>> all() {
         List<Driver> drivers = service.getAllDrivers();
@@ -37,7 +36,6 @@ public class DriverController {
                 .body(ApiResponse.success(drivers));
     }
 
-    // POST /drivers — register a new driver
     @PostMapping
     public ResponseEntity<ApiResponse<Driver>> newDriver(@Valid @RequestBody Driver newDriver) {
         Driver savedDriver = service.addDriver(newDriver);
@@ -46,7 +44,6 @@ public class DriverController {
                 .body(ApiResponse.success(savedDriver));
     }
 
-    // GET /drivers/{id} — get a single driver
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Driver>> one(@PathVariable Long id) {
         Driver driver = service.getDriver(id);
@@ -55,7 +52,6 @@ public class DriverController {
                 .body(ApiResponse.success(driver));
     }
 
-    // PUT /drivers/{id} — replace a driver profile
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Driver>> replaceDriver(
             @Valid @RequestBody Driver newDriver,
@@ -66,7 +62,6 @@ public class DriverController {
                 .body(ApiResponse.success(updatedDriver));
     }
 
-    // PATCH /drivers/{id}/vehicle — add or update vehicle info for a driver
     @PatchMapping("/{id}/vehicle")
     public ResponseEntity<ApiResponse<Driver>> addVehicle(
             @PathVariable Long id,
@@ -107,7 +102,6 @@ public class DriverController {
                 .body(data);
     }
 
-    // DELETE /drivers/{id} — remove a driver
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> deleteDriver(@PathVariable Long id) {
         service.deleteDriver(id);

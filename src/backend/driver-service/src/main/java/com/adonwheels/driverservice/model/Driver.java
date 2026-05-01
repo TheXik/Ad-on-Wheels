@@ -28,7 +28,6 @@ public class Driver {
     @NotBlank
     private String email;
 
-    // Vehicle info
     @Column(nullable = true)
     @NoHtml
     private String vehicleMake;
@@ -51,26 +50,22 @@ public class Driver {
 
     @Column(nullable = true)
     private Boolean vehicleVerified;
-    
-    // Rating
+
     @Column(nullable = true)
     private Double rating;
     
     @Column(nullable = true)
     private LocalDateTime lastVerificationDate;
 
-    // Monthly driving goal
     @Column(nullable = true)
     private Double monthlyGoalKm;
 
     @Column(nullable = true)
     private Boolean onboardingCompleted;
 
-    // Registration date
     @Column(nullable = true)
     private LocalDateTime memberSince;
 
-    // Getters and setters
     public Long getId() {
         return id;
     }

@@ -124,7 +124,6 @@ struct QRScanView: View {
         .padding(.vertical, 50)
     }
 
-    // MARK: - UC013 Deferred Ride Prompt
 
     private var deferredPromptView: some View {
         VStack(spacing: 24) {
@@ -195,7 +194,6 @@ struct QRScanView: View {
         }
     }
 
-    // MARK: - Deferred Ride Success
 
     private var deferredSuccessView: some View {
         VStack(spacing: 20) {
@@ -251,7 +249,6 @@ struct QRScanView: View {
         }
     }
 
-    // MARK: - Normal Success View
 
     private var successView: some View {
         VStack(spacing: 20) {

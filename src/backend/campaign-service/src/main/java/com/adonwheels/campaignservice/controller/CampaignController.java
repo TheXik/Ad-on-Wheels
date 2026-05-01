@@ -115,7 +115,7 @@ public class CampaignController {
     }
 
     /**
-     * UC07 — partial update of an application's status. Accepted bodies:
+     * UC07 - partial update of an application's status. Accepted bodies:
      * <pre>{ "status": "ACCEPTED" }</pre> or <pre>{ "status": "DECLINED" }</pre>.
      * Modelled as PATCH on the application resource (Richardson Level 2 REST)
      * so the verb communicates the state transition without a verb in the URL.
