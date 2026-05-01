@@ -16,40 +16,42 @@ The purpose of this project is to develop a mobile application that connects car
 
 ## Project Overview
 
-**Ad-on-Wheels** is a full-stack application built with modern technologies:
+**Ad-on-Wheels** is a full-stack application:
 
-- **Backend**: Java microservices (Spring Boot + Spring Cloud)
-- **Frontend**: Native iOS app (SwiftUI)
-- **Database**: MySQL 8.0
+- **Backend**: seven Java microservices (Spring Boot + Spring Cloud) behind an API gateway.
+- **iOS client**: native SwiftUI app for drivers and companies.
+- **Web dashboard**: React + Vite app for companies (campaign management, coverage heat-map).
+- **Storage**: MySQL for relational data, Cassandra for active ride sessions, MinIO for campaign images.
 
 ### Key Features
 
-- **Driver Registration & Profiles** - Drivers create profiles to participate in campaigns
-- **Company Accounts** - Companies manage advertising campaigns
-- **Campaign Management** - Create, browse, and apply to campaigns
-- **Application Tracking** - View and manage campaign applications
-- **Secure Authentication** - JWT-based authentication with auto-login
-- **Native iOS Experience** - SwiftUI app with modern UX
+- **Driver and Company onboarding** with JWT authentication, Google Sign-In, and saga-based registration that rolls back on partial failure.
+- **Campaign lifecycle** — companies create campaigns, drivers browse and apply, companies accept or decline.
+- **Live ride tracking** — driver app records GPS at five-second cadence; ride-service stores active sessions in Cassandra (24h TTL) and persists completed rides in MySQL.
+- **Earnings and statistics** — daily / weekly breakdown for drivers, computed from verified rides only.
+- **Coverage heat-map** — companies see aggregated ride routes per campaign; verified rides render solid, unverified dashed.
+- **In-app messaging** between driver and company per campaign.
 
 ### Technology Stack
 
 #### Backend
-- **Language**: Java 21
-- **Framework**: Spring Boot 3.4.3, Spring Cloud 2024.0.0
-- **Database**: MySQL 8.0
-- **Security**: JWT (JJWT 0.12.5), Spring Security
-- **Service Discovery**: Netflix Eureka
-- **API Gateway**: Spring Cloud Gateway
-- **Build**: Maven 3.9+
-- **Container**: Docker & Docker Compose
+- **Language**: Java 21 (Eclipse Temurin in containers).
+- **Framework**: Spring Boot 3.4.3, Spring Cloud 2024.0.0.
+- **Storage**: MySQL 8.0 (per-service schemas), Cassandra (ride sessions), MinIO (S3-compatible object storage).
+- **Security**: Spring Security, JWT (JJWT 0.12.5), bcrypt with work factor ≥ 12, Google OAuth.
+- **Service discovery**: Netflix Eureka.
+- **API gateway**: Spring Cloud Gateway (reactive); BFF controllers aggregate driver-home, company-home, and coverage responses.
+- **Build**: Maven 3.9+; per-module JaCoCo coverage.
+- **Container**: Docker & Docker Compose.
 
-#### Frontend
-- **Language**: Swift
-- **Framework**: SwiftUI (iOS)
-- **Architecture**: MVVM (Model-View-ViewModel)
-- **Networking**: URLSession with async/await
-- **Security**: Keychain for token storage
-- **Platforms**: iOS 15.0+
+#### iOS client
+- **Language**: Swift, SwiftUI.
+- **Architecture**: MVVM with `@Published` state; `URLSession` async/await networking.
+- **Security**: Keychain token storage.
+- **Platform**: iOS 15.0+.
+
+#### Web dashboard
+- **Stack**: React 19 + Vite 8, React Router 7, Leaflet for the coverage map, `@react-oauth/google` for sign-in.
 
 ## Getting Started
 
@@ -65,19 +67,38 @@ The purpose of this project is to develop a mobile application that connects car
 
 ### Quick Start
 
-#### 1. Clone Repository
+#### 1. Get the source
+
+Clone the repository (or unpack the thesis attachment) and `cd` into the project root.
+
+#### 2. Configure secrets and the backend URL
 
 ```bash
-git clone https://github.com/your-username/Ad-on-Wheels.git
-cd Ad-on-Wheels
+# Copy the env template and fill in values for your local environment.
+cp src/backend/.env.template src/backend/.env
+# Generate a JWT secret: openssl rand -base64 32
+# Add Google OAuth client IDs from Google Cloud Console (iOS, Web).
+# Fill MinIO and MySQL credentials.
+
+# Create config/backend.env with your machine's reachable backend URL.
+# This is gitignored on purpose; each machine has its own.
+cat > config/backend.env <<EOF
+BACKEND_URL=http://localhost:8080
+GOOGLE_WEB_CLIENT_ID=<paste-from-cloud-console>
+EOF
+
+# Generate per-machine config files for the iOS app and the web dashboard.
+bash scripts/sync-backend-url.sh
 ```
 
-#### 2. Start Backend Services
+The sync script writes `src/swift-ui/.../LocalConfig.swift` (gitignored) and `src/web-app/.env.local` (gitignored) so that source files stay clean of personal IPs.
+
+#### 3. Start backend services
 
 ```bash
 cd src/backend
 
-# Build all microservices (first time: ~5-10 minutes)
+# Build all microservices (first run: a few minutes for image builds)
 ./scripts/build.sh
 
 # Start all services
@@ -95,14 +116,9 @@ cd src/backend
 
 All services should show `UP`.
 
-#### 3. Configure iOS App
-
-**IMPORTANT**: Update the backend URL in the iOS app to match your setup.
-
-#### 4. Run iOS App
+#### 4. Run the iOS app
 
 ```bash
-# Open Xcode project
 open src/swift-ui/AdOnWheelsApp/AdOnWheelsApp.xcodeproj
 ```
 
@@ -117,74 +133,40 @@ open src/swift-ui/AdOnWheelsApp/AdOnWheelsApp.xcodeproj
 - Register a new account
 - You'll be automatically logged in after registration
 
-## Configuration
-
-### Backend Configuration
-
-The backend uses environment variables defined in [`src/backend/.env`](src/backend/.env):
+#### 5. Run the web dashboard (optional)
 
 ```bash
-# MySQL Configuration
-MYSQL_ROOT_PASSWORD=root_password
-MYSQL_USER=ad_on_wheels_user
-MYSQL_PASSWORD=test
-
-# JWT Secret (CHANGE IN PRODUCTION!)
-JWT_SECRET_KEY=jwt-secret-token
+cd src/web-app
+npm install
+npm run dev
 ```
 
+Vite serves on `http://localhost:5173` by default. The dashboard reads `VITE_API_BASE_URL` and `VITE_GOOGLE_WEB_CLIENT_ID` from `.env.local`, which `sync-backend-url.sh` already populated.
 
-### iOS App Configuration
+## Configuration
 
-#### Base URL Configuration
+### Backend secrets
 
-The app's backend URL is configured in [`AppConfig.swift`](src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/AppConfig.swift):
+All backend secrets live in `src/backend/.env`, which is gitignored. The committed `src/backend/.env.template` lists the required keys with empty values:
 
-```swift
-private static let defaultBaseURLString: String = "http://192.168.1.27:8080"
-```
+- `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD` — database credentials.
+- `JWT_SECRET_KEY` — generate with `openssl rand -base64 32`.
+- `GOOGLE_CLIENT_IDS` — comma-separated list of OAuth client IDs (iOS, Web), created in Google Cloud Console.
+- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET` — object storage.
+- `GATEWAY_ALLOWED_ORIGINS` — comma-separated origins for CORS (defaults to `http://localhost:*,http://127.0.0.1:*`).
 
-**Configuration Options:**
+### Backend URL (per machine)
 
-1. **Hardcoded URL** (current approach):
-   - Edit `AppConfig.swift` directly
-   - Simple but requires recompile for changes
+`config/backend.env` is gitignored and personal: it holds `BACKEND_URL` and `GOOGLE_WEB_CLIENT_ID` for the local machine. `scripts/sync-backend-url.sh` reads it and regenerates:
 
-2. **Info.plist Configuration**:
-   - Add `API_BASE_URL` key to `Info.plist`
-   - App will use this value if present
-   - Allows different URLs per build configuration
+- `src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/LocalConfig.swift` — read by `AppConfig.swift` at runtime.
+- `src/web-app/.env.local` — read by Vite at build/dev time.
 
-**Example Info.plist:**
-```xml
-<key>API_BASE_URL</key>
-<string>http://localhost:8080</string>
-```
+Both generated files are gitignored, so personal IPs never end up in source control. To override at iOS runtime instead of regenerating, set the `API_BASE_URL` key in the build's `Info.plist`; `AppConfig` prefers it over `LocalConfig.backendURL` when present.
 
-#### Building for Different Environments
+### iOS App Transport Security
 
-**Debug (Development)**:
-- Use `http://localhost:8080` (simulator)
-- Use `http://<your-ip>:8080` (physical device)
-
-**Release (Production)**:
-- Use your production domain: `https://api.yourdomain.com`
-- Ensure HTTPS is configured
-
-#### Network Security
-
-For iOS 14+, if using HTTP (not HTTPS), you must configure App Transport Security.
-
-Edit `Info.plist`:
-```xml
-<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-</dict>
-```
-
-**Only use HTTP for development!** Production should always use HTTPS.
+For development against an HTTP backend, the iOS target's `Info.plist` allows arbitrary loads. Production builds should target HTTPS and remove that exception.
 
 ### Ports Reference
 
