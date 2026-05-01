@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.controller;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.ApplicationWithDriver;
 import com.adonwheels.gatewayservice.dto.CampaignWithStats;
 import com.adonwheels.gatewayservice.service.CompanyBffService;
@@ -23,15 +23,15 @@ public class CompanyBffController {
     }
 
     @GetMapping(value = "/{companyId}/applications-with-drivers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<List<ApplicationWithDriver>>> getApplicationsWithDrivers(@PathVariable Long companyId) {
+    public Mono<ApiResponse<List<ApplicationWithDriver>>> getApplicationsWithDrivers(@PathVariable Long companyId) {
         return companyBffService.getApplicationsWithDrivers(companyId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
 
     @GetMapping(value = "/{companyId}/campaign-stats", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<List<CampaignWithStats>>> getCampaignStats(@PathVariable Long companyId) {
+    public Mono<ApiResponse<List<CampaignWithStats>>> getCampaignStats(@PathVariable Long companyId) {
         return companyBffService.getCampaignStats(companyId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
 
     @GetMapping(value = "/{companyId}/export-csv", produces = "text/csv; charset=UTF-8")

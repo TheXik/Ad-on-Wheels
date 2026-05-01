@@ -7,8 +7,7 @@ public class RideStatistics {
     private Integer totalDurationSeconds;
     private Integer averageDurationSeconds;
     private Long activeRidesCount;
-    
-    // New fields for distance and earnings
+
     private Double totalDistanceKm;
     private Double weeklyDistanceKm;
     private Double monthlyDistanceKm;
@@ -32,7 +31,6 @@ public class RideStatistics {
         this.activeRidesCount = activeRidesCount;
     }
 
-    // Getters and Setters
     public Long getTotalRides() {
         return totalRides;
     }
@@ -80,8 +78,7 @@ public class RideStatistics {
     public void setActiveRidesCount(Long activeRidesCount) {
         this.activeRidesCount = activeRidesCount;
     }
-    
-    // New getters and setters
+
     public Double getTotalDistanceKm() {
         return totalDistanceKm;
     }

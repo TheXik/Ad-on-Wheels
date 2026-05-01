@@ -1,42 +1,56 @@
 package com.adonwheels.gatewayservice.exception;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.AppErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
-
+/**
+ * Handles exceptions thrown from BFF {@code @RestController} methods. Filter-thrown
+ * exceptions (JWT validation, role authorization) are handled by
+ * {@link ApiResponseErrorWebExceptionHandler} because {@code @RestControllerAdvice}
+ * does not see WebFilter exceptions in the reactive pipeline.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ApiResponseWrapper<Void>> handleResponseStatusException(ResponseStatusException ex) {
-        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
-        int code = status == HttpStatus.UNAUTHORIZED ? 4010 : status.value();
-        String message = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
-        return ResponseEntity.status(status).body(ApiResponseWrapper.error(code, message));
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatus(ResponseStatusException ex) {
+        HttpStatusCode status = ex.getStatusCode();
+        AppErrorCode code = mapStatusToCode(status);
+        String message = ex.getReason() != null ? ex.getReason() : code.getMessage();
+        return ResponseEntity.status(status).body(ApiResponse.error(code, message));
     }
 
-    @ExceptionHandler(WebClientResponseException.class)
-    @ResponseStatus(HttpStatus.BAD_GATEWAY)
-    public ApiResponseWrapper<Void> handleWebClientException(WebClientResponseException ex) {
-        logger.error("Downstream service returned an error: {} {}", ex.getStatusCode(), ex.getMessage());
-        return ApiResponseWrapper.error(9002, "A required service is currently unavailable. Please try again later.");
+    @ExceptionHandler({WebClientResponseException.class, WebClientRequestException.class})
+    public ResponseEntity<ApiResponse<Void>> handleWebClient(Exception ex) {
+        logger.error("Downstream service call failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiResponse.error(AppErrorCode.SERVICE_UNAVAILABLE,
+                        "A required service is currently unavailable. Please try again later."));
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiResponseWrapper<Void> handleGenericException(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
         logger.error("Unhandled exception in gateway controller", ex);
-        return ApiResponseWrapper.error(9999, "An unexpected error occurred.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(AppErrorCode.INTERNAL_SERVER_ERROR));
+    }
+
+    static AppErrorCode mapStatusToCode(HttpStatusCode status) {
+        if (status.value() == HttpStatus.UNAUTHORIZED.value()) return AppErrorCode.INVALID_TOKEN;
+        if (status.value() == HttpStatus.FORBIDDEN.value()) return AppErrorCode.ACCESS_DENIED;
+        if (status.is4xxClientError()) return AppErrorCode.VALIDATION_ERROR;
+        return AppErrorCode.INTERNAL_SERVER_ERROR;
     }
 }
