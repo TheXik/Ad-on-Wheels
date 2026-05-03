@@ -123,5 +123,4 @@ struct RideMapView: View {
 private struct RoutePoint: Codable {
     let lat: Double
     let lon: Double
-    let timestamp: Int64?
 }
