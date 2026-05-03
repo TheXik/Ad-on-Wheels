@@ -108,7 +108,7 @@ class BrowseViewModel: ObservableObject {
             removeCard(campaign)
             seenCampaignIds.insert(campaign.id)
             if case .serverError(let details) = error,
-               details.internalCode == 3007 || details.internalCode == 3008 {
+               [3002, 3003, 3007, 3008].contains(details.internalCode) {
                 errorMessage = details.message
             } else {
                 errorMessage = error.localizedDescription
