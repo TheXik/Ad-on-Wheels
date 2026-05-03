@@ -3,9 +3,7 @@ import Foundation
 enum AppError: LocalizedError, Equatable {
     
     case invalidCredentials // 1001 - Wrong email or password
-    case unauthorized // 1002, 1004 - Token expired/invalid
-    case accountLocked // 1003 Specific alert
-    case profileIncomplete // 2003, 2004 - Navigate to profile setup
+    case unauthorized // 1004 - Token invalid
     case roleMismatch(existingRole: UserRole) // 2007 - Email registered under a different role
 
     case serverMessage(String)
@@ -24,12 +22,8 @@ enum AppError: LocalizedError, Equatable {
         switch backendError.internalCode {
         case 1001:
             self = .invalidCredentials
-        case 1002, 1004:
+        case 1004:
             self = .unauthorized
-        case 1003:
-            self = .accountLocked
-        case 2003, 2004:
-            self = .profileIncomplete
         case 2007:
             let raw = backendError.message.trimmingCharacters(in: .whitespaces).uppercased()
             if raw == "DRIVER" {
@@ -50,10 +44,6 @@ enum AppError: LocalizedError, Equatable {
             return "Invalid email or password."
         case .unauthorized:
             return "Your session has expired. Please login again."
-        case .accountLocked:
-            return "Your account is locked. Please contact support."
-        case .profileIncomplete:
-            return "Please complete your profile to continue."
         case .roleMismatch(let existingRole):
             return "This email is already registered as a \(existingRole.rawValue)."
         case .serverMessage(let message):
