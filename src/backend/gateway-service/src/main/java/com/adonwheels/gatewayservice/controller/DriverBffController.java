@@ -34,8 +34,9 @@ public class DriverBffController {
     }
     
     @DeleteMapping("/{driverId}/rides")
-    public Mono<Void> deleteDriverRideHistory(@PathVariable("driverId") Long driverId) {
-        return driverBffService.deleteDriverRideHistory(driverId);
+    public Mono<ApiResponse<Void>> deleteDriverRideHistory(@PathVariable("driverId") Long driverId) {
+        return driverBffService.deleteDriverRideHistory(driverId)
+                .then(Mono.just(ApiResponse.success(null)));
     }
 
     @GetMapping(value = "/{driverId}/rides", produces = MediaType.APPLICATION_JSON_VALUE)

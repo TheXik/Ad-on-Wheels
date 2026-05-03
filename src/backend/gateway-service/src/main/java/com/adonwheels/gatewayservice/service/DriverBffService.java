@@ -55,15 +55,15 @@ public class DriverBffService {
                             .onErrorResume(e -> Mono.empty());
 
                     return Mono.zip(
-                            activeRideMono.defaultIfEmpty(createEmptyRide()),
-                            statisticsMono.defaultIfEmpty(createEmptyStatistics())
+                            activeRideMono.defaultIfEmpty(EMPTY_RIDE),
+                            statisticsMono.defaultIfEmpty(EMPTY_STATS)
                     ).flatMap(tuple -> {
-                        Ride activeRide = tuple.getT1().getId() != null ? tuple.getT1() : null;
+                        Ride activeRide = tuple.getT1().id() != null ? tuple.getT1() : null;
                         RideStatistics statistics = tuple.getT2();
 
-                        if (activeRide != null && activeRide.getCampaignId() != null) {
+                        if (activeRide != null && activeRide.campaignId() != null) {
                             return campaignClient.get()
-                                    .uri("/campaigns/{id}", activeRide.getCampaignId())
+                                    .uri("/campaigns/{id}", activeRide.campaignId())
                                     .retrieve()
                                     .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<Campaign>>() {})
@@ -85,8 +85,8 @@ public class DriverBffService {
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
                 .map(ApiResponse::getData)
-                .onErrorReturn(createEmptyStatistics())
-                .defaultIfEmpty(createEmptyStatistics());
+                .onErrorReturn(EMPTY_STATS)
+                .defaultIfEmpty(EMPTY_STATS);
     }
 
     public Mono<List<Ride>> getDriverRideHistory(Long driverId, Integer limit) {
@@ -110,11 +110,11 @@ public class DriverBffService {
                 .bodyToMono(Void.class);
     }
 
-    private Ride createEmptyRide() {
-        return new Ride();
-    }
+    private static final Ride EMPTY_RIDE = new Ride(
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null);
 
-    private RideStatistics createEmptyStatistics() {
-        return new RideStatistics(0L, 0L, 0L, 0, 0, 0L);
-    }
+    private static final RideStatistics EMPTY_STATS = new RideStatistics(
+            0L, 0L, 0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 }
