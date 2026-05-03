@@ -1,4 +1,7 @@
 #!/bin/bash
+# Personal workflow: pushes the local build to a private Ubuntu host over Tailscale
+# via the "lukbaos" Docker context. Not part of the reproducible build.
+# Other developers should use scripts/build.sh + scripts/start.sh instead.
 set -e
 
 CONTEXT=lukbaos
