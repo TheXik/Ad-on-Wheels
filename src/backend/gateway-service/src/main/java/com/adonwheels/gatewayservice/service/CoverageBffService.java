@@ -20,8 +20,6 @@ import java.util.List;
  * already returns one entry per completed ride with {@code verified} and
  * embedded track points, then reshapes it into the
  * {@link CampaignCoverage} DTO consumed by the iOS and web clients.
- *
- * Reads only - fully idempotent, fully non-blocking.
  */
 @Service
 public class CoverageBffService {
@@ -60,7 +58,7 @@ public class CoverageBffService {
             return Collections.emptyList();
         }
         return points.stream()
-                .map(p -> new RoutePoint(p.lat(), p.lon(), null))
+                .map(p -> new RoutePoint(p.lat(), p.lon()))
                 .toList();
     }
 

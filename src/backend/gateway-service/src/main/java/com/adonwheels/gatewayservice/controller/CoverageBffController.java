@@ -3,7 +3,6 @@ package com.adonwheels.gatewayservice.controller;
 import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.CampaignCoverage;
 import com.adonwheels.gatewayservice.service.CoverageBffService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +26,6 @@ public class CoverageBffController {
 
     private final CoverageBffService coverageBffService;
 
-    @Autowired
     public CoverageBffController(CoverageBffService coverageBffService) {
         this.coverageBffService = coverageBffService;
     }
