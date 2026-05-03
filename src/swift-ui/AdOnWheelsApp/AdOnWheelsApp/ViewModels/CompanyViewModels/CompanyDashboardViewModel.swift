@@ -62,15 +62,13 @@ class CompanyDashboardViewModel: ObservableObject {
     }
 
     var campaignStatusBreakdown: [(label: String, count: Int, color: String)] {
-        let statuses = ["RECRUITING", "ACTIVE", "PAUSED", "COMPLETED"]
+        let statuses = ["RECRUITING", "COMPLETED"]
         return statuses.compactMap { status in
             let count = campaigns.filter { $0.status == status }.count
             guard count > 0 else { return nil }
             let color: String
             switch status {
             case "RECRUITING": color = "blue"
-            case "ACTIVE": color = "green"
-            case "PAUSED": color = "orange"
             default: color = "gray"
             }
             return (label: status.capitalized, count: count, color: color)
@@ -133,7 +131,10 @@ class CompanyDashboardViewModel: ObservableObject {
             let fetched: [CampaignRideStat] = try await api.send(endpoint)
             self.campaignRideStats = fetched
         } catch {
-            // Non-critical - stats may not be available yet
+            // Surface as a banner: with stats unavailable, "Km Driven" / "Total
+            // Rides" / "Earnings Paid" all read zero, which would otherwise be
+            // indistinguishable from an empty company.
+            self.errorMessage = "Stats temporarily unavailable: \(error.localizedDescription)"
         }
     }
 
