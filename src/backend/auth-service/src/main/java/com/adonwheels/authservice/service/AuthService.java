@@ -13,7 +13,6 @@ import com.adonwheels.dto.AppErrorCode;
 import com.adonwheels.dto.exception.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,12 +29,13 @@ import java.util.stream.Collectors;
 @Service
 public class AuthService {
 
-    @Autowired
-    private AuthRepository repository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private WebClient.Builder webClientBuilder;
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
+    private final AuthRepository repository;
+    private final PasswordEncoder passwordEncoder;
+    private final WebClient.Builder webClientBuilder;
+    private final AuthenticationManager authenticationManager;
+    private final JWTService jwtService;
 
     @Value("${services.driver-service.url}")
     private String driverServiceUrl;
@@ -46,31 +46,23 @@ public class AuthService {
     @Value("${google.client-ids}")
     private String googleClientIdsRaw;
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final  JWTService JWTService;
-    private final AuthenticationManager authenticationManager;
-
-    public AuthService(AuthenticationManager authenticationManager,  JWTService JWTService) {
+    public AuthService(
+            AuthRepository repository,
+            PasswordEncoder passwordEncoder,
+            WebClient.Builder webClientBuilder,
+            AuthenticationManager authenticationManager,
+            JWTService jwtService) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+        this.webClientBuilder = webClientBuilder;
         this.authenticationManager = authenticationManager;
-        this.JWTService = JWTService;
-    }
-
-    /**
-     * Checks if an email already exists in the database.
-     * This is called BEFORE creating a profile to prevent orphaned records.
-     */
-    public boolean emailExists(String email) {
-        return repository.findByEmail(email).isPresent();
+        this.jwtService = jwtService;
     }
 
     public Optional<User> findByEmail(String email) {
         return repository.findByEmail(email);
     }
 
-    /**
-     * This method is called by the RegistrationSagaOrchestrator AFTER the profile has been created.
-     * It handles the final step of saving the user to the database.
-     */
     public User saveUserWithProfile(RegistrationRequest request, Long profileId) {
         User newUser = new User();
         newUser.setEmail(request.email());
@@ -80,10 +72,6 @@ public class AuthService {
         return repository.save(newUser);
     }
 
-    /**
-     * Creates a profile in the appropriate service (driver or company) using WebClient.
-     * This is a step in the registration saga.
-     */
     public Long createProfile(String name, String email, Role role) {
         String url;
         ProfileRequest requestBody = new ProfileRequest(name, email);
@@ -110,10 +98,6 @@ public class AuthService {
         }
     }
 
-
-    /**
-     * Compensating transaction for the saga. Deletes a profile if the saga fails.
-     */
     public void deleteProfile(Long profileId, Role role) {
         String url;
         if (role == Role.DRIVER) {
@@ -135,10 +119,6 @@ public class AuthService {
                 .block();
     }
 
-
-    /**
-     * Verifies user credentials and generates a JWT token upon successful authentication.
-     */
     public LoginResponse verify(LoginRequest loginRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
@@ -150,15 +130,11 @@ public class AuthService {
                 throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
             }
         }
-        return new LoginResponse(JWTService.generateToken(loginRequest.email()), "Token Generated");
+        return new LoginResponse(jwtService.generateToken(loginRequest.email()));
     }
 
-    /**
-     * Generates a JWT token for a newly registered user without requiring authentication.
-     * This is used for auto-login after successful registration.
-     */
     public String generateTokenForNewUser(String email) {
-        return JWTService.generateToken(email);
+        return jwtService.generateToken(email);
     }
 
     public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
@@ -171,8 +147,8 @@ public class AuthService {
             if (user.getRole() != request.role()) {
                 throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
             }
-            String token = JWTService.generateToken(email);
-            return new LoginResponse(token, "Google sign-in successful");
+            String token = jwtService.generateToken(email);
+            return new LoginResponse(token);
         }
 
         String name = (String) payload.get("name");
@@ -190,11 +166,15 @@ public class AuthService {
             user.setProfileId(profileId);
             repository.save(user);
 
-            String token = JWTService.generateToken(email);
-            return new LoginResponse(token, "Google sign-in successful");
+            String token = jwtService.generateToken(email);
+            return new LoginResponse(token);
         } catch (Exception e) {
             if (profileId != null) {
-                try { deleteProfile(profileId, role); } catch (Exception ignored) {}
+                try {
+                    deleteProfile(profileId, role);
+                } catch (Exception rollbackEx) {
+                    logger.error("Rollback failed for profile ID: {}. May require manual cleanup.", profileId, rollbackEx);
+                }
             }
             throw e;
         }

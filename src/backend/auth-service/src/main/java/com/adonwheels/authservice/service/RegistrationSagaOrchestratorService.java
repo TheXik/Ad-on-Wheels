@@ -1,26 +1,29 @@
 package com.adonwheels.authservice.service;
 
 import com.adonwheels.authservice.dto.RegistrationRequest;
+import com.adonwheels.authservice.dto.RegistrationResponse;
 import com.adonwheels.authservice.model.Role;
 import com.adonwheels.authservice.model.User;
 import com.adonwheels.dto.AppErrorCode;
 import com.adonwheels.dto.exception.BusinessException;
-
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.adonwheels.authservice.dto.RegistrationResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.Optional;
+
 @Service
 public class RegistrationSagaOrchestratorService {
+
     private static final Logger logger = LoggerFactory.getLogger(RegistrationSagaOrchestratorService.class);
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+
+    public RegistrationSagaOrchestratorService(AuthService authService) {
+        this.authService = authService;
+    }
 
     public RegistrationResponse register(RegistrationRequest request) {
         Long profileId = null;
@@ -45,13 +48,12 @@ public class RegistrationSagaOrchestratorService {
             String token = authService.generateTokenForNewUser(request.email());
 
             logger.info("Auto-login token generated for email: {}", request.email());
-            return new RegistrationResponse(token, "Registration successful");
+            return new RegistrationResponse(token);
 
         } catch (BusinessException ex) {
             throw ex;
 
         } catch (DataIntegrityViolationException ex) {
-            // This should rarely happen now since we check email first
             logger.error("SAGA ROLLBACK: Unexpected data integrity violation for email {}.", request.email());
             rollbackProfileCreation(profileId, request.role());
             throw new BusinessException(AppErrorCode.EMAIL_ALREADY_EXISTS);
@@ -80,7 +82,6 @@ public class RegistrationSagaOrchestratorService {
             try {
                 authService.deleteProfile(profileId, role);
             } catch (Exception ex) {
-                // Log the rollback failure but don't let it override the original exception
                 logger.error("Rollback failed for profile ID: {}. This may require manual cleanup.", profileId, ex);
             }
         }
