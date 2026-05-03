@@ -220,6 +220,10 @@ private struct EarningsBarChart: View {
         max(dailyEarnings.max() ?? 1, 1)
     }
 
+    private var hasAnyEarnings: Bool {
+        dailyEarnings.contains(where: { $0 > 0 })
+    }
+
     // Bucket order is oldest → today; the last bucket is always today.
     private var todayIndex: Int { daysShown - 1 }
 
@@ -228,6 +232,14 @@ private struct EarningsBarChart: View {
     private var barSpacing: CGFloat { daysShown <= 7 ? 10 : 2 }
 
     var body: some View {
+        if hasAnyEarnings {
+            barChart
+        } else {
+            emptyState
+        }
+    }
+
+    private var barChart: some View {
         HStack(alignment: .bottom, spacing: barSpacing) {
             ForEach(0..<daysShown, id: \.self) { index in
                 VStack(spacing: 6) {
@@ -244,17 +256,32 @@ private struct EarningsBarChart: View {
                         .frame(
                             height: dailyEarnings[index] > 0
                                 ? max(10, CGFloat(dailyEarnings[index] / maxEarning) * 90)
-                                : 4
+                                : 2
                         )
 
                     Text(label(for: index))
                         .font(.system(size: daysShown <= 7 ? 11 : 9,
                                       weight: index == todayIndex ? .bold : .regular))
                         .foregroundColor(index == todayIndex ? .primary : .secondary)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
                 .frame(maxWidth: .infinity)
             }
         }
+        .frame(height: 140)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "chart.bar.xaxis")
+                .font(.system(size: 28))
+                .foregroundColor(.secondary)
+            Text("No verified rides in the last \(daysShown) days")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
         .frame(height: 140)
     }
 
