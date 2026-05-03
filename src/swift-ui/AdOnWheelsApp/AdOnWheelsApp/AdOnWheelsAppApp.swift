@@ -37,7 +37,7 @@ struct AdOnWheelsAppApp: App {
                     case .company:
                         CompanyRootView(authService: authService)
                     case .none:
-                        AuthRouterView(authService: authService, initialScreen: nil, lockedRole: nil)
+                        AuthRouterView(authService: authService, initialScreen: nil)
                     }
                 } else {
                     if selectedRole == .none {
@@ -49,7 +49,6 @@ struct AdOnWheelsAppApp: App {
                         AuthRouterView(
                             authService: authService,
                             initialScreen: initialScreen,
-                            lockedRole: selectedRole,
                             onBack: {
                                 selectedRole = .none
                             }

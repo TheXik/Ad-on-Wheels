@@ -4,15 +4,13 @@ struct AuthRouterView: View {
     @StateObject private var navViewModel: AuthNavigationViewModel
     @ObservedObject var authService: AuthenticationService
     var initialScreen: AuthScreen? = nil
-    var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var didApplyInitialScreen = false
 
-    init(authService: AuthenticationService, initialScreen: AuthScreen? = nil, lockedRole: InitialUserRole? = nil, onBack: (() -> Void)? = nil) {
+    init(authService: AuthenticationService, initialScreen: AuthScreen? = nil, onBack: (() -> Void)? = nil) {
         self._navViewModel = StateObject(wrappedValue: AuthNavigationViewModel())
         self.authService = authService
         self.initialScreen = initialScreen
-        self.lockedRole = lockedRole
         self.onBack = onBack
     }
 
@@ -20,13 +18,13 @@ struct AuthRouterView: View {
         Group {
             switch navViewModel.currentScreen {
             case .loginDriver:
-                LoginDriverView(authService: authService, navViewModel: navViewModel, lockedRole: lockedRole, onBack: onBack)
+                LoginDriverView(authService: authService, navViewModel: navViewModel, onBack: onBack)
             case .loginCompany:
-                LoginCompanyView(authService: authService, navViewModel: navViewModel, lockedRole: lockedRole, onBack: onBack)
+                LoginCompanyView(authService: authService, navViewModel: navViewModel, onBack: onBack)
             case .registerDriver:
-                RegisterDriverView(authService: authService, navViewModel: navViewModel, lockedRole: lockedRole, onBack: onBack)
+                RegisterDriverView(authService: authService, navViewModel: navViewModel, onBack: onBack)
             case .registerCompany:
-                RegisterCompanyView(authService: authService, navViewModel: navViewModel, lockedRole: lockedRole, onBack: onBack)
+                RegisterCompanyView(authService: authService, navViewModel: navViewModel, onBack: onBack)
             }
         }
         .onAppear {
