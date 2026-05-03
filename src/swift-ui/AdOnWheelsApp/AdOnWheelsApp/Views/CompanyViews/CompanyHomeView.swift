@@ -69,27 +69,27 @@ struct CompanyHomeView: View {
     var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
             CompanyStatCard(
-                icon: "megaphone.fill",
-                value: "\(dashboard.activeCampaigns.count)",
-                label: "Active Campaigns",
+                icon: "tray.full.fill",
+                value: "\(dashboard.campaigns.count)",
+                label: "Total Campaigns",
                 iconColor: .accentBlue
             )
             CompanyStatCard(
-                icon: "person.2.fill",
-                value: "\(dashboard.acceptedDriverCount)",
-                label: "Hired Drivers",
+                icon: "megaphone.fill",
+                value: "\(dashboard.activeCampaigns.count)",
+                label: "Active Campaigns",
                 iconColor: .green
             )
             CompanyStatCard(
-                icon: "eye.fill",
-                value: formattedReach(dashboard.totalReach),
-                label: "Est. Reach",
+                icon: "road.lanes",
+                value: String(format: "%.0f km", dashboard.totalKmDriven),
+                label: "Total Km Driven",
                 iconColor: .purple
             )
             CompanyStatCard(
-                icon: "eurosign.circle.fill",
-                value: String(format: "€%.0f", dashboard.totalBudget),
-                label: "Total Budget",
+                icon: "car.fill",
+                value: "\(dashboard.totalCampaignRides)",
+                label: "Total Rides",
                 iconColor: .orange
             )
         }
@@ -210,14 +210,6 @@ struct CompanyHomeView: View {
         .cornerRadius(14)
     }
 
-    func formattedReach(_ reach: Int) -> String {
-        if reach >= 1_000_000 {
-            return String(format: "%.1fM", Double(reach) / 1_000_000)
-        } else if reach >= 1000 {
-            return String(format: "%.1fK", Double(reach) / 1000)
-        }
-        return "\(reach)"
-    }
 }
 
 struct CompanyStatCard: View {

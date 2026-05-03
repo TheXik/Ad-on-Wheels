@@ -1,21 +1,23 @@
 :root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #eef2ff;
-  --success: #16a34a;
-  --success-light: #dcfce7;
-  --danger: #dc2626;
-  --danger-light: #fef2f2;
-  --warning: #f59e0b;
-  --text: #1f2937;
-  --text-secondary: #6b7280;
-  --bg: #f9fafb;
+  /* iOS-aligned palette: --primary matches the SwiftUI brandBlue
+     Color(red: 0.0, green: 0.478, blue: 1.0) used across the app. */
+  --primary: #007aff;
+  --primary-hover: #0062cc;
+  --primary-light: #e5f1ff;
+  --success: #34c759;
+  --success-light: #e6f8ec;
+  --danger: #ff3b30;
+  --danger-light: #ffe8e6;
+  --warning: #ff9500;
+  --text: #1c1c1e;
+  --text-secondary: #6e6e73;
+  --bg: #f2f2f7;
   --white: #ffffff;
-  --border: #e5e7eb;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --radius: 8px;
-  --radius-lg: 12px;
+  --border: #d1d1d6;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --radius: 10px;
+  --radius-lg: 14px;
 }
 
 * {
@@ -25,10 +27,17 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Mirrors the SwiftUI default — San Francisco on Apple devices (delivered
+     by -apple-system / BlinkMacSystemFont), system-ui elsewhere so the OS
+     picks its native UI face. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
+               system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-feature-settings: 'ss01', 'ss03', 'cv11';
   color: var(--text);
   background: var(--bg);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -56,16 +65,11 @@ body {
 }
 
 .logo {
-  background: var(--primary);
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
   width: 36px;
   height: 36px;
   border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: cover;
+  display: block;
 }
 
 .brand-text {
@@ -963,4 +967,84 @@ body {
 @keyframes modal-pop-in {
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Campaign coverage / heat-map (UC014) */
+.coverage-map {
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius, 12px);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.coverage-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.coverage-map-header h3 {
+  margin: 0;
+}
+
+.coverage-map-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 14px;
+}
+
+.coverage-map-status {
+  color: var(--text-secondary, #6b7280);
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+.coverage-map-status.error {
+  color: #dc2626;
+}
+
+.coverage-map-container {
+  border-radius: var(--radius, 12px);
+  overflow: hidden;
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.coverage-map-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.coverage-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coverage-legend-swatch {
+  display: inline-block;
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.coverage-legend-swatch.verified {
+  background: #2563eb;
+}
+
+.coverage-legend-swatch.unverified {
+  background: repeating-linear-gradient(
+    to right,
+    #94a3b8 0,
+    #94a3b8 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  height: 3px;
 }

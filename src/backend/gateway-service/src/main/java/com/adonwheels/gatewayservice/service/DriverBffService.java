@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.service;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.Campaign;
 import com.adonwheels.gatewayservice.dto.Driver;
 import com.adonwheels.gatewayservice.dto.DriverHomePageResponse;
@@ -35,39 +35,39 @@ public class DriverBffService {
         return driverClient.get()
                 .uri("/drivers/{id}", driverId)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Driver>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
+                .map(ApiResponse::getData)
                 .flatMap(driver -> {
                     Mono<Ride> activeRideMono = rideClient.get()
                             .uri("/rides/{driverId}/active", driverId)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Ride>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<Ride>>() {})
+                            .map(ApiResponse::getData)
                             .onErrorResume(e -> Mono.empty());
 
                     Mono<RideStatistics> statisticsMono = rideClient.get()
                             .uri("/rides/{driverId}/statistics", driverId)
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<RideStatistics>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
+                            .map(ApiResponse::getData)
                             .onErrorResume(e -> Mono.empty());
 
                     return Mono.zip(
-                            activeRideMono.defaultIfEmpty(createEmptyRide()),
-                            statisticsMono.defaultIfEmpty(createEmptyStatistics())
+                            activeRideMono.defaultIfEmpty(EMPTY_RIDE),
+                            statisticsMono.defaultIfEmpty(EMPTY_STATS)
                     ).flatMap(tuple -> {
-                        Ride activeRide = tuple.getT1().getId() != null ? tuple.getT1() : null;
+                        Ride activeRide = tuple.getT1().id() != null ? tuple.getT1() : null;
                         RideStatistics statistics = tuple.getT2();
 
-                        if (activeRide != null && activeRide.getCampaignId() != null) {
+                        if (activeRide != null && activeRide.campaignId() != null) {
                             return campaignClient.get()
-                                    .uri("/campaigns/{id}", activeRide.getCampaignId())
+                                    .uri("/campaigns/{id}", activeRide.campaignId())
                                     .retrieve()
                                     .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                                    .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Campaign>>() {})
-                                    .map(ApiResponseWrapper::getData)
+                                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Campaign>>() {})
+                                    .map(ApiResponse::getData)
                                     .map(campaign -> new DriverHomePageResponse(driver, activeRide, campaign, statistics))
                                     .onErrorReturn(new DriverHomePageResponse(driver, activeRide, null, statistics))
                                     .defaultIfEmpty(new DriverHomePageResponse(driver, activeRide, null, statistics));
@@ -83,10 +83,10 @@ public class DriverBffService {
                 .uri("/rides/{driverId}/statistics", driverId)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<RideStatistics>>() {})
-                .map(ApiResponseWrapper::getData)
-                .onErrorReturn(createEmptyStatistics())
-                .defaultIfEmpty(createEmptyStatistics());
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
+                .map(ApiResponse::getData)
+                .onErrorReturn(EMPTY_STATS)
+                .defaultIfEmpty(EMPTY_STATS);
     }
 
     public Mono<List<Ride>> getDriverRideHistory(Long driverId, Integer limit) {
@@ -97,8 +97,8 @@ public class DriverBffService {
                         .build(driverId))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Ride>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Ride>>>() {})
+                .map(ApiResponse::getData)
                 .onErrorReturn(Collections.emptyList())
                 .defaultIfEmpty(Collections.emptyList());
     }
@@ -110,11 +110,11 @@ public class DriverBffService {
                 .bodyToMono(Void.class);
     }
 
-    private Ride createEmptyRide() {
-        return new Ride();
-    }
+    private static final Ride EMPTY_RIDE = new Ride(
+            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null);
 
-    private RideStatistics createEmptyStatistics() {
-        return new RideStatistics(0L, 0L, 0L, 0, 0, 0L);
-    }
+    private static final RideStatistics EMPTY_STATS = new RideStatistics(
+            0L, 0L, 0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 }

@@ -37,7 +37,6 @@ class AuthenticationService: ObservableObject {
            let role = parseRole(from: roleString) {
             self.userRole = role
 
-            // Extract profileID from JWT token
             if let profileId = payload["profileID"] as? Int {
                 self.userId = profileId
             }
@@ -84,8 +83,8 @@ class AuthenticationService: ObservableObject {
         return Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
     }
     
-    // TODO: Verify JWT signature and claims using your servers public key
-
+    // No signature check on the device — the gateway re-validates every
+    // request; we only read claims for UI routing.
     private func decodeJWTPart(_ value: String) -> [String: Any]? {
         guard let bodyData = base64UrlDecode(value),
               let json = try? JSONSerialization.jsonObject(with: bodyData, options: []),

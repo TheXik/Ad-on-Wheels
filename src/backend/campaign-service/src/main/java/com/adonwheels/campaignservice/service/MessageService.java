@@ -48,9 +48,13 @@ public class MessageService {
     }
 
     @Transactional
-    public void markAsRead(Long messageId) {
+    public void markAsRead(Long messageId, Long callerId) {
         Message msg = repository.findById(messageId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+        if (!callerId.equals(msg.getRecipientId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Only the recipient can mark a message as read");
+        }
         msg.setRead(true);
         repository.save(msg);
     }

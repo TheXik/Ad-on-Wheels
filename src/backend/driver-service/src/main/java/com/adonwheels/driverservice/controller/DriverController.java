@@ -5,7 +5,7 @@ import com.adonwheels.driverservice.dto.VehicleRequest;
 import com.adonwheels.driverservice.model.Driver;
 import com.adonwheels.driverservice.service.DriverService;
 import com.adonwheels.driverservice.service.VehicleImageService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -28,53 +27,32 @@ public class DriverController {
         this.imageService = imageService;
     }
 
-    // GET /drivers — list all drivers
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Driver>>> all() {
-        List<Driver> drivers = service.getAllDrivers();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(drivers));
-    }
-
-    // POST /drivers — register a new driver
     @PostMapping
     public ResponseEntity<ApiResponse<Driver>> newDriver(@Valid @RequestBody Driver newDriver) {
         Driver savedDriver = service.addDriver(newDriver);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(savedDriver));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(savedDriver));
     }
 
-    // GET /drivers/{id} — get a single driver
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Driver>> one(@PathVariable Long id) {
         Driver driver = service.getDriver(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(driver));
+        return ResponseEntity.ok(ApiResponse.success(driver));
     }
 
-    // PUT /drivers/{id} — replace a driver profile
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Driver>> replaceDriver(
             @Valid @RequestBody Driver newDriver,
             @PathVariable Long id) {
         Driver updatedDriver = service.updateDriver(id, newDriver);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(updatedDriver));
+        return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
 
-    // PATCH /drivers/{id}/vehicle — add or update vehicle info for a driver
     @PatchMapping("/{id}/vehicle")
     public ResponseEntity<ApiResponse<Driver>> addVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest vehicle) {
         Driver updatedDriver = service.addVehicle(id, vehicle);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(updatedDriver));
+        return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
 
     @PatchMapping("/{id}/onboarding")
@@ -82,17 +60,7 @@ public class DriverController {
             @PathVariable Long id,
             @Valid @RequestBody OnboardingRequest request) {
         Driver updatedDriver = service.completeOnboarding(id, request);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(updatedDriver));
-    }
-
-    @PostMapping("/{id}/verify-decal")
-    public ResponseEntity<ApiResponse<Driver>> verifyDecal(
-            @PathVariable Long id,
-            @RequestParam String photoBase64) {
-        Driver driver = service.submitVerification(id, photoBase64);
-        return ResponseEntity.ok(ApiResponse.success(driver));
+        return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
 
     @PostMapping("/{id}/vehicle-image")
@@ -115,12 +83,9 @@ public class DriverController {
                 .body(data);
     }
 
-    // DELETE /drivers/{id} — remove a driver
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteDriver(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteDriver(@PathVariable Long id) {
         service.deleteDriver(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

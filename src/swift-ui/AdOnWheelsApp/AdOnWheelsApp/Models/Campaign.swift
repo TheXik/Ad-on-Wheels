@@ -9,6 +9,7 @@ struct Campaign: Identifiable, Codable, Hashable {
     let endDate: String
     let budget: Double
     let maxDrivers: Int
+    let ratePerKm: Double?
     let estimatedReach: Int?
     let status: String
     let imageUrls: [String]?
@@ -44,8 +45,13 @@ struct Campaign: Identifiable, Codable, Hashable {
         String(format: "€ %.0f", budget)
     }
 
+    var formattedRatePerKm: String {
+        guard let rate = ratePerKm else { return "-" }
+        return String(format: "€ %.2f / km", rate)
+    }
+
     var formattedReach: String {
-        guard let reach = estimatedReach else { return "—" }
+        guard let reach = estimatedReach else { return "-" }
         if reach >= 1000 {
             return "\(reach / 1000)k people"
         }

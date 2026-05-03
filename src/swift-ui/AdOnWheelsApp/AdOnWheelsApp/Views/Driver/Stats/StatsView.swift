@@ -35,8 +35,8 @@ struct StatsView: View {
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("Statistics")
             .navigationBarTitleDisplayMode(.large)
-            .task {
-                await viewModel.fetchStats()
+            .onAppear {
+                Task { await viewModel.fetchStats() }
             }
             .refreshable {
                 await viewModel.fetchStats()
@@ -98,12 +98,17 @@ struct StatsView: View {
     }
 
     private var earningsChart: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Last 7 Days")
+        let days = selectedPeriod == 0 ? 7 : 30
+        return VStack(alignment: .leading, spacing: 12) {
+            Text(selectedPeriod == 0 ? "Last 7 Days" : "Last 30 Days")
                 .font(.headline)
                 .foregroundColor(.primary)
 
-            EarningsBarChart(dailyEarnings: viewModel.dailyEarnings, brandBlue: brandBlue)
+            EarningsBarChart(
+                dailyEarnings: viewModel.dailyEarnings(days),
+                daysShown: days,
+                brandBlue: brandBlue
+            )
         }
         .padding()
         .background(cardBackground)
@@ -208,41 +213,58 @@ private struct StatCard: View {
 
 private struct EarningsBarChart: View {
     let dailyEarnings: [Double]
+    let daysShown: Int
     let brandBlue: Color
 
     private var maxEarning: Double {
         max(dailyEarnings.max() ?? 1, 1)
     }
 
-    private var todayIndex: Int {
-        let weekday = Calendar.current.component(.weekday, from: Date())
-        // Convert Sunday=1..Saturday=7 to Mon=0..Sun=6
-        return (weekday + 5) % 7
+    private var hasAnyEarnings: Bool {
+        dailyEarnings.contains(where: { $0 > 0 })
     }
 
+    // Bucket order is oldest → today; the last bucket is always today.
+    private var todayIndex: Int { daysShown - 1 }
+
+    private var showPerBarPriceLabels: Bool { daysShown <= 7 }
+
+    private var barSpacing: CGFloat { daysShown <= 7 ? 10 : 2 }
+
     var body: some View {
-        HStack(alignment: .bottom, spacing: 10) {
-            ForEach(0..<7, id: \.self) { index in
+        if hasAnyEarnings {
+            barChart
+        } else {
+            emptyState
+        }
+    }
+
+    private var barChart: some View {
+        HStack(alignment: .bottom, spacing: barSpacing) {
+            ForEach(0..<daysShown, id: \.self) { index in
                 VStack(spacing: 6) {
                     Spacer(minLength: 0)
 
-                    if dailyEarnings[index] > 0 {
-                        Text(String(format: "€%.0f", dailyEarnings[index]))
+                    if showPerBarPriceLabels && dailyEarnings[index] > 0 {
+                        Text(String(format: "€%.2f", dailyEarnings[index]))
                             .font(.system(size: 10, weight: .medium, design: .rounded))
                             .foregroundColor(.secondary)
                     }
 
-                    RoundedRectangle(cornerRadius: 5)
+                    RoundedRectangle(cornerRadius: daysShown <= 7 ? 5 : 2)
                         .fill(brandBlue.opacity(index == todayIndex ? 1.0 : 0.3))
                         .frame(
                             height: dailyEarnings[index] > 0
                                 ? max(10, CGFloat(dailyEarnings[index] / maxEarning) * 90)
-                                : 4
+                                : 2
                         )
 
-                    Text(dayLabel(for: index))
-                        .font(.system(size: 11, weight: index == todayIndex ? .bold : .regular))
+                    Text(label(for: index))
+                        .font(.system(size: daysShown <= 7 ? 11 : 9,
+                                      weight: index == todayIndex ? .bold : .regular))
                         .foregroundColor(index == todayIndex ? .primary : .secondary)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -250,9 +272,33 @@ private struct EarningsBarChart: View {
         .frame(height: 140)
     }
 
-    private func dayLabel(for index: Int) -> String {
-        let labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        return labels[index]
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "chart.bar.xaxis")
+                .font(.system(size: 28))
+                .foregroundColor(.secondary)
+            Text("No verified rides in the last \(daysShown) days")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 140)
+    }
+
+    private func label(for index: Int) -> String {
+        let daysAgo = todayIndex - index
+        let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
+        let formatter = DateFormatter()
+        if daysShown <= 7 {
+            formatter.dateFormat = "EEE"
+            return formatter.string(from: date)
+        }
+        // 30-day view: only label every 5th bar + today, so axis is readable.
+        if index == todayIndex || daysAgo % 5 == 0 {
+            formatter.dateFormat = "d"
+            return formatter.string(from: date)
+        }
+        return ""
     }
 }
 

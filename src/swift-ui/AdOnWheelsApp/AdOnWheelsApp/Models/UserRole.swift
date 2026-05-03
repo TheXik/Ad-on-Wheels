@@ -1,6 +1,6 @@
 import Foundation
 
-enum UserRole: String, CaseIterable {
+enum UserRole: String {
     case driver = "Driver"
     case company = "Company"
-} 
+}

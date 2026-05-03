@@ -1,5 +1,6 @@
 package com.adonwheels.campaignservice.model;
 
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,9 +18,11 @@ public class Campaign {
     private Long id;
 
     @NotBlank
+    @NoHtml
     private String name;
 
     @NotBlank
+    @NoHtml
     @Column(length = 2000)
     private String description;
 
@@ -39,6 +42,11 @@ public class Campaign {
     @NotNull
     @Positive
     private Integer maxDrivers;
+
+    @NotNull
+    @Positive
+    @Column(precision = 10, scale = 4)
+    private BigDecimal ratePerKm;
 
     private Long estimatedReach;
 
@@ -95,6 +103,9 @@ public class Campaign {
 
     public Integer getMaxDrivers() { return maxDrivers; }
     public void setMaxDrivers(Integer maxDrivers) { this.maxDrivers = maxDrivers; }
+
+    public BigDecimal getRatePerKm() { return ratePerKm; }
+    public void setRatePerKm(BigDecimal ratePerKm) { this.ratePerKm = ratePerKm; }
 
     public Long getEstimatedReach() { return estimatedReach; }
     public void setEstimatedReach(Long estimatedReach) { this.estimatedReach = estimatedReach; }

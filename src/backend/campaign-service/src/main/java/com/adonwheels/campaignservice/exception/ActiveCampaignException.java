@@ -1,7 +1,11 @@
 package com.adonwheels.campaignservice.exception;
 
-public class ActiveCampaignException extends RuntimeException {
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
+
+public class ActiveCampaignException extends BusinessException {
     public ActiveCampaignException(Long driverId) {
-        super("Driver " + driverId + " already has an active campaign");
+        super(AppErrorCode.DRIVER_HAS_ACTIVE_CAMPAIGN,
+                "Driver " + driverId + " already has an active campaign");
     }
 }

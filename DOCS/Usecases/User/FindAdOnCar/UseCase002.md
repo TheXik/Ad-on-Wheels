@@ -1,60 +1,51 @@
 # UC02: Find an Advertisement
 
-**Addresses:** FR.7, FR.8.
-
-A driver browses the set of currently recruiting campaigns and acts on
-each one individually.
+Through this use case a driver discovers and applies to campaigns that
+are currently recruiting. It addresses **FR.7** and **FR.8**.
 
 
 ## Actors
+
 Driver.
 
 
 ## Preconditions
-- The driver is logged in.
-- The driver has completed onboarding (vehicle info supplied per FR.6).
+
+a. The driver is signed in.
+b. The driver needs to find an advertising campaign to participate in.
 
 
 ## Basic Flow
-1. The driver navigates to the **Find Ad** screen.
-2. The system fetches the list of currently recruiting campaigns and
-   presents one campaign at a time, with enough information for the
-   driver to make a decision (name, company, reward model, duration,
-   required vehicle type).
-3. The driver performs one of the following actions on the current
-   campaign:
-    - **Affirmative gesture** - submit an application to the current
-      campaign (a single gesture, per FR.7).
-    - **Dismissive gesture** - skip to the next campaign (a single
-      gesture, per FR.7).
-    - **Open for details** - open the current campaign's detail page
-      (UC03).
-    - **Reverse last action** - restore a skipped campaign or
-      withdraw a just-submitted application.
-4. Steps 2–3 repeat until no further recruiting campaigns are
-   available.
-5. When the list is exhausted, the system indicates this to the driver
-   and offers a way to refresh the list.
+
+1. The driver chooses to discover advertising campaigns.
+2. The system shows the recruiting campaigns the driver has not yet
+   applied to and has not skipped during this discovery session, one at
+   a time, with the company name, campaign name, date range,
+   per-kilometer rate, maximum number of drivers, and a short
+   description.
+3. For each campaign the driver chooses to apply, to skip, or to view
+   its details.
+4. After each choice, the system advances to the next campaign.
+5. When no further recruiting campaigns are available, the system tells
+   the driver and offers to refresh the list.
 
 
 ## Alternative Flows
 
-**2a. No recruiting campaigns available.** The system displays a
-message informing the driver and offers a refresh action.
+**3a. The driver reverses the most recent skip.** The system restores
+the just-skipped campaign and offers it to the driver again.
 
-**3a. Application submission fails.** The previous state is preserved
-and the system surfaces an error; the campaign remains available to
-retry.
+**3b. The driver has an accepted campaign.** The system rejects the
+application, tells the driver they cannot run two campaigns at once, and
+advances to the next campaign.
+
+**3c. The application cannot be submitted for any other reason.** The
+system tells the driver the application failed and lets them retry.
 
 
 ## Postconditions
-For each affirmative gesture, a new application is persisted with
-status `pending` and becomes visible to the target company under UC07.
-Skipped campaigns are not re-presented in the current session.
 
-
-## Design Notes
-The specific interaction style (swipeable cards, paginated list, or
-another pattern) is a design decision. The thesis favours a swipe-card
-pattern for consumer fit, but the requirement is only that the
-affirmative and dismissive actions each be a *single* gesture.
+a. Every campaign the driver applied to during the session is recorded
+   as an application with status *applied*.
+b. Skipped campaigns are not offered again during the same discovery
+   session unless the skip is reversed.

@@ -7,7 +7,6 @@ struct QRScanView: View {
     var rideViewModel: RideViewModel?
 
     @State private var isScanning = true
-    @State private var progress: CGFloat = 0.0
     @State private var showDeferredPrompt = false
     @State private var deferredSuccess = false
     @State private var cameraPermission: AVAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
@@ -34,9 +33,6 @@ struct QRScanView: View {
         }
         .onAppear {
             requestCameraAccess()
-            withAnimation(.linear(duration: 2).repeatForever(autoreverses: true)) {
-                progress = 1.0
-            }
         }
         .alert("Camera Access Required", isPresented: $showPermissionDenied) {
             Button("Open Settings") {
@@ -124,7 +120,6 @@ struct QRScanView: View {
         .padding(.vertical, 50)
     }
 
-    // MARK: - UC013 Deferred Ride Prompt
 
     private var deferredPromptView: some View {
         VStack(spacing: 24) {
@@ -195,7 +190,6 @@ struct QRScanView: View {
         }
     }
 
-    // MARK: - Deferred Ride Success
 
     private var deferredSuccessView: some View {
         VStack(spacing: 20) {
@@ -251,7 +245,6 @@ struct QRScanView: View {
         }
     }
 
-    // MARK: - Normal Success View
 
     private var successView: some View {
         VStack(spacing: 20) {

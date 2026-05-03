@@ -26,7 +26,6 @@ struct ComposeMessageView: View {
     var bodyContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Recipient info
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
@@ -52,7 +51,6 @@ struct ComposeMessageView: View {
                 .background(Color.cardBackground)
                 .cornerRadius(14)
 
-                // Subject
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Subject")
                         .font(.caption)
@@ -64,7 +62,6 @@ struct ComposeMessageView: View {
                         .cornerRadius(10)
                 }
 
-                // Message body
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Message")
                         .font(.caption)
@@ -87,7 +84,6 @@ struct ComposeMessageView: View {
                     }
                 }
 
-                // Send button
                 Button(action: sendMessage) {
                     HStack {
                         Spacer()

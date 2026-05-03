@@ -1,62 +1,74 @@
-# UC09: User Registration (Driver)
+# UC09: User Registration
 
-**Addresses:** FR.1, FR.2, FR.3, FR.4, FR.5.
-
-An unregistered user creates a driver account on the mobile client.
+Registration is the entry point for every new user. It addresses
+**FR.1**, **FR.2**, **FR.3**, **FR.4**, and the compensating behaviour
+mandated by **FR.5**.
 
 
 ## Actors
+
 Unregistered User.
 
 
 ## Preconditions
-- The user has installed and opened the mobile application.
-- No session is active on the device (the landing screen is shown).
+
+a. The user does not have an existing account on the platform.
+b. The user needs an account to access the features of their chosen role.
 
 
 ## Basic Flow
-1. The user taps **Sign Up** on the welcome screen.
-2. The mobile application displays the role picker (per FR.1) with
-   two options: **Driver** and **Company**.
-3. The user selects **Driver**.
-4. The system displays the driver registration form asking for name,
-   e-mail, and password - or, alternatively, offers **Sign in with
-   Google** (per FR.4).
-5. The user fills in the required fields (or authenticates through
-   Google) and submits.
-6. The system validates input format (e-mail syntax, password
-   strength).
-7. The system checks that no other account exists with the same
-   e-mail (FR.2).
-8. The system creates the authentication record (with the password
-   stored only in hashed form, per FR.3 / NFR.1) and a driver profile
-   record matching the chosen role. If Google OAuth was used, the
-   account is created automatically without a password (FR.4).
-9. The system issues an authentication token (lifetime bounded by
-   **NFR.2**, at most one hour) and navigates the client to the
-   driver onboarding wizard (vehicle info, per FR.6).
-10. The user completes the onboarding wizard and confirms.
-11. The system saves the vehicle details and navigates the user to
-    the driver home screen.
+
+1. The user chooses to register as a driver or as a company.
+2. The system asks for the role-specific information: for a driver, name,
+   e-mail, and password; for a company, company name, contact name,
+   e-mail, and password.
+3. The user submits the information.
+4. The system verifies that the e-mail is not already in use under any
+   role, records the credentials in non-reversible form, creates the
+   corresponding profile, and signs the user in.
+5. A driver registering from a mobile device additionally provides
+   vehicle information (make, model, year, licence plate), a photo of
+   the vehicle decal, and a monthly distance goal.
+6. The system records the onboarding information and shows the user the
+   interface for their role.
 
 
 ## Alternative Flows
 
-**6a. Invalid input.** The system highlights invalid fields and
-prevents submission until corrected.
+**2a. The user signs in with a federated identity provider, and the
+returned e-mail is not yet registered.** The system creates a new account
+under the chosen role, signs the user in, and the flow continues at
+step 5.
 
-**7a. E-mail already registered.** The system shows "E-mail already
-in use" and offers a link to the Login flow (UC10).
+**2b. The user signs in with a federated identity provider, and the
+returned e-mail is already registered under the same role.** The system
+signs the user in. The use case ends.
 
-**8a. Registration fails partway through.** The system executes
-compensating actions (per **FR.5**) that undo any already-completed
-registration steps (authentication record, profile record, onboarding
-data), so no orphaned partial record remains. The user is returned to
-the registration form with a retry-safe state.
+**2c. The user signs in with a federated identity provider, and the
+returned e-mail is already registered under a different role.** The
+system tells the user the e-mail belongs to the other role and offers to
+sign them in as that role instead.
+
+**4a. The e-mail is already in use under the same role.** The system
+rejects the submission and offers to sign the user in instead.
+
+**4b. The e-mail is already in use under a different role.** The system
+rejects the submission and tells the user which role the e-mail belongs
+to.
+
+**4c. The credentials cannot be recorded after the profile has been
+created.** The system removes the just-created profile, tells the user
+the registration failed, and invites them to retry.
+
+**5a. The driver leaves onboarding before completing it.** The system
+records a minimal driver profile and reminds the driver to complete
+onboarding before starting a ride.
 
 
 ## Postconditions
-A new driver account (authentication record + driver profile +
-optional vehicle info) is created. The user is authenticated and
-landed on the driver home screen. An authentication token with a
-bounded lifetime is persisted on the device.
+
+a. An account exists for the user with credentials and a matching
+   profile.
+b. The user is signed in to the interface for their role.
+c. A driver registered from a mobile device has either completed
+   onboarding or is reminded to complete it before starting a ride.

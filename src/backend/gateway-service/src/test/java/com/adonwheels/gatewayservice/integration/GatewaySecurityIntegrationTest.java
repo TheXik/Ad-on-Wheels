@@ -28,14 +28,14 @@ public class GatewaySecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        testToken = testJwtUtil.generateToken("testuser");
+        testToken = testJwtUtil.generateToken("testuser", "COMPANY", "42");
         WireMock.reset();
     }
 
     @Test
     void whenAccessingProtectedEndpointWithoutToken_thenReturns401Unauthorized() {
         webTestClient
-                .get().uri("/campaigns/1")
+                .get().uri("/api/campaigns/1")
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -66,12 +66,16 @@ public class GatewaySecurityIntegrationTest {
                         .withBody("{\"campaignName\":\"Test Campaign\"}")));
         // Act && assert
         webTestClient
-                .get().uri("/campaigns/1")
+                .get().uri("/api/campaigns/1")
                 .header("Authorization", "Bearer " + testToken)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.campaignName").isEqualTo("Test Campaign");
+
+        verify(getRequestedFor(urlEqualTo("/campaigns/1"))
+                .withHeader("X-User-Role", equalTo("COMPANY"))
+                .withHeader("X-User-Id", equalTo("42")));
     }
 
    

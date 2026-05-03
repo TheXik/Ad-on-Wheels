@@ -74,6 +74,21 @@ struct RideDetailView: View {
                         DetailStatBox(title: "Avg Speed", value: String(format: "%.0f km/h", ride.averageSpeedKmh ?? 0))
                     }
 
+                    NavigationLink(destination: RideMapView(rideId: ride.id)) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "map")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Open full coverage map")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.blue)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.blue.opacity(0.08))
+                        .cornerRadius(10)
+                    }
+
                     Divider()
 
                     VStack(alignment: .leading, spacing: 15) {
@@ -280,12 +295,9 @@ struct RideDetailView_Previews: PreviewProvider {
             campaignId: 1,
             startTime: "2024-01-15T10:00:00",
             endTime: "2024-01-15T11:00:00",
-            startLocation: nil,
-            endLocation: nil,
             duration: 3600,
-            qrCodeData: nil,
             status: "COMPLETED",
-            campaignName: "Test Campaign",
+            verified: true,
             distanceKm: 25.5,
             averageSpeedKmh: 45.0,
             earnings: 3.83,

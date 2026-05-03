@@ -9,8 +9,8 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
+    expose:
+      - "3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
@@ -24,8 +24,8 @@ services:
     build:
       context: eureka-server
       dockerfile: Dockerfile
-    ports:
-      - "8761:8761"
+    expose:
+      - "8761"
     depends_on:
       mysql:
         condition: service_healthy
@@ -49,23 +49,29 @@ services:
       eureka-server:
         condition: service_healthy
       auth-service:
-        condition: service_started
+        condition: service_healthy
       driver-service:
-        condition: service_started
+        condition: service_healthy
       company-service:
-        condition: service_started
+        condition: service_healthy
       campaign-service:
-        condition: service_started
+        condition: service_healthy
       ride-service:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   auth-service:
     image: auth-service
     build:
       context: auth-service
       dockerfile: Dockerfile
-    ports:
-      - "8081:8081"          # expose auth port for manual requests/testing
+    expose:
+      - "8081"
     env_file:
       - .env
     depends_on:
@@ -73,14 +79,20 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   driver-service:
     image: driver-service
     build:
       context: driver-service
       dockerfile: Dockerfile
-    ports:
-      - "8082:8082"          # expose driver API for debugging
+    expose:
+      - "8082"
     env_file:
       - .env
     depends_on:
@@ -90,14 +102,20 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   company-service:
     image: company-service
     build:
       context: company-service
       dockerfile: Dockerfile
-    ports:
-      - "8083:8083"          # expose company API
+    expose:
+      - "8083"
     env_file:
       - .env
     depends_on:
@@ -105,16 +123,22 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   minio:
     image: minio/minio:latest
     container_name: ad_on_wheels_minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    expose:
+      - "9000"
+      - "9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
@@ -130,8 +154,8 @@ services:
     build:
       context: campaign-service
       dockerfile: Dockerfile
-    ports:
-      - "8084:8084"          # expose campaign API
+    expose:
+      - "8084"
     env_file:
       - .env
     depends_on:
@@ -141,11 +165,17 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   cassandra:
     image: cassandra:4.1
-    ports:
-      - "9042:9042"
+    expose:
+      - "9042"
     environment:
       - CASSANDRA_CLUSTER_NAME=adonwheels
       - CASSANDRA_DC=datacenter1
@@ -165,8 +195,8 @@ services:
     build:
       context: ride-service
       dockerfile: Dockerfile
-    ports:
-      - "8085:8085"
+    expose:
+      - "8085"
     env_file:
       - .env
     depends_on:
@@ -176,6 +206,12 @@ services:
         condition: service_healthy
       cassandra:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
 volumes:
   mysql-data:

@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.controller;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.DriverHomePageResponse;
 import com.adonwheels.gatewayservice.dto.Ride;
 import com.adonwheels.gatewayservice.dto.RideStatistics;
@@ -22,27 +22,28 @@ public class DriverBffController {
     }
 
     @GetMapping(value = "/{driverId}/home", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<DriverHomePageResponse>> getDriverHomePage(@PathVariable("driverId") Long driverId) {
+    public Mono<ApiResponse<DriverHomePageResponse>> getDriverHomePage(@PathVariable("driverId") Long driverId) {
         return driverBffService.getDriverHomePage(driverId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
     
     @GetMapping(value = "/{driverId}/statistics", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<RideStatistics>> getDriverStatistics(@PathVariable("driverId") Long driverId) {
+    public Mono<ApiResponse<RideStatistics>> getDriverStatistics(@PathVariable("driverId") Long driverId) {
         return driverBffService.getDriverStatistics(driverId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
     
     @DeleteMapping("/{driverId}/rides")
-    public Mono<Void> deleteDriverRideHistory(@PathVariable("driverId") Long driverId) {
-        return driverBffService.deleteDriverRideHistory(driverId);
+    public Mono<ApiResponse<Void>> deleteDriverRideHistory(@PathVariable("driverId") Long driverId) {
+        return driverBffService.deleteDriverRideHistory(driverId)
+                .then(Mono.just(ApiResponse.success(null)));
     }
 
     @GetMapping(value = "/{driverId}/rides", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<List<Ride>>> getDriverRideHistory(
+    public Mono<ApiResponse<List<Ride>>> getDriverRideHistory(
             @PathVariable("driverId") Long driverId,
             @RequestParam(value = "limit", required = false, defaultValue = "50") Integer limit) {
         return driverBffService.getDriverRideHistory(driverId, limit)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
 }

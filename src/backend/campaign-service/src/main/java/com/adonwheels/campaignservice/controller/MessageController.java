@@ -2,7 +2,8 @@ package com.adonwheels.campaignservice.controller;
 
 import com.adonwheels.campaignservice.model.Message;
 import com.adonwheels.campaignservice.service.MessageService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -75,9 +76,11 @@ public class MessageController {
     }
 
     @PatchMapping("/{messageId}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long messageId) {
-        messageService.markAsRead(messageId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ApiResponse<Void>> markAsRead(
+            @PathVariable Long messageId,
+            @RequestHeader("X-User-Id") Long callerId) {
+        messageService.markAsRead(messageId, callerId);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/unread-count/{recipientId}")
@@ -100,7 +103,7 @@ public class MessageController {
         @NotBlank public String senderRole;
         @NotNull public Long recipientId;
         @NotBlank public String recipientRole;
-        @NotBlank public String subject;
-        @NotBlank public String body;
+        @NotBlank @NoHtml public String subject;
+        @NotBlank @NoHtml public String body;
     }
 }

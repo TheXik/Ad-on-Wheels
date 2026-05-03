@@ -1,7 +1,7 @@
 package com.adonwheels.campaignservice.exception;
 
-import dto.AppErrorCode;
-import dto.exception.BusinessException;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 
 public class CampaignNotFoundException extends BusinessException {
     public CampaignNotFoundException(Long id) {

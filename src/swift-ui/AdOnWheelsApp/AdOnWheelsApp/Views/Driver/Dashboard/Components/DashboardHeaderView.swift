@@ -11,12 +11,9 @@ struct DashboardHeaderView: View {
                 .edgesIgnoringSafeArea(.top)
             
             VStack(spacing: 0) {
-                // Extended top area to cover safe area
                 Color.clear.frame(height: 0)
-                
-                // Expanded View
+
                 VStack(spacing: 25) {
-                    // Greeting / Title
                     VStack(alignment: .leading) {
                         Text("👋 Hello \(viewModel.driverName)")
                             .font(.title2)
@@ -29,45 +26,40 @@ struct DashboardHeaderView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .padding(.top, 40)
-                    
-                    // Main Stats Circle
+
                     HStack(alignment: .center, spacing: 30) {
-                        // Left: Distance
                         VStack(alignment: .trailing) {
                             Label("Driven", systemImage: "speedometer")
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.8))
-                            
+
                             Text(String(format: "%.1f km", viewModel.distanceDriven))
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                         }
-                        
-                        // Center: Progress
+
                         ZStack {
                             CircularProgressBar(progress: viewModel.monthlyGoalProgress, lineWidth: 8)
                                 .frame(width: 100, height: 100)
-                            
+
                             Image(systemName: "car.fill")
                                 .font(.title)
                                 .foregroundColor(.white)
                         }
-                        
-                        // Right: Remaining
+
                         VStack(alignment: .leading) {
                             Label("To Go", systemImage: "flag.fill")
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.8))
-                            
+
                             Text(String(format: "%.1f km", viewModel.distanceRemaining))
                                 .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                         }
                     }
-                    
-                    // Progress Bar (Monthly Goal)
+
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Monthly Goal")
@@ -109,7 +101,6 @@ struct DashboardHeaderView: View {
                 }
             }
         }
-        // Fixed height
         .frame(height: 310)
         .cornerRadius(30, corners: [.bottomLeft, .bottomRight])
         .shadow(color: brandBlue.opacity(0.3), radius: 10, x: 0, y: 10)

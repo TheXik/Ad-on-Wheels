@@ -7,16 +7,12 @@ class BrowseViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var applySuccess = false
 
-    /// Stack of skipped campaigns for undo (back arrow) functionality
     @Published private(set) var skippedCampaigns: [Campaign] = []
-
-    /// Whether undo is available (at least one skipped campaign exists)
     var canUndo: Bool { !skippedCampaigns.isEmpty }
 
-    /// True when the driver has seen all available campaigns this session
     @Published var allCampaignsSeen = false
 
-    /// IDs the driver already interacted with (skipped or applied) — survives refresh
+    // Survives refresh so we don't show the same card twice in one session.
     private var seenCampaignIds: Set<Int> = []
 
     private let api: APIClientProtocol
@@ -32,9 +28,15 @@ class BrowseViewModel: ObservableObject {
         errorMessage = nil
         defer { isLoading = false }
 
-        do {
-            await fetchAppliedCampaignIds()
+        // Bail out if we can't load the applied set — otherwise a network
+        // blip would re-show campaigns the driver has already been declined for.
+        guard await fetchAppliedCampaignIds() else {
+            self.errorMessage = "Couldn't load your application history. Pull to retry."
+            self.campaigns = []
+            return
+        }
 
+        do {
             let endpoint = Endpoint(path: "api/campaigns", queryItems: [
                 URLQueryItem(name: "status", value: "RECRUITING")
             ])
@@ -50,16 +52,16 @@ class BrowseViewModel: ObservableObject {
         }
     }
 
-    private func fetchAppliedCampaignIds() async {
+    private func fetchAppliedCampaignIds() async -> Bool {
         do {
             let endpoint = Endpoint(path: "api/campaigns/driver/\(driverId)/applications")
             let apps: [ApplicationWithCampaign] = try await api.send(endpoint)
             for app in apps {
                 seenCampaignIds.insert(app.campaignId)
             }
+            return true
         } catch {
-            // Non-fatal: worst case we show campaigns the driver already applied to,
-            // but the backend will reject duplicates with 409
+            return false
         }
     }
 
@@ -98,7 +100,7 @@ class BrowseViewModel: ObservableObject {
             removeCard(campaign)
             seenCampaignIds.insert(campaign.id)
             if case .serverError(let details) = error,
-               details.internalCode == 3007 || details.internalCode == 3008 {
+               [3002, 3003, 3007, 3008].contains(details.internalCode) {
                 errorMessage = details.message
             } else {
                 errorMessage = error.localizedDescription
@@ -108,7 +110,6 @@ class BrowseViewModel: ObservableObject {
         }
     }
 
-    /// Skip a campaign (swipe left) — pushes it onto the undo stack
     func skipCampaign(_ campaign: Campaign) {
         guard let index = campaigns.firstIndex(where: { $0.id == campaign.id }) else { return }
         campaigns.remove(at: index)
@@ -116,7 +117,6 @@ class BrowseViewModel: ObservableObject {
         seenCampaignIds.insert(campaign.id)
     }
 
-    /// Undo the last skip — pops from the undo stack and re-inserts at the front
     func undoLastSkip() {
         guard let lastSkipped = skippedCampaigns.popLast() else { return }
         campaigns.insert(lastSkipped, at: 0)

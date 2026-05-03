@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 @MainActor
 class ProfileViewModel: ObservableObject {
@@ -7,24 +6,19 @@ class ProfileViewModel: ObservableObject {
     @Published var statistics: RideStatistics?
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // Computed properties from backend data
+
     var driverName: String {
         driver?.name ?? "Driver"
     }
     
     var totalRides: Int {
-        statistics?.totalRides ?? 0
+        Int(statistics?.totalRides ?? 0)
     }
-    
+
     var totalEarnings: Double {
         statistics?.totalEarnings ?? 0
     }
-    
-    var driverRating: Double {
-        driver?.rating ?? 0
-    }
-    
+
     var memberSince: String {
         if let date = driver?.memberSince {
             return date
@@ -36,7 +30,6 @@ class ProfileViewModel: ObservableObject {
         statistics?.totalEarnings ?? 0
     }
     
-    // Vehicle info from backend
     var vehicleMake: String {
         driver?.vehicleMake ?? ""
     }
@@ -51,14 +44,6 @@ class ProfileViewModel: ObservableObject {
     
     var vehiclePlate: String {
         driver?.vehiclePlate ?? ""
-    }
-    
-    var vehicleColor: String {
-        driver?.vehicleColor ?? ""
-    }
-    
-    var isVehicleVerified: Bool {
-        driver?.vehicleVerified ?? false
     }
     
     private let api: APIClientProtocol
@@ -81,7 +66,6 @@ class ProfileViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            // Fetch driver info and statistics via home endpoint
             let endpoint = Endpoint(path: "api/drivers/\(driverId)/home")
             let response: DriverHomePageResponse = try await api.send(endpoint)
             
@@ -102,7 +86,7 @@ class ProfileViewModel: ObservableObject {
     @Published var isSavingVehicle = false
     @Published var vehicleSaveSuccess = false
 
-    func saveVehicle(make: String, model: String, year: String, plate: String, color: String) async {
+    func saveVehicle(make: String, model: String, year: String, plate: String) async {
         guard let driverId = authService.userId else { return }
 
         isSavingVehicle = true
@@ -115,8 +99,7 @@ class ProfileViewModel: ObservableObject {
                 "make": make,
                 "model": model,
                 "year": year,
-                "licensePlate": plate,
-                "color": color
+                "licensePlate": plate
             ]
             let data = try JSONEncoder().encode(body)
             let endpoint = Endpoint(
@@ -145,13 +128,5 @@ class ProfileViewModel: ObservableObject {
     
     var formattedBalance: String {
         String(format: "€%.2f", currentBalance)
-    }
-    
-    var formattedRating: String {
-        String(format: "%.1f", driverRating)
-    }
-    
-    var vehicleDisplayName: String {
-        driver?.vehicleDisplayName ?? "No vehicle"
     }
 }

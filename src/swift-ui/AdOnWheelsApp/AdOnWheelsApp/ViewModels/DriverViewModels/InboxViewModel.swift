@@ -84,21 +84,4 @@ class InboxViewModel: ObservableObject {
         }
     }
 
-    func loadConversation(campaignId: Int, otherUserId: Int) async -> [Message] {
-        do {
-            let endpoint = Endpoint(
-                path: "api/messages/conversation",
-                queryItems: [
-                    URLQueryItem(name: "campaignId", value: String(campaignId)),
-                    URLQueryItem(name: "userId1", value: String(userId)),
-                    URLQueryItem(name: "userId2", value: String(otherUserId))
-                ]
-            )
-            let conversation: [Message] = try await api.send(endpoint)
-            return conversation
-        } catch {
-            errorMessage = error.localizedDescription
-            return []
-        }
-    }
 }

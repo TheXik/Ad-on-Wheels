@@ -14,8 +14,6 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
-
-    //TODO DO ROLES
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(new SimpleGrantedAuthority(user.getRole().name()));
@@ -31,7 +29,6 @@ public class CustomUserDetails implements UserDetails {
         return user.getEmail();
     }
 
-    // TODO FOR local dev just keep empty when in PRODUCTION I need to implement this also
     @Override
     public boolean isAccountNonExpired() {
         return true;

@@ -24,7 +24,6 @@ class OnboardingViewModel: ObservableObject {
     // State
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var isComplete = false
 
     let driverName: String
 
@@ -84,6 +83,11 @@ class OnboardingViewModel: ObservableObject {
         }
     }
 
+    func clearVehiclePhoto() {
+        vehicleImage = nil
+        selectedPhotoItem = nil
+    }
+
     func nextStep() {
         withAnimation(.easeInOut(duration: 0.3)) {
             currentStep += 1
@@ -136,7 +140,6 @@ class OnboardingViewModel: ObservableObject {
 
             UserDefaults.standard.set(monthlyGoalKm, forKey: "monthlyGoalKm")
 
-            isComplete = true
             nextStep()
         } catch let NetworkError.serverError(response) {
             if let fieldErrors = response.validationErrors, !fieldErrors.isEmpty {

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { campaigns } from '../services/api';
 
 const MAX_IMAGES = 5;
@@ -17,6 +17,7 @@ export default function CreateCampaignPage() {
     endDate: '',
     budget: '',
     maxDrivers: '',
+    ratePerKm: '0.10',
     estimatedReach: '',
   });
   const [images, setImages] = useState([]);
@@ -60,8 +61,9 @@ export default function CreateCampaignPage() {
   }
 
   useEffect(() => {
-    return () => images.forEach((img) => URL.revokeObjectURL(img.preview));
-  }, []);
+    const previews = images.map((img) => img.preview);
+    return () => previews.forEach(URL.revokeObjectURL);
+  }, [images]);
 
   function handlePaste(e) {
     const files = e.clipboardData?.files;
@@ -90,6 +92,7 @@ export default function CreateCampaignPage() {
         endDate: form.endDate,
         budget: parseFloat(form.budget),
         maxDrivers: parseInt(form.maxDrivers),
+        ratePerKm: parseFloat(form.ratePerKm),
         estimatedReach: form.estimatedReach ? parseInt(form.estimatedReach) : null,
         status: 'RECRUITING',
       });
@@ -191,6 +194,10 @@ export default function CreateCampaignPage() {
           <div className="form-group">
             <label>Max Drivers</label>
             <input type="number" value={form.maxDrivers} onChange={(e) => update('maxDrivers', e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label>Driver Pay per km (EUR)</label>
+            <input type="number" step="0.01" min="0.01" value={form.ratePerKm} onChange={(e) => update('ratePerKm', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Estimated Reach (optional)</label>

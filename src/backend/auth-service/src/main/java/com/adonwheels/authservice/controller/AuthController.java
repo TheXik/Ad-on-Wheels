@@ -3,7 +3,7 @@ package com.adonwheels.authservice.controller;
 import com.adonwheels.authservice.dto.*;
 import com.adonwheels.authservice.service.AuthService;
 import com.adonwheels.authservice.service.RegistrationSagaOrchestratorService;
-import dto.ApiResponse;
+import com.adonwheels.dto.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,19 +36,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         LoginResponse loginData = authService.verify(loginRequest);
-        LoginResponse loginResponseData = new LoginResponse(loginData.token(), "User successfully logged in");
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(loginResponseData));
+        return ResponseEntity.ok(ApiResponse.success(loginData));
     }
 
     @PostMapping("/google")
     public ResponseEntity<ApiResponse<LoginResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
         LoginResponse loginData = authService.loginWithGoogle(request);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(loginData));
+        return ResponseEntity.ok(ApiResponse.success(loginData));
     }
 }

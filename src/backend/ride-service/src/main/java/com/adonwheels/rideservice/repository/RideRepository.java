@@ -4,10 +4,6 @@ import com.adonwheels.rideservice.model.RideSession;
 
 import java.util.Optional;
 
-/**
- * Storage contract for active ride sessions.
- * Backed by Cassandra via {@link RideRepositoryCassandra}.
- */
 public interface RideRepository {
 
     void save(RideSession session);

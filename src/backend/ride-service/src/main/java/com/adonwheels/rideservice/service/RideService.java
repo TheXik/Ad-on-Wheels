@@ -2,26 +2,31 @@ package com.adonwheels.rideservice.service;
 
 import com.adonwheels.rideservice.dto.ActiveRideResponse;
 import com.adonwheels.rideservice.dto.CampaignRideStatsResponse;
+import com.adonwheels.rideservice.dto.CampaignRouteResponse;
 import com.adonwheels.rideservice.dto.DeferredRideRequest;
 import com.adonwheels.rideservice.dto.EndRideResponse;
 import com.adonwheels.rideservice.dto.LatLng;
 import com.adonwheels.rideservice.dto.RideHistoryResponse;
 import com.adonwheels.rideservice.dto.RideStatisticsResponse;
+import com.adonwheels.rideservice.dto.RoutePointDto;
 import com.adonwheels.rideservice.dto.StartRideResponse;
 import com.adonwheels.rideservice.model.CompletedRide;
 import com.adonwheels.rideservice.model.LocationPoint;
 import com.adonwheels.rideservice.model.RideSession;
+import com.adonwheels.rideservice.exception.InvalidDeferredRideException;
+import com.adonwheels.rideservice.exception.RideNotFoundException;
+import com.adonwheels.rideservice.exception.RideSessionNotFoundException;
 import com.adonwheels.rideservice.repository.RideHistoryRepository;
 import com.adonwheels.rideservice.repository.RideRepository;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -35,8 +40,8 @@ import java.util.stream.Collectors;
 @Service
 public class RideService {
 
-    // TODO: replace with campaign-based pricing
-    private static final double EARNINGS_RATE_PER_KM = 0.10;
+    // Fallback when no campaign rate is supplied; per-campaign rates override this.
+    private static final double DEFAULT_EARNINGS_RATE_PER_KM = 0.10;
 
     private final RideRepository repository;
     private final RideHistoryRepository historyRepository;
@@ -52,12 +57,15 @@ public class RideService {
 
     public Optional<ActiveRideResponse> getActiveRide(Long driverId) {
         return repository.findByDriverId(String.valueOf(driverId))
-                .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
+                .map(session -> ActiveRideResponse.active(driverId, session.getStartTime()));
     }
 
-    public StartRideResponse startRide(String driverId, Long campaignId) {
+    public StartRideResponse startRide(String driverId, Long campaignId, Double ratePerKm) {
+        if (repository.findByDriverId(driverId).isPresent()) {
+            throw new BusinessException(AppErrorCode.RIDE_ALREADY_STARTED);
+        }
         String rideId = UUID.randomUUID().toString();
-        RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId);
+        RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId, ratePerKm);
         repository.save(session);
         return new StartRideResponse(rideId);
     }
@@ -87,7 +95,8 @@ public class RideService {
         ride.setDuration((int) durationSeconds);
         ride.setDistanceKm(totalDistanceKm);
         ride.setAverageSpeedKmh(averageSpeedKmh);
-        ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
+        double rate = session.getRatePerKm() != null ? session.getRatePerKm() : DEFAULT_EARNINGS_RATE_PER_KM;
+        ride.setEarnings(totalDistanceKm * rate);
         ride.setStatus("COMPLETED");
         ride.setVerified(false);
         extractGeoCoords(ride, session.getRouteHistory());
@@ -101,20 +110,20 @@ public class RideService {
 
     @Transactional
     public EndRideResponse logDeferredRide(DeferredRideRequest request) {
-        List<DeferredRideRequest.LocationPointDto> points = request.getLocationPoints();
+        List<DeferredRideRequest.LocationPointDto> points = request.locationPoints();
 
         if (points == null || points.size() < 2) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "At least 2 location points are required for a deferred ride");
+            throw new InvalidDeferredRideException(
+                    "At least 2 location points are required for a deferred ride");
         }
 
-        points.sort((a, b) -> a.getCapturedAt().compareTo(b.getCapturedAt()));
+        points.sort((a, b) -> a.capturedAt().compareTo(b.capturedAt()));
 
-        LocalDateTime startTime = LocalDateTime.parse(points.get(0).getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME);
-        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime startTime = LocalDateTime.parse(points.get(0).capturedAt(), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).capturedAt(), DateTimeFormatter.ISO_DATE_TIME);
 
         List<LocationPoint> route = points.stream()
-                .map(p -> new LocationPoint(p.getLat(), p.getLon(), LocalDateTime.parse(p.getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME)))
+                .map(p -> new LocationPoint(p.lat(), p.lon(), LocalDateTime.parse(p.capturedAt(), DateTimeFormatter.ISO_DATE_TIME)))
                 .toList();
 
         double totalDistanceKm = calculateTotalDistance(route);
@@ -124,14 +133,15 @@ public class RideService {
                 : 0.0;
 
         CompletedRide ride = new CompletedRide();
-        ride.setDriverId(Long.parseLong(request.getDriverId()));
-        ride.setCampaignId(request.getCampaignId());
+        ride.setDriverId(Long.parseLong(request.driverId()));
+        ride.setCampaignId(request.campaignId());
         ride.setStartTime(startTime);
         ride.setEndTime(endTime);
         ride.setDuration((int) durationSeconds);
         ride.setDistanceKm(totalDistanceKm);
         ride.setAverageSpeedKmh(averageSpeedKmh);
-        ride.setEarnings(totalDistanceKm * EARNINGS_RATE_PER_KM);
+        double rate = request.ratePerKm() != null ? request.ratePerKm() : DEFAULT_EARNINGS_RATE_PER_KM;
+        ride.setEarnings(totalDistanceKm * rate);
         ride.setStatus("DEFERRED");
         ride.setVerified(false);
         extractGeoCoords(ride, route);
@@ -144,8 +154,7 @@ public class RideService {
     @Transactional
     public void verifyRide(Long rideId) {
         CompletedRide ride = historyRepository.findById(rideId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "No completed ride found for id: " + rideId));
+                .orElseThrow(() -> new RideNotFoundException(rideId));
         ride.setVerified(true);
         historyRepository.save(ride);
     }
@@ -179,11 +188,16 @@ public class RideService {
                 .filter(r -> r.getStartTime().isAfter(monthAgo))
                 .mapToDouble(CompletedRide::getDistanceKm).sum();
 
-        double totalEarnings = allRides.stream().mapToDouble(CompletedRide::getEarnings).sum();
-        double weeklyEarnings = allRides.stream()
+        // Only verified rides contribute to earnings; counts and distance
+        // include unverified rides too.
+        java.util.function.Predicate<CompletedRide> isVerified =
+                r -> Boolean.TRUE.equals(r.getVerified());
+        double totalEarnings = allRides.stream().filter(isVerified)
+                .mapToDouble(CompletedRide::getEarnings).sum();
+        double weeklyEarnings = allRides.stream().filter(isVerified)
                 .filter(r -> r.getStartTime().isAfter(weekAgo))
                 .mapToDouble(CompletedRide::getEarnings).sum();
-        double monthlyEarnings = allRides.stream()
+        double monthlyEarnings = allRides.stream().filter(isVerified)
                 .filter(r -> r.getStartTime().isAfter(monthAgo))
                 .mapToDouble(CompletedRide::getEarnings).sum();
 
@@ -191,12 +205,37 @@ public class RideService {
                 .mapToDouble(CompletedRide::getAverageSpeedKmh).average().orElse(0.0);
 
         return new RideStatisticsResponse(
-                totalRides, totalRides, 0L,
-                totalDuration, avgDuration, 0L,
+                totalRides, totalRides,
+                totalDuration,
                 totalDistance, weeklyDistance, monthlyDistance,
                 totalEarnings, weeklyEarnings, monthlyEarnings,
-                avgSpeed, null
+                avgSpeed
         );
+    }
+
+    public List<RoutePointDto> getRoute(Long rideId, Long callerDriverId) {
+        CompletedRide ride = historyRepository.findById(rideId)
+                .orElseThrow(() -> new RideNotFoundException(rideId));
+
+        if (callerDriverId == null || !callerDriverId.equals(ride.getDriverId())) {
+            throw new BusinessException(AppErrorCode.ACCESS_DENIED);
+        }
+
+        return deserializeRoute(ride.getRoutePointsJson()).stream()
+                .map(p -> new RoutePointDto(p.lat(), p.lon()))
+                .toList();
+    }
+
+    public List<CampaignRouteResponse> getCampaignRoutes(Long campaignId) {
+        return historyRepository.findByCampaignId(campaignId).stream()
+                .map(ride -> new CampaignRouteResponse(
+                        ride.getId(),
+                        ride.getDriverId(),
+                        ride.getDistanceKm(),
+                        ride.getStatus(),
+                        ride.getVerified(),
+                        deserializeRoute(ride.getRoutePointsJson())))
+                .toList();
     }
 
     public CampaignRideStatsResponse getCampaignStatistics(Long campaignId) {
@@ -218,7 +257,10 @@ public class RideService {
         long totalRides = rides.size();
         double totalDistance = rides.stream().mapToDouble(CompletedRide::getDistanceKm).sum();
         long totalDuration = rides.stream().mapToLong(CompletedRide::getDuration).sum();
-        double totalEarnings = rides.stream().mapToDouble(CompletedRide::getEarnings).sum();
+        // Earnings count verified rides only.
+        double totalEarnings = rides.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getVerified()))
+                .mapToDouble(CompletedRide::getEarnings).sum();
         long driverCount = rides.stream().map(CompletedRide::getDriverId).distinct().count();
 
         return new CampaignRideStatsResponse(
@@ -226,20 +268,17 @@ public class RideService {
     }
 
     private RideHistoryResponse toHistoryResponse(CompletedRide ride) {
-        RideHistoryResponse response = new RideHistoryResponse(
+        return new RideHistoryResponse(
                 ride.getId(), ride.getDriverId(), ride.getCampaignId(),
                 ride.getStartTime(), ride.getEndTime(),
-                null, null,
-                ride.getDuration(), null,
+                ride.getDuration(),
                 ride.getStatus(), ride.getDistanceKm(),
-                ride.getAverageSpeedKmh(), ride.getEarnings()
+                ride.getAverageSpeedKmh(), ride.getEarnings(),
+                ride.getStartLat(), ride.getStartLon(),
+                ride.getEndLat(), ride.getEndLon(),
+                deserializeRoute(ride.getRoutePointsJson()),
+                Boolean.TRUE.equals(ride.getVerified())
         );
-        response.setStartLat(ride.getStartLat());
-        response.setStartLon(ride.getStartLon());
-        response.setEndLat(ride.getEndLat());
-        response.setEndLon(ride.getEndLon());
-        response.setTrackPoints(deserializeRoute(ride.getRoutePointsJson()));
-        return response;
     }
 
     private String serializeRoute(List<LocationPoint> route) {
@@ -280,11 +319,10 @@ public class RideService {
 
     private RideSession requireSession(String rideId) {
         return repository.findById(rideId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "No active ride found for id: " + rideId));
+                .orElseThrow(() -> new RideSessionNotFoundException(rideId));
     }
 
-    private double calculateTotalDistance(List<LocationPoint> route) {
+    static double calculateTotalDistance(List<LocationPoint> route) {
         if (route == null || route.size() < 2) {
             return 0.0;
         }
@@ -294,7 +332,7 @@ public class RideService {
             LocationPoint b = route.get(i);
             double segmentKm = haversineKm(a, b);
 
-            // Skip GPS glitches: if a single segment implies > 200 km/h, discard it
+            // Drop segments faster than 200 km/h (GPS glitch).
             long dtSeconds = java.time.Duration.between(a.getCapturedAt(), b.getCapturedAt()).getSeconds();
             if (dtSeconds > 0) {
                 double impliedSpeedKmh = segmentKm / (dtSeconds / 3600.0);
@@ -303,7 +341,7 @@ public class RideService {
                 }
             }
 
-            // Skip GPS jitter: ignore segments under 10 meters
+            // Drop segments under 10 m (jitter while parked).
             if (segmentKm < 0.01) {
                 continue;
             }
@@ -313,7 +351,7 @@ public class RideService {
         return total;
     }
 
-    private double haversineKm(LocationPoint a, LocationPoint b) {
+    static double haversineKm(LocationPoint a, LocationPoint b) {
         final double R = 6371.0;
         double dLat = Math.toRadians(b.getLat() - a.getLat());
         double dLon = Math.toRadians(b.getLon() - a.getLon());
