@@ -135,7 +135,7 @@ struct SettingsView: View {
         do {
             let endpoint = Endpoint(path: "api/drivers/\(driverId)/statistics")
             let stats: RideStatistics = try await api.send(endpoint)
-            totalRides = stats.totalRides
+            totalRides = Int(stats.totalRides)
             totalDistance = stats.totalDistanceKm ?? 0
             totalEarnings = stats.totalEarnings ?? 0
         } catch {}
