@@ -15,6 +15,4 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     );
 
     long countByRecipientIdAndRecipientRoleAndIsReadFalse(Long recipientId, String recipientRole);
-
-    List<Message> findByCampaignIdOrderByCreatedAtDesc(Long campaignId);
 }

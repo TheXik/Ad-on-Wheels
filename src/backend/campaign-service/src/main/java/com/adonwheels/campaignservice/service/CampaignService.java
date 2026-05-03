@@ -4,6 +4,8 @@ import com.adonwheels.campaignservice.model.Campaign;
 import com.adonwheels.campaignservice.model.CampaignStatus;
 import com.adonwheels.campaignservice.repository.CampaignRepository;
 import com.adonwheels.campaignservice.exception.CampaignNotFoundException;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,10 @@ public class CampaignService {
 
     @Transactional
     public Campaign save(Campaign campaign) {
+        if (campaign.getStartDate() != null && campaign.getEndDate() != null
+                && !campaign.getStartDate().isBefore(campaign.getEndDate())) {
+            throw new BusinessException(AppErrorCode.INVALID_CAMPAIGN_DATES);
+        }
         Campaign saved = repository.save(campaign);
         populateImageUrls(saved);
         return saved;
