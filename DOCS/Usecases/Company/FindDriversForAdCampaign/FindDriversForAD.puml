@@ -8,7 +8,7 @@ Backend -> App : Campaign list
 alt Campaigns available
     Company -> App : Select campaign
     App -> Backend : Fetch pending applications
-    Backend -> App : Applications (driver name, vehicle, rating)
+    Backend -> App : Applications (driver name, vehicle)
 
     alt Applications exist
         App -> Company : Display list with filters & sort
