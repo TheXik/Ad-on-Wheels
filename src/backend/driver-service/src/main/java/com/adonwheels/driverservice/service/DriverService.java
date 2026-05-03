@@ -1,12 +1,13 @@
 package com.adonwheels.driverservice.service;
 
+import com.adonwheels.driverservice.dto.OnboardingRequest;
+import com.adonwheels.driverservice.dto.VehicleRequest;
 import com.adonwheels.driverservice.model.Driver;
 import com.adonwheels.driverservice.exception.DriverNotFoundException;
 import com.adonwheels.driverservice.repository.DriverRepository;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 public class DriverService {
@@ -14,10 +15,6 @@ public class DriverService {
 
     public DriverService(DriverRepository repository) {
         this.repository = repository;
-    }
-
-    public List<Driver> getAllDrivers() {
-        return repository.findAll();
     }
 
     public Driver getDriver(Long id) {
@@ -45,30 +42,26 @@ public class DriverService {
     }
 
     @Transactional
-    public Driver addVehicle(Long id, com.adonwheels.driverservice.dto.VehicleRequest vehicle) {
+    public Driver addVehicle(Long id, VehicleRequest vehicle) {
         Driver driver = repository.findById(id)
                 .orElseThrow(() -> new DriverNotFoundException(id));
-        driver.setVehicleMake(vehicle.getMake());
-        driver.setVehicleModel(vehicle.getModel());
-        driver.setVehicleYear(vehicle.getYear());
-        driver.setVehiclePlate(vehicle.getLicensePlate());
-        driver.setVehicleColor(vehicle.getColor());
-        driver.setVehicleVerified(false); // always requires re-verification on update
+        driver.setVehicleMake(vehicle.make());
+        driver.setVehicleModel(vehicle.model());
+        driver.setVehicleYear(vehicle.year());
+        driver.setVehiclePlate(vehicle.licensePlate());
         return repository.save(driver);
     }
 
     @Transactional
-    public Driver completeOnboarding(Long id, com.adonwheels.driverservice.dto.OnboardingRequest request) {
+    public Driver completeOnboarding(Long id, OnboardingRequest request) {
         Driver driver = repository.findById(id)
                 .orElseThrow(() -> new DriverNotFoundException(id));
-        driver.setVehicleMake(request.getMake());
-        driver.setVehicleModel(request.getModel());
-        driver.setVehicleYear(request.getYear());
-        driver.setVehiclePlate(request.getLicensePlate());
-        driver.setVehicleColor(request.getColor());
-        driver.setVehicleImageUrl(request.getVehicleImageUrl());
-        driver.setVehicleVerified(false);
-        driver.setMonthlyGoalKm(request.getMonthlyGoalKm());
+        driver.setVehicleMake(request.make());
+        driver.setVehicleModel(request.model());
+        driver.setVehicleYear(request.year());
+        driver.setVehiclePlate(request.licensePlate());
+        driver.setVehicleImageUrl(request.vehicleImageUrl());
+        driver.setMonthlyGoalKm(request.monthlyGoalKm());
         driver.setOnboardingCompleted(true);
         return repository.save(driver);
     }
@@ -77,8 +70,8 @@ public class DriverService {
     public void deleteDriver(Long id) {
         try {
             repository.deleteById(id);
-        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-            // Idempotent delete: if it's already gone, we don't care.
+        } catch (EmptyResultDataAccessException e) {
+            // Idempotent: already-deleted is success.
         }
     }
 }

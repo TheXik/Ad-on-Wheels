@@ -41,21 +41,9 @@ public class Driver {
     
     @Column(nullable = true)
     private String vehiclePlate;
-    
-    @Column(nullable = true)
-    private String vehicleColor;
 
     @Column(nullable = true)
     private String vehicleImageUrl;
-
-    @Column(nullable = true)
-    private Boolean vehicleVerified;
-
-    @Column(nullable = true)
-    private Double rating;
-    
-    @Column(nullable = true)
-    private LocalDateTime lastVerificationDate;
 
     @Column(nullable = true)
     private Double monthlyGoalKm;
@@ -122,44 +110,12 @@ public class Driver {
         this.vehiclePlate = vehiclePlate;
     }
 
-    public String getVehicleColor() {
-        return vehicleColor;
-    }
-
-    public void setVehicleColor(String vehicleColor) {
-        this.vehicleColor = vehicleColor;
-    }
-
     public String getVehicleImageUrl() {
         return vehicleImageUrl;
     }
 
     public void setVehicleImageUrl(String vehicleImageUrl) {
         this.vehicleImageUrl = vehicleImageUrl;
-    }
-
-    public Boolean getVehicleVerified() {
-        return vehicleVerified;
-    }
-
-    public void setVehicleVerified(Boolean vehicleVerified) {
-        this.vehicleVerified = vehicleVerified;
-    }
-
-    public Double getRating() {
-        return rating;
-    }
-
-    public void setRating(Double rating) {
-        this.rating = rating;
-    }
-
-    public LocalDateTime getLastVerificationDate() {
-        return lastVerificationDate;
-    }
-
-    public void setLastVerificationDate(LocalDateTime lastVerificationDate) {
-        this.lastVerificationDate = lastVerificationDate;
     }
 
     public LocalDateTime getMemberSince() {
