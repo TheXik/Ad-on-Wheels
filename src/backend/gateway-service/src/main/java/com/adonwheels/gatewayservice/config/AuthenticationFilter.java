@@ -5,6 +5,8 @@ import com.adonwheels.gatewayservice.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -15,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Autowired
     private RouteValidator validator;
@@ -61,13 +65,13 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                             .build();
 
                 } catch (ExpiredJwtException e) {
-                    System.err.println("JWT expired: " + e.getMessage());
+                    logger.warn("JWT expired: {}", e.getMessage());
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token has expired");
                 } catch (SignatureException e) {
-                    System.err.println("Invalid signature: " + e.getMessage());
+                    logger.warn("Invalid signature: {}", e.getMessage());
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid JWT signature");
                 } catch (Exception e) {
-                    System.err.println("Invalid token: " + e.getMessage());
+                    logger.warn("Invalid token: {}", e.getMessage());
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized access: Invalid token");
                 }
             }
