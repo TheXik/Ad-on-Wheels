@@ -48,8 +48,22 @@ check_public_endpoint() {
     fi
 }
 
-check_public_endpoint "Eureka Server (8761)  " "http://localhost:8761"
-check_public_endpoint "Gateway API (8080)    " "http://localhost:8080/actuator/health"
+# Function to probe an internal (expose-only) endpoint via the gateway container.
+# Eureka and the per-service Eureka registration check go through here so that the
+# script honors req:nfr:surface (single-public-port) instead of relying on host curl.
+check_internal_endpoint() {
+    local name=$1
+    local url=$2
+
+    if docker compose exec -T gateway-service curl -fsS -o /dev/null --max-time 3 "$url" 2>/dev/null; then
+        echo -e "  ${GREEN}✓${NC} $name - ${GREEN}UP${NC}"
+    else
+        echo -e "  ${RED}✗${NC} $name - ${RED}DOWN${NC}"
+    fi
+}
+
+check_internal_endpoint "Eureka Server (in-network)" "http://eureka-server:8761/eureka/apps"
+check_public_endpoint "Gateway API (8080)        " "http://localhost:8080/actuator/health"
 
 # Check MySQL
 if docker compose exec -T mysql mysqladmin ping -h localhost -u root -proot_password > /dev/null 2>&1; then
@@ -74,8 +88,9 @@ check_internal_service() {
         local eureka_name
         eureka_name=$(echo "$service_name" | tr '[:lower:]' '[:upper:]' | tr '-' '-')
 
-        # Check if service is registered with Eureka (better health indicator)
-        if curl -s "http://localhost:8761/eureka/apps/$eureka_name" 2>/dev/null | grep -q "UP"; then
+        # Check if service is registered with Eureka (better health indicator).
+        # Probe via the gateway container so we honor req:nfr:surface (Eureka is expose-only).
+        if docker compose exec -T gateway-service curl -fsS --max-time 3 "http://eureka-server:8761/eureka/apps/$eureka_name" 2>/dev/null | grep -q "UP"; then
             echo -e "  ${GREEN}✓${NC} $display_name - ${GREEN}RUNNING${NC} ${CYAN}(registered with Eureka)${NC}"
         else
             echo -e "  ${YELLOW}⚡${NC} $display_name - ${YELLOW}STARTING${NC} ${CYAN}(not yet registered)${NC}"
@@ -121,9 +136,9 @@ fi
 
 echo ""
 echo -e "${BLUE}Quick Links:${NC}"
-echo "  Eureka Dashboard: ${YELLOW}http://localhost:8761${NC}"
 echo "  Gateway API:      ${YELLOW}http://localhost:8080${NC}"
 echo "  API Docs:         ${YELLOW}http://localhost:8080/actuator${NC}"
+echo "  Eureka (in-net):  ${YELLOW}docker compose exec gateway-service curl http://eureka-server:8761/eureka/apps${NC}"
 echo ""
 echo -e "${BLUE}Useful Commands:${NC}"
 echo "  View all logs:     ${GREEN}./scripts/logs.sh${NC}"
