@@ -3,15 +3,13 @@ import SwiftUI
 struct RegisterCompanyView: View {
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
-    var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
     @StateObject private var viewModel: RegisterCompanyViewModel
-    
-    init(authService: AuthenticationService, navViewModel: AuthNavigationViewModel, lockedRole: InitialUserRole? = nil, onBack: (() -> Void)? = nil) {
+
+    init(authService: AuthenticationService, navViewModel: AuthNavigationViewModel, onBack: (() -> Void)? = nil) {
         self.authService = authService
         self.navViewModel = navViewModel
-        self.lockedRole = lockedRole
         self.onBack = onBack
         self._viewModel = StateObject(wrappedValue: RegisterCompanyViewModel(authService: authService))
     }
@@ -131,5 +129,5 @@ struct RegisterCompanyView: View {
     let auth = AuthenticationService()
     let nav = AuthNavigationViewModel()
     nav.currentScreen = .registerCompany
-    return RegisterCompanyView(authService: auth, navViewModel: nav, lockedRole: nil, onBack: nil)
+    return RegisterCompanyView(authService: auth, navViewModel: nav, onBack: nil)
 }
