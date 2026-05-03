@@ -21,7 +21,7 @@ import java.util.List;
 @Component
 public class CassandraSchemaMigrator {
 
-    private static final Logger log = LoggerFactory.getLogger(CassandraSchemaMigrator.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraSchemaMigrator.class);
 
     private final CqlSession session;
     private final String keyspaceName;
@@ -53,10 +53,10 @@ public class CassandraSchemaMigrator {
                 keyspaceName, addition.table(), addition.column(), addition.cqlType());
         try {
             session.execute(cql);
-            log.info("Cassandra migration: added column {}.{} ({})",
+            logger.info("Cassandra migration: added column {}.{} ({})",
                     addition.table(), addition.column(), addition.cqlType());
         } catch (InvalidQueryException e) {
-            log.debug("Cassandra migration skipped for {}.{} - {}",
+            logger.debug("Cassandra migration skipped for {}.{} - {}",
                     addition.table(), addition.column(), e.getMessage());
         }
     }

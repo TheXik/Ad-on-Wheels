@@ -29,9 +29,6 @@ public class RideSession {
     @Column("route_history")
     private List<LocationPoint> routeHistory = new ArrayList<>();
 
-    @Column("total_distance_km")
-    private double totalDistanceKm;
-
     public RideSession() {
     }
 
@@ -89,14 +86,6 @@ public class RideSession {
 
     public void setRouteHistory(List<LocationPoint> routeHistory) {
         this.routeHistory = routeHistory;
-    }
-
-    public double getTotalDistanceKm() {
-        return totalDistanceKm;
-    }
-
-    public void setTotalDistanceKm(double totalDistanceKm) {
-        this.totalDistanceKm = totalDistanceKm;
     }
 
     public void addPoint(LocationPoint point) {
