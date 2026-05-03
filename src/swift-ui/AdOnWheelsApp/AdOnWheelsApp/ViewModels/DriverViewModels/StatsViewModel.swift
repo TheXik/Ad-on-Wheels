@@ -33,7 +33,7 @@ class StatsViewModel: ObservableObject {
     }
     
     var totalRides: Int {
-        statistics?.totalRides ?? 0
+        Int(statistics?.totalRides ?? 0)
     }
     
     var averageSpeed: Double {
@@ -109,10 +109,12 @@ class StatsViewModel: ObservableObject {
         String(format: "%.1f km", distance(for: period))
     }
     
-    /// Earnings grouped by day for the last seven days, oldest first.
-    /// Rides are bucketed by their end-time calendar day in the user's
-    /// current timezone. Only verified rides contribute to earnings totals
-    /// (matches the postcondition of UC01).
+    // Earnings grouped by day for the last seven days, oldest first.
+    // Verified rides only, matching chap06's "platform does not count
+    // unverified rides toward earnings" and the verified-only weekly /
+    // monthly aggregates from the backend. Server emits LocalDateTime as
+    // UTC wall-clock; we parse as UTC and let Calendar.current bin into
+    // local-zone days.
     var dailyEarnings: [Double] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -130,15 +132,13 @@ class StatsViewModel: ObservableObject {
         return buckets
     }
 
-    /// Parses Spring's default `LocalDateTime` serialization, which has no
-    /// timezone and may or may not carry fractional seconds. iOS'
-    /// `ISO8601DateFormatter` requires a timezone so we use `DateFormatter`
-    /// pinned to the device's current timezone (matching what the server
-    /// emits for `LocalDateTime`).
+    // Spring's default LocalDateTime serialisation has no timezone designator
+    // but the server writes UTC wall-clock; parse as UTC so binning aligns
+    // with RideDetailView.parseBackendDate.
     static func parseLocalDateTime(_ value: String) -> Date? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
+        formatter.timeZone = TimeZone(identifier: "UTC")
         for format in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS",
                        "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
                        "yyyy-MM-dd'T'HH:mm:ss.SSS",

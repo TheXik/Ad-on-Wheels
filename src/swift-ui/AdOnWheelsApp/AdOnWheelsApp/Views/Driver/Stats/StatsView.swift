@@ -26,7 +26,9 @@ struct StatsView: View {
                             .padding()
                     } else {
                         statCards
-                        earningsChart
+                        if selectedPeriod == 0 {
+                            earningsChart
+                        }
                         recentRidesSection
                     }
                 }
@@ -35,8 +37,8 @@ struct StatsView: View {
             .background(Color(UIColor.systemGroupedBackground))
             .navigationTitle("Statistics")
             .navigationBarTitleDisplayMode(.large)
-            .task {
-                await viewModel.fetchStats()
+            .onAppear {
+                Task { await viewModel.fetchStats() }
             }
             .refreshable {
                 await viewModel.fetchStats()
@@ -227,7 +229,7 @@ private struct EarningsBarChart: View {
                     Spacer(minLength: 0)
 
                     if dailyEarnings[index] > 0 {
-                        Text(String(format: "€%.0f", dailyEarnings[index]))
+                        Text(String(format: "€%.2f", dailyEarnings[index]))
                             .font(.system(size: 10, weight: .medium, design: .rounded))
                             .foregroundColor(.secondary)
                     }
