@@ -9,6 +9,8 @@ import com.adonwheels.campaignservice.service.ApplicationService;
 import com.adonwheels.campaignservice.service.ImageStorageService;
 import com.adonwheels.campaignservice.dto.ApplicationWithCampaign;
 import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -69,10 +71,10 @@ public class CampaignController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCampaign(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteCampaign(@PathVariable Long id) {
         applicationService.deleteByCampaignId(id);
         campaignService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/driver/{driverId}")
@@ -101,8 +103,8 @@ public class CampaignController {
     @PostMapping("/{id}/apply")
     public ResponseEntity<ApiResponse<Application>> applyToCampaign(
             @PathVariable Long id, @RequestParam Long driverId) {
-        campaignService.findById(id);
-        Application app = applicationService.apply(id, driverId);
+        Campaign campaign = campaignService.findById(id);
+        Application app = applicationService.apply(campaign, driverId);
         return ResponseEntity.ok(ApiResponse.success(app));
     }
 
@@ -114,12 +116,7 @@ public class CampaignController {
         return ResponseEntity.ok(ApiResponse.success(applications));
     }
 
-    /**
-     * UC07 - partial update of an application's status. Accepted bodies:
-     * <pre>{ "status": "ACCEPTED" }</pre> or <pre>{ "status": "DECLINED" }</pre>.
-     * Modelled as PATCH on the application resource (Richardson Level 2 REST)
-     * so the verb communicates the state transition without a verb in the URL.
-     */
+    // UC07 - partial update; body { "status": "ACCEPTED" | "DECLINED" }.
     @PatchMapping("/applications/{id}")
     public ResponseEntity<ApiResponse<Application>> updateApplicationStatus(
             @PathVariable Long id,
@@ -127,32 +124,36 @@ public class CampaignController {
         Application app = switch (update.status()) {
             case ACCEPTED -> applicationService.accept(id);
             case DECLINED -> applicationService.decline(id);
-            case APPLIED -> throw new com.adonwheels.dto.exception.BusinessException(
-                    com.adonwheels.dto.AppErrorCode.VALIDATION_ERROR,
+            case APPLIED -> throw new BusinessException(
+                    AppErrorCode.VALIDATION_ERROR,
                     "Application status can only be transitioned to ACCEPTED or DECLINED.");
         };
         return ResponseEntity.ok(ApiResponse.success(app));
     }
 
-    public record ApplicationStatusUpdate(com.adonwheels.campaignservice.model.ApplicationStatus status) {}
+    public record ApplicationStatusUpdate(ApplicationStatus status) {}
 
-    /**
-     * UC008 – Export campaign stats as CSV.
-     * Returns a downloadable CSV file with campaign details and application metrics.
-     */
+    @DeleteMapping("/applications/{id}")
+    public ResponseEntity<ApiResponse<Void>> withdrawApplication(
+            @PathVariable Long id, @RequestParam Long driverId) {
+        applicationService.withdraw(id, driverId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    // UC008 - export campaign stats as CSV.
     @GetMapping("/{id}/export")
     public ResponseEntity<byte[]> exportCampaignStats(@PathVariable Long id) {
         Campaign campaign = campaignService.findById(id);
         List<Application> applications = applicationService.findByCampaignId(id);
 
         long accepted = applications.stream()
-                .filter(a -> a.getStatus() == com.adonwheels.campaignservice.model.ApplicationStatus.ACCEPTED)
+                .filter(a -> a.getStatus() == ApplicationStatus.ACCEPTED)
                 .count();
         long declined = applications.stream()
-                .filter(a -> a.getStatus() == com.adonwheels.campaignservice.model.ApplicationStatus.DECLINED)
+                .filter(a -> a.getStatus() == ApplicationStatus.DECLINED)
                 .count();
         long pending = applications.stream()
-                .filter(a -> a.getStatus() == com.adonwheels.campaignservice.model.ApplicationStatus.APPLIED)
+                .filter(a -> a.getStatus() == ApplicationStatus.APPLIED)
                 .count();
 
         StringBuilder csv = new StringBuilder();
@@ -182,7 +183,7 @@ public class CampaignController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
-                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+                .body(('\uFEFF' + csv.toString()).getBytes(StandardCharsets.UTF_8));
     }
 
     @PostMapping("/{id}/images")
@@ -234,6 +235,6 @@ public class CampaignController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"company_" + companyId + "_campaigns.csv\"")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
-                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+                .body(('\uFEFF' + csv.toString()).getBytes(StandardCharsets.UTF_8));
     }
 }
