@@ -13,17 +13,20 @@ import com.adonwheels.rideservice.dto.StartRideResponse;
 import com.adonwheels.rideservice.model.CompletedRide;
 import com.adonwheels.rideservice.model.LocationPoint;
 import com.adonwheels.rideservice.model.RideSession;
+import com.adonwheels.rideservice.exception.InvalidDeferredRideException;
+import com.adonwheels.rideservice.exception.RideNotFoundException;
+import com.adonwheels.rideservice.exception.RideSessionNotFoundException;
 import com.adonwheels.rideservice.repository.RideHistoryRepository;
 import com.adonwheels.rideservice.repository.RideRepository;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -59,10 +62,13 @@ public class RideService {
 
     public Optional<ActiveRideResponse> getActiveRide(Long driverId) {
         return repository.findByDriverId(String.valueOf(driverId))
-                .map(session -> new ActiveRideResponse(driverId, session.getStartTime()));
+                .map(session -> ActiveRideResponse.active(driverId, session.getStartTime()));
     }
 
     public StartRideResponse startRide(String driverId, Long campaignId, Double ratePerKm) {
+        if (repository.findByDriverId(driverId).isPresent()) {
+            throw new BusinessException(AppErrorCode.RIDE_ALREADY_STARTED);
+        }
         String rideId = UUID.randomUUID().toString();
         RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId, ratePerKm);
         repository.save(session);
@@ -109,20 +115,20 @@ public class RideService {
 
     @Transactional
     public EndRideResponse logDeferredRide(DeferredRideRequest request) {
-        List<DeferredRideRequest.LocationPointDto> points = request.getLocationPoints();
+        List<DeferredRideRequest.LocationPointDto> points = request.locationPoints();
 
         if (points == null || points.size() < 2) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "At least 2 location points are required for a deferred ride");
+            throw new InvalidDeferredRideException(
+                    "At least 2 location points are required for a deferred ride");
         }
 
-        points.sort((a, b) -> a.getCapturedAt().compareTo(b.getCapturedAt()));
+        points.sort((a, b) -> a.capturedAt().compareTo(b.capturedAt()));
 
-        LocalDateTime startTime = LocalDateTime.parse(points.get(0).getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME);
-        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime startTime = LocalDateTime.parse(points.get(0).capturedAt(), DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime endTime = LocalDateTime.parse(points.get(points.size() - 1).capturedAt(), DateTimeFormatter.ISO_DATE_TIME);
 
         List<LocationPoint> route = points.stream()
-                .map(p -> new LocationPoint(p.getLat(), p.getLon(), LocalDateTime.parse(p.getCapturedAt(), DateTimeFormatter.ISO_DATE_TIME)))
+                .map(p -> new LocationPoint(p.lat(), p.lon(), LocalDateTime.parse(p.capturedAt(), DateTimeFormatter.ISO_DATE_TIME)))
                 .toList();
 
         double totalDistanceKm = calculateTotalDistance(route);
@@ -132,14 +138,14 @@ public class RideService {
                 : 0.0;
 
         CompletedRide ride = new CompletedRide();
-        ride.setDriverId(Long.parseLong(request.getDriverId()));
-        ride.setCampaignId(request.getCampaignId());
+        ride.setDriverId(Long.parseLong(request.driverId()));
+        ride.setCampaignId(request.campaignId());
         ride.setStartTime(startTime);
         ride.setEndTime(endTime);
         ride.setDuration((int) durationSeconds);
         ride.setDistanceKm(totalDistanceKm);
         ride.setAverageSpeedKmh(averageSpeedKmh);
-        double rate = request.getRatePerKm() != null ? request.getRatePerKm() : DEFAULT_EARNINGS_RATE_PER_KM;
+        double rate = request.ratePerKm() != null ? request.ratePerKm() : DEFAULT_EARNINGS_RATE_PER_KM;
         ride.setEarnings(totalDistanceKm * rate);
         ride.setStatus("DEFERRED");
         ride.setVerified(false);
@@ -153,8 +159,7 @@ public class RideService {
     @Transactional
     public void verifyRide(Long rideId) {
         CompletedRide ride = historyRepository.findById(rideId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "No completed ride found for id: " + rideId));
+                .orElseThrow(() -> new RideNotFoundException(rideId));
         ride.setVerified(true);
         historyRepository.save(ride);
     }
@@ -207,32 +212,25 @@ public class RideService {
                 .mapToDouble(CompletedRide::getAverageSpeedKmh).average().orElse(0.0);
 
         return new RideStatisticsResponse(
-                totalRides, totalRides, 0L,
-                totalDuration, avgDuration, 0L,
+                totalRides, totalRides,
+                totalDuration,
                 totalDistance, weeklyDistance, monthlyDistance,
                 totalEarnings, weeklyEarnings, monthlyEarnings,
-                avgSpeed, null
+                avgSpeed
         );
     }
 
-    /**
-     * Returns the recorded GPS polyline for a single completed ride.
-     * Caller must own the ride: throws {@link com.adonwheels.dto.exception.BusinessException}
-     * with {@link com.adonwheels.dto.AppErrorCode#ACCESS_DENIED} when {@code callerDriverId}
-     * does not match the ride's driver. Used by the coverage / heat-map
-     * feature on the driver app (UC014).
-     */
+    // UC014 - coverage / heat-map. Caller must own the ride.
     public List<RoutePointDto> getRoute(Long rideId, Long callerDriverId) {
         CompletedRide ride = historyRepository.findById(rideId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "No completed ride found for id: " + rideId));
+                .orElseThrow(() -> new RideNotFoundException(rideId));
 
         if (callerDriverId == null || !callerDriverId.equals(ride.getDriverId())) {
-            throw new com.adonwheels.dto.exception.BusinessException(com.adonwheels.dto.AppErrorCode.ACCESS_DENIED);
+            throw new BusinessException(AppErrorCode.ACCESS_DENIED);
         }
 
         return deserializeRoute(ride.getRoutePointsJson()).stream()
-                .map(p -> new RoutePointDto(p.lat(), p.lon(), null))
+                .map(p -> new RoutePointDto(p.lat(), p.lon()))
                 .toList();
     }
 
@@ -278,21 +276,17 @@ public class RideService {
     }
 
     private RideHistoryResponse toHistoryResponse(CompletedRide ride) {
-        RideHistoryResponse response = new RideHistoryResponse(
+        return new RideHistoryResponse(
                 ride.getId(), ride.getDriverId(), ride.getCampaignId(),
                 ride.getStartTime(), ride.getEndTime(),
-                null, null,
-                ride.getDuration(), null,
+                ride.getDuration(),
                 ride.getStatus(), ride.getDistanceKm(),
-                ride.getAverageSpeedKmh(), ride.getEarnings()
+                ride.getAverageSpeedKmh(), ride.getEarnings(),
+                ride.getStartLat(), ride.getStartLon(),
+                ride.getEndLat(), ride.getEndLon(),
+                deserializeRoute(ride.getRoutePointsJson()),
+                Boolean.TRUE.equals(ride.getVerified())
         );
-        response.setStartLat(ride.getStartLat());
-        response.setStartLon(ride.getStartLon());
-        response.setEndLat(ride.getEndLat());
-        response.setEndLon(ride.getEndLon());
-        response.setTrackPoints(deserializeRoute(ride.getRoutePointsJson()));
-        response.setVerified(Boolean.TRUE.equals(ride.getVerified()));
-        return response;
     }
 
     private String serializeRoute(List<LocationPoint> route) {
@@ -333,8 +327,7 @@ public class RideService {
 
     private RideSession requireSession(String rideId) {
         return repository.findById(rideId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "No active ride found for id: " + rideId));
+                .orElseThrow(() -> new RideSessionNotFoundException(rideId));
     }
 
     static double calculateTotalDistance(List<LocationPoint> route) {
