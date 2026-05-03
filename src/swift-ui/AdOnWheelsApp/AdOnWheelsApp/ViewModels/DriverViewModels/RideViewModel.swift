@@ -11,22 +11,13 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var currentSpeed: Double = 0.0
     @Published var currentRideId: String?
     @Published var lastCompletedRideId: Int64?
-    @Published var currentRide: Ride?
-    @Published var lastCompletedRide: Ride?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var locationVersion: Int = 0
 
-
-    /// Whether background GPS buffering is active (always on when user has a campaign)
-    @Published var isBufferingGPS: Bool = false
-
     /// Buffered GPS points collected in the background for deferred ride logging
     @Published private(set) var gpsBuffer: [DeferredLocationPoint] = []
-
-    /// Whether a deferred ride was just completed
-    @Published var deferredRideCompleted: Bool = false
 
     /// True if there are enough buffered points to reconstruct a ride
     var hasDeferredRideData: Bool { gpsBuffer.count >= 2 }
@@ -184,7 +175,6 @@ class RideViewModel: NSObject, ObservableObject {
     /// Called when the driver has an active campaign but hasn't started a ride.
     func startGPSBuffering() {
         guard !isRiding else { return }
-        isBufferingGPS = true
         gpsBuffer = []
 
         // Buffer a GPS point every 10 seconds, but only if we actually moved
@@ -219,7 +209,6 @@ class RideViewModel: NSObject, ObservableObject {
     func stopGPSBuffering() {
         bufferTimer?.cancel()
         bufferTimer = nil
-        isBufferingGPS = false
     }
 
     /// UC013: Submit a deferred ride using the buffered GPS data.
@@ -252,13 +241,8 @@ class RideViewModel: NSObject, ObservableObject {
             elapsedTime = TimeInterval(response.durationSeconds)
 
             gpsBuffer = []
-            deferredRideCompleted = true
 
             NotificationCenter.default.post(name: .rideCompleted, object: nil)
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                self.deferredRideCompleted = false
-            }
         } catch {
             errorMessage = error.localizedDescription
         }

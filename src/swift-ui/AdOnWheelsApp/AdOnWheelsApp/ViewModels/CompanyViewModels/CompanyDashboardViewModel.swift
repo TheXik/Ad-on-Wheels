@@ -36,29 +36,12 @@ class CompanyDashboardViewModel: ObservableObject {
         campaigns.reduce(0) { $0 + $1.budget }
     }
 
-    var activeBudget: Double {
-        activeCampaigns.reduce(0) { $0 + $1.budget }
-    }
-
-    var totalReach: Int {
-        campaigns.compactMap { $0.estimatedReach }.reduce(0, +)
-    }
-
-    var totalDriverSlots: Int {
-        campaigns.reduce(0) { $0 + $1.maxDrivers }
-    }
-
     var acceptedDriverCount: Int {
         applications.filter { $0.status.uppercased() == "ACCEPTED" }.count
     }
 
     var pendingApplicationCount: Int {
         applications.filter { $0.status.uppercased() == "APPLIED" }.count
-    }
-
-    var budgetUtilization: Double {
-        guard totalBudget > 0 else { return 0 }
-        return activeBudget / totalBudget
     }
 
     var campaignStatusBreakdown: [(label: String, count: Int, color: String)] {
@@ -144,14 +127,6 @@ class CompanyDashboardViewModel: ObservableObject {
 
     var totalCampaignRides: Int {
         campaignRideStats.reduce(0) { $0 + $1.rideStats.totalRides }
-    }
-
-    var totalEarningsPaid: Double {
-        campaignRideStats.reduce(0) { $0 + $1.rideStats.totalEarnings }
-    }
-
-    func rideStatsFor(campaignId: Int) -> RideStatsData? {
-        campaignRideStats.first { $0.campaign.id == campaignId }?.rideStats
     }
 
     func deleteCampaign(_ campaignId: Int) async {

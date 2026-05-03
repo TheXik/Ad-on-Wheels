@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 @MainActor
 class StatsViewModel: ObservableObject {
@@ -27,11 +26,7 @@ class StatsViewModel: ObservableObject {
     var totalEarnings: Double {
         statistics?.totalEarnings ?? 0
     }
-    
-    var totalDistance: Double {
-        statistics?.totalDistanceKm ?? 0
-    }
-    
+
     var totalRides: Int {
         Int(statistics?.totalRides ?? 0)
     }

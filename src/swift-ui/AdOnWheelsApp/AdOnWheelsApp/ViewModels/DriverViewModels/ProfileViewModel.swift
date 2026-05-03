@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 @MainActor
 class ProfileViewModel: ObservableObject {
