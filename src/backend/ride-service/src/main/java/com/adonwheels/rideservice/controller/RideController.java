@@ -14,6 +14,7 @@ import com.adonwheels.rideservice.dto.StartRideResponse;
 import com.adonwheels.rideservice.dto.TrackRequest;
 import com.adonwheels.rideservice.service.RideService;
 import com.adonwheels.dto.ApiResponse;
+import com.adonwheels.dto.AppErrorCode;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,27 +35,27 @@ public class RideController {
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<StartRideResponse>> startRide(
             @Valid @RequestBody StartRideRequest request) {
-        StartRideResponse response = rideService.startRide(request.getDriverId(), request.getCampaignId(), request.getRatePerKm());
+        StartRideResponse response = rideService.startRide(request.driverId(), request.campaignId(), request.ratePerKm());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     @PostMapping("/track")
     public ResponseEntity<Void> trackPoint(@Valid @RequestBody TrackRequest request) {
-        rideService.trackPoint(request.getRideId(), request.getLat(), request.getLon());
+        rideService.trackPoint(request.rideId(), request.lat(), request.lon());
         return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/end")
     public ResponseEntity<ApiResponse<EndRideResponse>> endRide(
             @Valid @RequestBody EndRideRequest request) {
-        EndRideResponse response = rideService.endRide(request.getRideId());
+        EndRideResponse response = rideService.endRide(request.rideId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/{completedRideId}/verify")
-    public ResponseEntity<Void> verifyRide(@PathVariable("completedRideId") Long completedRideId) {
+    public ResponseEntity<ApiResponse<Void>> verifyRide(@PathVariable("completedRideId") Long completedRideId) {
         rideService.verifyRide(completedRideId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     /**
@@ -87,13 +88,13 @@ public class RideController {
         return rideService.getActiveRide(driverId)
                 .map(ride -> ResponseEntity.ok(ApiResponse.success(ride)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error(com.adonwheels.dto.AppErrorCode.RIDE_NOT_ACTIVE)));
+                        .body(ApiResponse.error(AppErrorCode.RIDE_NOT_ACTIVE)));
     }
 
     @DeleteMapping("/{driverId}/history")
-    public ResponseEntity<Void> deleteAllRides(@PathVariable("driverId") Long driverId) {
+    public ResponseEntity<ApiResponse<Void>> deleteAllRides(@PathVariable("driverId") Long driverId) {
         rideService.deleteAllRides(driverId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/{driverId}/history")
