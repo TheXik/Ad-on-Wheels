@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -28,28 +27,16 @@ public class DriverController {
         this.imageService = imageService;
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Driver>>> all() {
-        List<Driver> drivers = service.getAllDrivers();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(drivers));
-    }
-
     @PostMapping
     public ResponseEntity<ApiResponse<Driver>> newDriver(@Valid @RequestBody Driver newDriver) {
         Driver savedDriver = service.addDriver(newDriver);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success(savedDriver));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(savedDriver));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Driver>> one(@PathVariable Long id) {
         Driver driver = service.getDriver(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(driver));
+        return ResponseEntity.ok(ApiResponse.success(driver));
     }
 
     @PutMapping("/{id}")
@@ -57,9 +44,7 @@ public class DriverController {
             @Valid @RequestBody Driver newDriver,
             @PathVariable Long id) {
         Driver updatedDriver = service.updateDriver(id, newDriver);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(updatedDriver));
+        return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
 
     @PatchMapping("/{id}/vehicle")
@@ -67,9 +52,7 @@ public class DriverController {
             @PathVariable Long id,
             @Valid @RequestBody VehicleRequest vehicle) {
         Driver updatedDriver = service.addVehicle(id, vehicle);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(updatedDriver));
+        return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
 
     @PatchMapping("/{id}/onboarding")
@@ -77,9 +60,7 @@ public class DriverController {
             @PathVariable Long id,
             @Valid @RequestBody OnboardingRequest request) {
         Driver updatedDriver = service.completeOnboarding(id, request);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(updatedDriver));
+        return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
 
     @PostMapping("/{id}/vehicle-image")
@@ -103,10 +84,8 @@ public class DriverController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteDriver(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteDriver(@PathVariable Long id) {
         service.deleteDriver(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
