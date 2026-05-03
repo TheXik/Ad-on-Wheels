@@ -14,7 +14,6 @@ class DashboardViewModel: ObservableObject {
     @Published var totalEarnings: Double = 0
     @Published var weeklyEarnings: Double = 0
     @Published var monthlyEarnings: Double = 0
-    @Published var driverRating: Double = 0
     @Published var totalRides: Int = 0
     @Published var monthlyRides: Int = 0
     @Published var averageSpeed: Double = 0
@@ -97,6 +96,26 @@ class DashboardViewModel: ObservableObject {
         }
     }
 
+    func withdrawApplication(_ application: ApplicationWithCampaign) async {
+        guard application.status.uppercased() == "APPLIED",
+              let driverId = authService.userId else { return }
+        do {
+            let endpoint = Endpoint(
+                path: "api/campaigns/applications/\(application.id)",
+                method: .delete,
+                queryItems: [URLQueryItem(name: "driverId", value: String(driverId))]
+            )
+            try await api.send(endpoint)
+            myApplications.removeAll { $0.id == application.id }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    var pendingApplicationCount: Int {
+        myApplications.filter { $0.status.uppercased() == "APPLIED" }.count
+    }
+
     private func fetchUnreadMessages(userId: Int) async {
         do {
             let endpoint = Endpoint(path: "api/messages/inbox/\(userId)")
@@ -149,9 +168,7 @@ class DashboardViewModel: ObservableObject {
             totalRides = stats.totalRides
             monthlyRides = stats.completedRides
             
-            // Speed and rating from backend
             averageSpeed = stats.averageSpeedKmh ?? 0
-            driverRating = stats.rating ?? 0
         }
     }
     
