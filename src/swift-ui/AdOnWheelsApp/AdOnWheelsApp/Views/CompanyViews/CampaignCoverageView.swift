@@ -167,13 +167,11 @@ struct CampaignCoverageView: View {
 
 
 private struct CoverageResponse: Codable {
-    let campaignId: Int
     let routes: [CoverageRoute]?
 }
 
 struct CoverageRoute: Identifiable, Codable {
     let rideId: Int
-    let driverId: Int
     let verified: Bool
     let route: [CoveragePoint]?
 
@@ -187,7 +185,6 @@ struct CoverageRoute: Identifiable, Codable {
 struct CoveragePoint: Codable {
     let lat: Double
     let lon: Double
-    let timestamp: Int64?
 }
 
 private struct LegendDashLine: Shape {

@@ -6,9 +6,6 @@ struct DashboardView: View {
     @ObservedObject var rideViewModel: RideViewModel
     var onDeferredScanTap: () -> Void
 
-    @State private var scrollOffset: CGFloat = 0
-    @State private var isHeaderCollapsed: Bool = false
-
     @State private var composeApp: ApplicationWithCampaign?
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
