@@ -75,7 +75,6 @@ export const campaigns = {
       method: 'PATCH',
       body: JSON.stringify({ status: 'DECLINED' }),
     }),
-  exportCsv: (companyId) => request(`/api/campaigns/company/${companyId}/export`),
   exportCampaignCsv: (campaignId) => request(`/api/campaigns/${campaignId}/export`),
   getCoverage: (campaignId) => request(`/api/campaigns/${campaignId}/coverage`),
 };
@@ -92,8 +91,6 @@ export const messages = {
     request('/api/messages', { method: 'POST', body: JSON.stringify(data) }),
   markRead: (messageId) =>
     request(`/api/messages/${messageId}/read`, { method: 'PATCH' }),
-  getUnreadCount: (userId) =>
-    request(`/api/messages/unread-count/${userId}`),
 };
 
 export const drivers = {
