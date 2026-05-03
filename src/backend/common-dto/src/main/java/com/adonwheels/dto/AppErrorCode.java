@@ -7,29 +7,20 @@ public enum AppErrorCode {
 
     // Authentication and security (401, 403)
     INVALID_CREDENTIALS(1001, "Invalid credentials provided", HttpStatus.UNAUTHORIZED),
-    TOKEN_EXPIRED(1002, "Authentication token has expired", HttpStatus.UNAUTHORIZED),
-    ACCOUNT_LOCKED(1003, "User account is locked", HttpStatus.FORBIDDEN),
     INVALID_TOKEN(1004, "Invalid authentication token", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED(1005, "Insufficient permissions to access this resource", HttpStatus.FORBIDDEN),
 
-    // User Management (404, 409, 400)
+    // User Management (404, 409)
     USER_NOT_FOUND(2001, "User not found", HttpStatus.NOT_FOUND),
-
-    // Critical use 409 CONFLICT for duplicates, not 400
     EMAIL_ALREADY_EXISTS(2002, "Email already exists", HttpStatus.CONFLICT),
-
-    DRIVER_PROFILE_INCOMPLETE(2003, "Driver profile is incomplete (missing car details)", HttpStatus.BAD_REQUEST),
-    COMPANY_PROFILE_INCOMPLETE(2004, "Company profile is incomplete", HttpStatus.BAD_REQUEST),
-    IMAGE_UPLOAD_FAILED(2005, "Failed to upload profile/car image", HttpStatus.INTERNAL_SERVER_ERROR),
     COMPANY_NOT_FOUND(2006, "Company not found", HttpStatus.NOT_FOUND),
     ROLE_MISMATCH(2007, "Email already registered under a different role", HttpStatus.CONFLICT),
 
-    // Campaign Management (404, 400)
+    // Campaign Management (404, 400, 409)
     CAMPAIGN_NOT_FOUND(3001, "Campaign not found", HttpStatus.NOT_FOUND),
     CAMPAIGN_FULL(3002, "Campaign has reached its maximum number of drivers", HttpStatus.CONFLICT),
     CAMPAIGN_EXPIRED(3003, "Campaign has ended", HttpStatus.BAD_REQUEST),
     INVALID_CAMPAIGN_DATES(3004, "Start date must be before end date", HttpStatus.BAD_REQUEST),
-    INSUFFICIENT_BUDGET(3005, "Company has insufficient budget for this campaign", HttpStatus.BAD_REQUEST),
     APPLICATION_NOT_FOUND(3006, "Application not found", HttpStatus.NOT_FOUND),
     ALREADY_APPLIED(3007, "Driver has already applied to this campaign", HttpStatus.CONFLICT),
     DRIVER_HAS_ACTIVE_CAMPAIGN(3008, "Driver already has an active campaign", HttpStatus.CONFLICT),
@@ -38,7 +29,7 @@ public enum AppErrorCode {
     INVALID_QR_CODE(5001, "The scanned QR code is invalid or unknown", HttpStatus.NOT_FOUND),
     RIDE_ALREADY_STARTED(5002, "Ride is already in progress", HttpStatus.CONFLICT),
     RIDE_NOT_ACTIVE(5003, "No active ride found to end", HttpStatus.NOT_FOUND),
-    RIDE_TOO_SHORT(5004, "Ride duration or distance was too short to be monetized", HttpStatus.BAD_REQUEST),
+    RIDE_NOT_FOUND(5005, "Completed ride not found", HttpStatus.NOT_FOUND),
 
     // System and validation (400, 409, 500, 503)
     VALIDATION_ERROR(9001, "Input validation failed", HttpStatus.BAD_REQUEST),
