@@ -17,4 +17,6 @@ docker --context "$CONTEXT" compose up -d
 echo "Running containers on server:"
 docker --context "$CONTEXT" compose ps
 
+bash ../../scripts/sync-backend-url.sh
+
 echo "Done"
