@@ -10,7 +10,6 @@ struct Ride: Identifiable, Codable {
     let duration: Int?          // Duration in seconds (matches backend field name)
     let status: String          // COMPLETED or DEFERRED (set by ride-service)
     let verified: Bool?         // Per-UC01 QR-scan verification flag
-    let campaignName: String?   // Campaign name for display
 
     let distanceKm: Double?
     let averageSpeedKmh: Double?
@@ -45,10 +44,6 @@ struct Ride: Identifiable, Codable {
         return CLLocationCoordinate2D(latitude: lat, longitude: lon)
     }
 
-    var displayCampaignName: String {
-        campaignName ?? "Campaign #\(campaignId ?? 0)"
-    }
-    
     // Computed property for formatted distance
     var formattedDistance: String {
         guard let distance = distanceKm else { return "0 km" }

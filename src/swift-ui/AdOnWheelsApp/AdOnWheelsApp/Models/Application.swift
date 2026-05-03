@@ -30,10 +30,7 @@ struct CampaignRideStat: Codable, Identifiable {
 }
 
 struct RideStatsData: Codable {
-    let campaignId: Int
     let totalRides: Int
     let totalDistanceKm: Double
-    let totalDurationSeconds: Int
     let totalEarnings: Double
-    let activeDriverCount: Int
 }
