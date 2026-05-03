@@ -76,9 +76,9 @@ public class MessageController {
     }
 
     @PatchMapping("/{messageId}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long messageId) {
+    public ResponseEntity<ApiResponse<Void>> markAsRead(@PathVariable Long messageId) {
         messageService.markAsRead(messageId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/unread-count/{recipientId}")
