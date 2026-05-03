@@ -69,7 +69,7 @@ public class RegistrationSagaOrchestratorService {
             throw new BusinessException(AppErrorCode.SERVICE_UNAVAILABLE,
                     "A required service is currently unavailable. Please try again later.");
 
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             logger.error("SAGA ROLLBACK: Unexpected error for {}.", request.email(), ex);
             rollbackProfileCreation(profileId, request.role());
             throw new BusinessException(AppErrorCode.INTERNAL_SERVER_ERROR,
