@@ -268,8 +268,6 @@ struct ApplicationCard: View {
     let onDecline: () -> Void
     @State private var showComposeMessage = false
 
-    private var actionInProgress: Int? { nil }
-
     var statusColor: Color {
         switch application.status.uppercased() {
         case "ACCEPTED": return .green
