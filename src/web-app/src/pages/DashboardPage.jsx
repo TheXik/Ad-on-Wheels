@@ -37,7 +37,7 @@ export default function DashboardPage() {
   if (loading) return <div className="loading">Loading dashboard...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
-  const active = campaignList.filter((c) => c.status === 'RECRUITING' || c.status === 'ONGOING');
+  const active = campaignList.filter((c) => c.status === 'RECRUITING');
 
   return (
     <div className="dashboard">
