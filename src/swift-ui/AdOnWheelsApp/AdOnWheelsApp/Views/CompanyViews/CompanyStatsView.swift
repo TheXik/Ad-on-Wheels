@@ -182,9 +182,9 @@ struct CompanyStatsView: View {
                 iconColor: .orange
             )
             CompanyStatCard(
-                icon: "chart.bar.fill",
-                value: "\(statsSource.count)",
-                label: "Campaigns",
+                icon: "eurosign.circle.fill",
+                value: String(format: "€%.2f", dashboard.totalEarningsPaid),
+                label: "Earnings Paid",
                 iconColor: .accentBlue
             )
         }
