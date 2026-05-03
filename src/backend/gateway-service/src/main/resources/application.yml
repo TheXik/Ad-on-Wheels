@@ -15,8 +15,6 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/auth/**
-          filters:
-            - name: AuthenticationFilter
 
         # -----------------------------------------------------------------------
         # Driver Service  →  GET /api/drivers/profile  (port 8082 internally)
@@ -29,8 +27,6 @@ spring:
             - Path=/api/drivers/**
           filters:
             - StripPrefix=1
-            - name: AuthenticationFilter
-            - name: RoleAuthorizationFilter
 
         # -----------------------------------------------------------------------
         # Ride Service    →  POST /api/rides/track     (port 8085 internally)
@@ -43,8 +39,6 @@ spring:
             - Path=/api/rides/**
           filters:
             - StripPrefix=1
-            - name: AuthenticationFilter
-            - name: RoleAuthorizationFilter
 
         # -----------------------------------------------------------------------
         # Company / Campaign Services
@@ -55,8 +49,6 @@ spring:
             - Path=/api/companies/**
           filters:
             - StripPrefix=1
-            - name: AuthenticationFilter
-            - name: RoleAuthorizationFilter
 
         - id: campaign-service
           uri: lb://campaign-service
@@ -64,8 +56,6 @@ spring:
             - Path=/api/campaigns/**
           filters:
             - StripPrefix=1
-            - name: AuthenticationFilter
-            - name: RoleAuthorizationFilter
 
         # -----------------------------------------------------------------------
         # Messages (UC005) — lives in campaign-service at /messages
@@ -76,8 +66,6 @@ spring:
             - Path=/api/messages/**
           filters:
             - StripPrefix=1
-            - name: AuthenticationFilter
-            - name: RoleAuthorizationFilter
 
 jwt:
   secret: ${JWT_SECRET_KEY}
