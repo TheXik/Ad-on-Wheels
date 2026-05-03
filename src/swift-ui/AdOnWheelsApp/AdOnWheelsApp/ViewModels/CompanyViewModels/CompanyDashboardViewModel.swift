@@ -129,6 +129,10 @@ class CompanyDashboardViewModel: ObservableObject {
         campaignRideStats.reduce(0) { $0 + $1.rideStats.totalRides }
     }
 
+    var totalEarningsPaid: Double {
+        campaignRideStats.reduce(0) { $0 + $1.rideStats.totalEarnings }
+    }
+
     func deleteCampaign(_ campaignId: Int) async {
         do {
             let endpoint = Endpoint(path: "api/campaigns/\(campaignId)", method: .delete)
