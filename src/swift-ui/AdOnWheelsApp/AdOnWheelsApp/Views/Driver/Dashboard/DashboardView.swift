@@ -9,8 +9,6 @@ struct DashboardView: View {
     @State private var scrollOffset: CGFloat = 0
     @State private var isHeaderCollapsed: Bool = false
 
-    @State private var showingVerification = false
-    @State private var isVerified = false
     @State private var composeApp: ApplicationWithCampaign?
 
     let brandBlue = Color(red: 0.0, green: 0.478, blue: 1.0)
@@ -61,46 +59,6 @@ struct DashboardView: View {
                             .buttonStyle(PlainButtonStyle())
                         }
 
-                        Button(action: {
-                            if !isVerified {
-                                showingVerification = true
-                            }
-                        }) {
-                            HStack(spacing: 15) {
-                                ZStack {
-                                    Circle()
-                                        .fill(isVerified ? Color.green.opacity(0.2) : Color.orange.opacity(0.2))
-                                        .frame(width: 50, height: 50)
-                                    
-                                    Image(systemName: isVerified ? "checkmark.seal.fill" : "camera.fill")
-                                        .font(.title2)
-                                        .foregroundColor(isVerified ? .green : .orange)
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(isVerified ? "Weekly Check Complete" : "Weekly Verification Required")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    Text(isVerified ? "You are all set for this week." : "Upload photo of passenger side decal")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                if !isVerified {
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .padding()
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(20)
-                            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .disabled(isVerified)
-
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Active Campaigns")
                                 .font(.headline)
@@ -137,6 +95,18 @@ struct DashboardView: View {
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                                     .padding(.horizontal, 4)
+
+                                if viewModel.pendingApplicationCount > 1 {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "info.circle")
+                                            .font(.caption)
+                                            .foregroundColor(.blue)
+                                        Text("Apply to as many as you like — once accepted, the rest decline automatically.")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.horizontal, 4)
+                                }
 
                                 ForEach(viewModel.myApplications) { app in
                                     VStack(spacing: 0) {
@@ -191,6 +161,23 @@ struct DashboardView: View {
                                                 }
                                             }
                                             .padding(.top, 8)
+                                        } else if app.status.uppercased() == "APPLIED" {
+                                            Divider().padding(.top, 10)
+                                            HStack {
+                                                Spacer()
+                                                Button(action: {
+                                                    Task { await viewModel.withdrawApplication(app) }
+                                                }) {
+                                                    HStack(spacing: 4) {
+                                                        Image(systemName: "arrow.uturn.backward")
+                                                        Text("Withdraw")
+                                                    }
+                                                    .font(.caption)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.red)
+                                                }
+                                            }
+                                            .padding(.top, 8)
                                         }
                                     }
                                     .padding()
@@ -227,11 +214,6 @@ struct DashboardView: View {
                     }
                     .padding(20)
                 }
-            }
-        }
-        .fullScreenCover(isPresented: $showingVerification) {
-            VerificationCameraView(driverId: authService.userId ?? 0) {
-                isVerified = true
             }
         }
         .sheet(item: $composeApp) { app in
