@@ -74,11 +74,10 @@ class StatsViewModel: ObservableObject {
             let stats: RideStatistics = try await api.send(statsEndpoint)
             self.statistics = stats
             
-            // Fetch recent rides (limit covers a typical week of activity, used by the
-            // 7-day earnings chart in dailyEarnings)
+            // 500 covers ~a month at typical activity, enough for the 30-day chart.
             let ridesEndpoint = Endpoint(
                 path: "api/drivers/\(driverId)/rides",
-                queryItems: [URLQueryItem(name: "limit", value: "100")]
+                queryItems: [URLQueryItem(name: "limit", value: "500")]
             )
             let rides: [Ride] = try await api.send(ridesEndpoint)
             self.recentRides = rides
@@ -104,32 +103,27 @@ class StatsViewModel: ObservableObject {
         String(format: "%.1f km", distance(for: period))
     }
     
-    // Earnings grouped by day for the last seven days, oldest first.
-    // Verified rides only, matching chap06's "platform does not count
-    // unverified rides toward earnings" and the verified-only weekly /
-    // monthly aggregates from the backend. Server emits LocalDateTime as
-    // UTC wall-clock; we parse as UTC and let Calendar.current bin into
-    // local-zone days.
-    var dailyEarnings: [Double] {
+    // Daily earnings over the requested window, oldest first. Verified rides
+    // only, to match the backend's weekly/monthly earnings totals.
+    func dailyEarnings(_ days: Int = 7) -> [Double] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-        var buckets = [Double](repeating: 0, count: 7)
+        var buckets = [Double](repeating: 0, count: days)
         for ride in recentRides {
             guard ride.verified == true else { continue }
             guard let endString = ride.endTime,
                   let endDate = StatsViewModel.parseLocalDateTime(endString) else { continue }
             let rideDay = calendar.startOfDay(for: endDate)
             guard let daysAgo = calendar.dateComponents([.day], from: rideDay, to: today).day else { continue }
-            guard daysAgo >= 0 && daysAgo < 7 else { continue }
-            let index = 6 - daysAgo
+            guard daysAgo >= 0 && daysAgo < days else { continue }
+            let index = days - 1 - daysAgo
             buckets[index] += ride.earnings ?? 0
         }
         return buckets
     }
 
-    // Spring's default LocalDateTime serialisation has no timezone designator
-    // but the server writes UTC wall-clock; parse as UTC so binning aligns
-    // with RideDetailView.parseBackendDate.
+    // Server LocalDateTime has no zone designator but is UTC; force UTC
+    // here so day-binning matches RideDetailView.parseBackendDate.
     static func parseLocalDateTime(_ value: String) -> Date? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
