@@ -116,7 +116,6 @@ public class CampaignController {
         return ResponseEntity.ok(ApiResponse.success(applications));
     }
 
-    // UC07 - partial update; body { "status": "ACCEPTED" | "DECLINED" }.
     @PatchMapping("/applications/{id}")
     public ResponseEntity<ApiResponse<Application>> updateApplicationStatus(
             @PathVariable Long id,
@@ -140,7 +139,6 @@ public class CampaignController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    // UC008 - export campaign stats as CSV.
     @GetMapping("/{id}/export")
     public ResponseEntity<byte[]> exportCampaignStats(@PathVariable Long id) {
         Campaign campaign = campaignService.findById(id);

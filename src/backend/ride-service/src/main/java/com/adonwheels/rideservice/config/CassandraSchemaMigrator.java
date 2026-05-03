@@ -11,13 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Spring Data Cassandra runs with {@code SchemaAction.CREATE_IF_NOT_EXISTS},
- * which never alters an existing table. When a new column is added to an
- * entity, deployments with a pre-existing keyspace silently miss it and writes
- * fail with "Undefined column name". This component patches the schema at
- * startup by issuing idempotent {@code ALTER TABLE ... ADD} statements.
- */
+// CREATE_IF_NOT_EXISTS never ALTERs, so new columns on existing keyspaces
+// would silently fail at write time. This patches them at startup.
 @Component
 public class CassandraSchemaMigrator {
 

@@ -40,12 +40,7 @@ import java.util.stream.Collectors;
 @Service
 public class RideService {
 
-    /**
-     * Fallback rate used when a ride is started or reconstructed without a
-     * campaign-supplied rate (legacy clients, deferred rides without a
-     * recorded campaign). Per-campaign rates set on the Campaign entity
-     * override this constant.
-     */
+    // Fallback when no campaign rate is supplied; per-campaign rates override this.
     private static final double DEFAULT_EARNINGS_RATE_PER_KM = 0.10;
 
     private final RideRepository repository;
@@ -193,10 +188,8 @@ public class RideService {
                 .filter(r -> r.getStartTime().isAfter(monthAgo))
                 .mapToDouble(CompletedRide::getDistanceKm).sum();
 
-        // Earnings: only verified rides contribute (UC01 postcondition).
-        // Ride counts and distance totals above are NOT filtered - they
-        // count every completed ride regardless of verification, since an
-        // unverified ride still represents real driving activity.
+        // Only verified rides contribute to earnings; counts and distance
+        // include unverified rides too.
         java.util.function.Predicate<CompletedRide> isVerified =
                 r -> Boolean.TRUE.equals(r.getVerified());
         double totalEarnings = allRides.stream().filter(isVerified)
@@ -220,7 +213,6 @@ public class RideService {
         );
     }
 
-    // UC014 - coverage / heat-map. Caller must own the ride.
     public List<RoutePointDto> getRoute(Long rideId, Long callerDriverId) {
         CompletedRide ride = historyRepository.findById(rideId)
                 .orElseThrow(() -> new RideNotFoundException(rideId));
@@ -265,7 +257,7 @@ public class RideService {
         long totalRides = rides.size();
         double totalDistance = rides.stream().mapToDouble(CompletedRide::getDistanceKm).sum();
         long totalDuration = rides.stream().mapToLong(CompletedRide::getDuration).sum();
-        // Earnings: only verified rides contribute (UC01 postcondition).
+        // Earnings count verified rides only.
         double totalEarnings = rides.stream()
                 .filter(r -> Boolean.TRUE.equals(r.getVerified()))
                 .mapToDouble(CompletedRide::getEarnings).sum();
@@ -340,7 +332,7 @@ public class RideService {
             LocationPoint b = route.get(i);
             double segmentKm = haversineKm(a, b);
 
-            // Skip GPS glitches: if a single segment implies > 200 km/h, discard it
+            // Drop segments faster than 200 km/h (GPS glitch).
             long dtSeconds = java.time.Duration.between(a.getCapturedAt(), b.getCapturedAt()).getSeconds();
             if (dtSeconds > 0) {
                 double impliedSpeedKmh = segmentKm / (dtSeconds / 3600.0);
@@ -349,7 +341,7 @@ public class RideService {
                 }
             }
 
-            // Skip GPS jitter: ignore segments under 10 meters
+            // Drop segments under 10 m (jitter while parked).
             if (segmentKm < 0.01) {
                 continue;
             }

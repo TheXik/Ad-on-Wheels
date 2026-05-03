@@ -88,9 +88,8 @@ public class ApplicationService {
         }
         applicationRepository.saveAll(otherPending);
 
-        // Lifecycle: campaign transitions to COMPLETED once accepted-driver count
-        // reaches maxDrivers. The discovery query filters by status=RECRUITING so
-        // a filled campaign stops appearing in driver decks immediately.
+        // Flip campaign to COMPLETED once it hits maxDrivers, so it
+        // disappears from RECRUITING-filtered driver decks.
         campaignRepository.findById(saved.getCampaignId()).ifPresent(campaign -> {
             if (campaign.getStatus() == CampaignStatus.RECRUITING && campaign.getMaxDrivers() != null) {
                 long acceptedCount = applicationRepository.countByCampaignIdAndStatus(

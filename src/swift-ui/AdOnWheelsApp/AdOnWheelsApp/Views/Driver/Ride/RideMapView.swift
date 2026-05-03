@@ -2,11 +2,8 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-/// UC014: Coverage / heat-map (driver, single ride).
-/// Fetches the recorded GPS polyline for one completed ride from
-/// `/api/rides/{rideId}/route` and draws it as a `MapPolyline`. The camera
-/// is fitted to the bounding box of the route plus ~10 % padding, so the
-/// whole drive is visible on first display.
+// Draws one completed ride's recorded GPS track as a MapPolyline,
+// fitted to the route's bounding box with a small padding.
 struct RideMapView: View {
     let rideId: Int
 
@@ -97,8 +94,6 @@ struct RideMapView: View {
         }
     }
 
-    /// Fit the camera to the bounding box of the route, expanded by ~10 %
-    /// so the polyline isn't clipped by the screen edges.
     private func recenterCamera() {
         guard !coordinates.isEmpty else { return }
         let lats = coordinates.map { $0.latitude }

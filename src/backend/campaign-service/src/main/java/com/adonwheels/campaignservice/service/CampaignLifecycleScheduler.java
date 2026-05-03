@@ -12,10 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 
-// Daily lifecycle pass that flips campaigns whose end date has passed from
-// RECRUITING to COMPLETED. The capacity-fill transition is handled inline by
-// ApplicationService.accept; this scheduler only catches the other path
-// (campaigns that ran out of time before filling).
+// Catches campaigns that ran out of time before filling.
+// The capacity-fill path is handled inline in ApplicationService.accept.
 @Component
 public class CampaignLifecycleScheduler {
 

@@ -13,16 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Path-prefix → allowed-role rules. Runs as a {@link WebFilter} after
- * {@link AuthenticationFilter}, so it sees the {@code X-User-Role} header
- * the auth filter already set.
- *
- * <p>Paths are inspected before {@code StripPrefix=1} runs, so they include
- * the {@code /api/} prefix. Auth-only paths ({@code /auth/**}) do not match
- * any rule and pass through unchanged (they are open per
- * {@link com.adonwheels.gatewayservice.filter.RouteValidator}).
- */
+// Runs after AuthenticationFilter, so X-User-Role is already set.
+// Paths still carry the /api/ prefix here (StripPrefix=1 happens later).
 @Component
 @Order(2)
 public class RoleAuthorizationFilter implements WebFilter {

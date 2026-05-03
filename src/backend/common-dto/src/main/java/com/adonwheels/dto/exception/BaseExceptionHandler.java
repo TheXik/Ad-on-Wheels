@@ -22,12 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Shared exception-to-ApiResponse mapping. Each service has its own
- * {@code @RestControllerAdvice} that extends this class. Service-specific
- * handlers (e.g. authentication failures in auth-service) are added by
- * overriding or extending in the subclass.
- */
+// Each service extends this with its own @RestControllerAdvice and adds
+// service-specific handlers on top.
 public abstract class BaseExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseExceptionHandler.class);

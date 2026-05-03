@@ -2,7 +2,6 @@ package com.adonwheels.dto;
 
 import org.springframework.http.HttpStatus;
 
-// Error codes used across the application improving the UX
 public enum AppErrorCode {
 
     // Authentication and security (401, 403)
