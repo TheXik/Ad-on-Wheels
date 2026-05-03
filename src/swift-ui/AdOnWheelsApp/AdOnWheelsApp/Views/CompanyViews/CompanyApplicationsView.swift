@@ -29,7 +29,6 @@ struct CompanyApplicationsView: View {
         default: result = dashboard.applications
         }
 
-        // UC007: Search by driver name or vehicle
         if !searchText.isEmpty {
             let query = searchText.lowercased()
             result = result.filter {
@@ -56,7 +55,6 @@ struct CompanyApplicationsView: View {
                     Text("Applications")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                     Spacer()
-                    // UC007: Filter toggle button
                     if !dashboard.applications.isEmpty {
                         Button(action: { withAnimation { showFilters.toggle() } }) {
                             ZStack(alignment: .topTrailing) {
@@ -80,7 +78,6 @@ struct CompanyApplicationsView: View {
                     }
                 }
 
-                // UC007: Search bar
                 if !dashboard.applications.isEmpty {
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")

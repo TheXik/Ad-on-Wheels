@@ -1,11 +1,8 @@
 import SwiftUI
 import MapKit
 
-/// UC014: Coverage / heat-map (company, multi-ride).
-/// Calls the coverage aggregator at `/api/campaigns/{id}/coverage` and
-/// overlays one `MapPolyline` per completed ride. Verified rides are drawn
-/// solid; unverified rides are drawn dashed in a lighter tone, mirroring
-/// the styling used by the web dashboard.
+// One MapPolyline per completed ride for the campaign.
+// Verified rides solid blue, unverified dashed grey.
 struct CampaignCoverageView: View {
     let campaign: Campaign
     @Environment(\.dismiss) private var dismiss
@@ -141,8 +138,6 @@ struct CampaignCoverageView: View {
         }
     }
 
-    /// Fit the camera to the bounding box of every coordinate across all
-    /// rides, expanded by ~10 % padding.
     private func recenterCamera() {
         let allCoords = routes.flatMap { $0.coordinates }
         guard !allCoords.isEmpty else { return }

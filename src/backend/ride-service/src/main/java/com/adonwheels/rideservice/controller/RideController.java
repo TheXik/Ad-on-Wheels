@@ -58,11 +58,6 @@ public class RideController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    /**
-     * UC014 – Coverage / heat-map: returns the recorded GPS polyline for a
-     * completed ride owned by the caller. Caller identity is supplied by the
-     * gateway via {@code X-User-Id}.
-     */
     @GetMapping("/{rideId}/route")
     public ResponseEntity<ApiResponse<List<RoutePointDto>>> getRideRoute(
             @PathVariable("rideId") Long rideId,
@@ -71,10 +66,6 @@ public class RideController {
         return ResponseEntity.ok(ApiResponse.success(route));
     }
 
-    /**
-     * UC013 – Deferred QR scan: logs a ride from buffered GPS data
-     * when the driver forgot to scan the QR code at the start.
-     */
     @PostMapping("/deferred")
     public ResponseEntity<ApiResponse<EndRideResponse>> logDeferredRide(
             @Valid @RequestBody DeferredRideRequest request) {

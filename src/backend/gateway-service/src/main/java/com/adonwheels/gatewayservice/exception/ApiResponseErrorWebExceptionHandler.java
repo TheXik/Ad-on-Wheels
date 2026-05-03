@@ -18,15 +18,8 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive exception handler for the Spring Cloud Gateway filter chain.
- * {@code @RestControllerAdvice} only catches exceptions thrown by
- * {@code @RestController} handlers. The gateway's {@code AuthenticationFilter}
- * and {@code RoleAuthorizationFilter} run as WebFilters; their thrown
- * {@link ResponseStatusException}s would otherwise fall through to Spring's
- * default reactive error page, breaking the {@link ApiResponse} envelope
- * the iOS and web clients depend on. This handler restores that envelope.
- */
+// @RestControllerAdvice doesn't catch WebFilter exceptions, so the auth /
+// role filters need this to keep the ApiResponse envelope on errors.
 @Component
 @Order(-2)
 public class ApiResponseErrorWebExceptionHandler implements WebExceptionHandler {

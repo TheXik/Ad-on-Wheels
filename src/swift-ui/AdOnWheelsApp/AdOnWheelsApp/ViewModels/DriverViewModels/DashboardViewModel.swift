@@ -2,26 +2,19 @@ import SwiftUI
 
 @MainActor
 class DashboardViewModel: ObservableObject {
-    // Header Stats
     @Published var distanceDriven: Double = 0
     @Published var distanceRemaining: Double = 0
-    @Published var monthlyGoalProgress: Double = 0 // 0.0 to 1.0
+    @Published var monthlyGoalProgress: Double = 0
     @Published var monthlyGoalTotal: Double = 200.0
 
-    // Quick Stats
     @Published var monthlyEarnings: Double = 0
     @Published var totalRides: Int = 0
 
-    // Greeting
     @Published var driverName: String = ""
 
-    // Active campaigns (driver is enrolled in)
     @Published var activeCampaigns: [Campaign] = []
-
-    // All driver applications (pending, accepted, declined)
     @Published var myApplications: [ApplicationWithCampaign] = []
 
-    // Messages
     @Published var unreadMessageCount: Int = 0
 
     @Published var isLoading = false

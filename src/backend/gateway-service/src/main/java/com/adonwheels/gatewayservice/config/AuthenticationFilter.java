@@ -18,21 +18,8 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
-/**
- * Global JWT authentication.
- *
- * <p>Implemented as a {@link WebFilter} (not a Spring Cloud Gateway
- * {@code AbstractGatewayFilterFactory}) so it runs in the WebFlux pipeline
- * <em>before</em> request mapping. That covers both routed endpoints
- * ({@code lb://*-service}) and the gateway-local {@code @RestController}
- * BFF aggregators ({@code DriverBffController}, {@code CompanyBffController},
- * {@code CoverageBffController}). A gateway-route filter would only fire for
- * the former, leaving the BFFs unauthenticated.
- *
- * <p>The filter sees the path before {@code StripPrefix=1} runs, so the
- * paths in {@link RouteValidator#openApiEndpoints} include the {@code /api/}
- * prefix where applicable.
- */
+// WebFilter (not a gateway-route filter) so it also covers the gateway-local
+// BFF controllers, which a route filter wouldn't see.
 @Component
 @Order(1)
 public class AuthenticationFilter implements WebFilter {

@@ -16,10 +16,7 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var currentLocation: CLLocationCoordinate2D?
     @Published var locationVersion: Int = 0
 
-    /// Buffered GPS points collected in the background for deferred ride logging
     @Published private(set) var gpsBuffer: [DeferredLocationPoint] = []
-
-    /// True if there are enough buffered points to reconstruct a ride
     var hasDeferredRideData: Bool { gpsBuffer.count >= 2 }
 
     var activeCampaignName: String = "Active Campaign"
@@ -38,7 +35,6 @@ class RideViewModel: NSObject, ObservableObject {
     private let api: APIClientProtocol
     private let authService: AuthenticationService
 
-    /// ISO-8601 date formatter for deferred ride timestamps
     private static let isoFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -133,7 +129,6 @@ class RideViewModel: NSObject, ObservableObject {
             isRiding = false
             currentRideId = nil
 
-            // Resume GPS buffering after ride ends
             startGPSBuffering()
 
             NotificationCenter.default.post(name: .rideCompleted, object: nil)
@@ -165,25 +160,23 @@ class RideViewModel: NSObject, ObservableObject {
                 let endpoint = Endpoint(path: "api/rides/track", method: .post, body: body)
                 try await api.send(endpoint)
             } catch {
-                // fire-and-forget: errors are intentionally swallowed
+                // fire-and-forget
             }
         }
     }
 
 
-    /// Start buffering GPS points in the background.
-    /// Called when the driver has an active campaign but hasn't started a ride.
+    // Background GPS buffering for the deferred-QR case (driver only scans
+    // at the end). One point every 10 s, capped at ~1 h.
     func startGPSBuffering() {
         guard !isRiding else { return }
         gpsBuffer = []
 
-        // Buffer a GPS point every 10 seconds, but only if we actually moved
         bufferTimer = Timer.publish(every: 10.0, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self, let location = self.lastLocation else { return }
 
-                // Skip if we haven't moved meaningfully since the last buffered point
                 if let prev = self.gpsBuffer.last {
                     let prevLoc = CLLocation(latitude: prev.lat, longitude: prev.lon)
                     if location.distance(from: prevLoc) < Self.minDistanceMeters {
@@ -198,21 +191,17 @@ class RideViewModel: NSObject, ObservableObject {
                 )
                 self.gpsBuffer.append(point)
 
-                // Cap buffer at ~1 hour of data (360 points at 10s intervals)
                 if self.gpsBuffer.count > 360 {
                     self.gpsBuffer.removeFirst()
                 }
             }
     }
 
-    /// Stop buffering GPS points
     func stopGPSBuffering() {
         bufferTimer?.cancel()
         bufferTimer = nil
     }
 
-    /// UC013: Submit a deferred ride using the buffered GPS data.
-    /// Called when the user scans QR at the end without having started a ride.
     func submitDeferredRide() async {
         guard hasDeferredRideData else {
             errorMessage = "Not enough GPS data to log a deferred ride"
@@ -319,7 +308,7 @@ extension RideViewModel: CLLocationManagerDelegate {
     ) {
         guard let location = locations.last else { return }
 
-        // Reject inaccurate GPS readings (common indoors or with weak signal)
+        // Drop bad GPS fixes (indoor / weak signal).
         guard location.horizontalAccuracy >= 0,
               location.horizontalAccuracy <= 20 else { return }
 
@@ -329,7 +318,6 @@ extension RideViewModel: CLLocationManagerDelegate {
             if self.isSimulatingMovement { return }
             #endif
 
-            // Always update the map pin
             self.currentLocation = location.coordinate
             self.locationVersion += 1
 
@@ -348,11 +336,9 @@ extension RideViewModel: CLLocationManagerDelegate {
                     self.currentSpeed = location.speed >= 0 ? location.speed * 3.6 : impliedSpeedKmh
                     self.lastLocation = location
                 } else {
-                    // Standing still or GPS jitter - zero out speed
                     self.currentSpeed = 0
                 }
             } else {
-                // First reading ever - just anchor, no distance/speed yet
                 self.lastLocation = location
                 self.currentSpeed = 0
             }
@@ -363,7 +349,7 @@ extension RideViewModel: CLLocationManagerDelegate {
         _ manager: CLLocationManager,
         didFailWithError error: Error
     ) {
-        // Location errors during a ride are non-fatal; tracking continues on next update
+        // Non-fatal — tracking resumes on the next update.
     }
 }
 

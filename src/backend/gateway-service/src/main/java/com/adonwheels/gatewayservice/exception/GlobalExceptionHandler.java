@@ -13,12 +13,8 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Handles exceptions thrown from BFF {@code @RestController} methods. Filter-thrown
- * exceptions (JWT validation, role authorization) are handled by
- * {@link ApiResponseErrorWebExceptionHandler} because {@code @RestControllerAdvice}
- * does not see WebFilter exceptions in the reactive pipeline.
- */
+// Handles BFF controller exceptions. Filter-thrown ones go through
+// ApiResponseErrorWebExceptionHandler instead.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

@@ -14,13 +14,6 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Aggregator behind {@code GET /api/campaigns/{campaignId}/coverage}.
- * Reuses ride-service's {@code /rides/campaign/{id}/routes} endpoint, which
- * already returns one entry per completed ride with {@code verified} and
- * embedded track points, then reshapes it into the
- * {@link CampaignCoverage} DTO consumed by the iOS and web clients.
- */
 @Service
 public class CoverageBffService {
 
@@ -62,10 +55,6 @@ public class CoverageBffService {
                 .toList();
     }
 
-    /**
-     * Internal projection of the ride-service response. Mirrors the fields
-     * we care about from {@code com.adonwheels.rideservice.dto.CampaignRouteResponse}.
-     */
     public static class CampaignRouteEntry {
         private Long rideId;
         private Long driverId;

@@ -64,7 +64,7 @@ struct DriverRootView: View {
             )
         }
         .onAppear {
-            // UC013: Start background GPS buffering so deferred rides are possible
+            // Buffer GPS in the background so deferred-QR rides have data.
             rideViewModel.requestLocationPermission()
             rideViewModel.startGPSBuffering()
         }
