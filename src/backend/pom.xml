@@ -24,15 +24,29 @@
         <spring-boot.version>3.4.3</spring-boot.version>
         <spring-cloud.version>2024.0.0</spring-cloud.version>
 
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <mysql-connector.version>9.1.0</mysql-connector.version>
         <snakeyaml.version>2.3</snakeyaml.version>
         <logback.version>1.5.16</logback.version>
         <bouncycastle.version>1.79</bouncycastle.version>
+        <mockito.version>5.18.0</mockito.version>
 
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -108,12 +122,38 @@
                     <version>3.14.1</version>
                     <configuration>
                         <release>${java.version}</release>
+                        <showWarnings>true</showWarnings>
+                        <showDeprecation>true</showDeprecation>
                         <compilerArgs>
                             <arg>-parameters</arg>
+                            <arg>-Xlint:all,-processing,-serial,-classfile</arg>
                         </compilerArgs>
                     </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 </project>

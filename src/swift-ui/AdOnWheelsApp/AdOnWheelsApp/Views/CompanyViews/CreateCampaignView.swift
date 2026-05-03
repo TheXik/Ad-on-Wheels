@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 
+@MainActor
 struct CreateCampaignView: View {
     @StateObject private var viewModel: CreateCampaignViewModel
     @Environment(\.dismiss) private var dismiss
@@ -74,14 +75,16 @@ struct CreateCampaignView: View {
                             }
 
                             if viewModel.selectedImages.count < CreateCampaignViewModel.maxImages {
+                                let imagesEmpty = viewModel.selectedImages.isEmpty
+                                let remainingSlots = CreateCampaignViewModel.maxImages - viewModel.selectedImages.count
                                 PhotosPicker(
                                     selection: $photosPickerItems,
-                                    maxSelectionCount: CreateCampaignViewModel.maxImages - viewModel.selectedImages.count,
+                                    maxSelectionCount: remainingSlots,
                                     matching: .images
                                 ) {
                                     HStack {
                                         Image(systemName: "photo.on.rectangle.angled")
-                                        Text(viewModel.selectedImages.isEmpty ? "Add Photos" : "Add More")
+                                        Text(imagesEmpty ? "Add Photos" : "Add More")
                                     }
                                     .font(.subheadline)
                                     .foregroundColor(.accentBlue)
@@ -90,7 +93,7 @@ struct CreateCampaignView: View {
                                     .background(Color.accentBlue.opacity(0.08))
                                     .cornerRadius(10)
                                 }
-                                .onChange(of: photosPickerItems) { items in
+                                .onChange(of: photosPickerItems) { _, items in
                                     viewModel.loadImages(from: items)
                                     photosPickerItems = []
                                 }
@@ -116,6 +119,7 @@ struct CreateCampaignView: View {
                         VStack(spacing: 14) {
                             FormField(icon: "eurosign.circle", placeholder: "Total Budget", text: $viewModel.budget, keyboardType: .decimalPad)
                             FormField(icon: "person.2", placeholder: "Max Drivers", text: $viewModel.maxDrivers, keyboardType: .numberPad)
+                            FormField(icon: "speedometer", placeholder: "Driver Pay per km (€)", text: $viewModel.ratePerKm, keyboardType: .decimalPad)
                             FormField(icon: "eye", placeholder: "Estimated Reach (optional)", text: $viewModel.estimatedReach, keyboardType: .numberPad)
                         }
                     }
@@ -167,7 +171,7 @@ struct CreateCampaignView: View {
             }
             .dismissKeyboardOnTap()
             .keyboardDoneButton()
-            .onChange(of: viewModel.didCreate) { created in
+            .onChange(of: viewModel.didCreate) { _, created in
                 if created { onCreated() }
             }
         }

@@ -4,7 +4,6 @@ struct LoginDriverView: View {
     @StateObject private var viewModel = LoginDriverViewModel()
     @ObservedObject var authService: AuthenticationService
     @ObservedObject var navViewModel: AuthNavigationViewModel
-    var lockedRole: InitialUserRole? = nil
     var onBack: (() -> Void)? = nil
     @State private var isPasswordVisible: Bool = false
 
@@ -104,5 +103,5 @@ struct LoginDriverView: View {
     let auth = AuthenticationService()
     let nav = AuthNavigationViewModel()
     nav.currentScreen = .loginDriver
-    return LoginDriverView(authService: auth, navViewModel: nav, lockedRole: nil, onBack: nil)
+    return LoginDriverView(authService: auth, navViewModel: nav, onBack: nil)
 }

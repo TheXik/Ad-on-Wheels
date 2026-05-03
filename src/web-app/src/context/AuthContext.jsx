@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState } from 'react';
 
-const AuthContext = createContext(null);
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext(null);
 
 function decodeJwt(token) {
   try {
@@ -11,27 +12,24 @@ function decodeJwt(token) {
   }
 }
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+function readStoredUser() {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  const payload = decodeJwt(token);
+  if (payload && payload.exp * 1000 > Date.now()) {
+    return {
+      token,
+      role: payload.role,
+      profileId: payload.profileID,
+      email: payload.sub,
+    };
+  }
+  localStorage.removeItem('token');
+  return null;
+}
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const payload = decodeJwt(token);
-      if (payload && payload.exp * 1000 > Date.now()) {
-        setUser({
-          token,
-          role: payload.role,
-          profileId: payload.profileID,
-          email: payload.sub,
-        });
-      } else {
-        localStorage.removeItem('token');
-      }
-    }
-    setLoading(false);
-  }, []);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(readStoredUser);
 
   function login(token) {
     localStorage.setItem('token', token);
@@ -50,14 +48,8 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading: false }}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
 }

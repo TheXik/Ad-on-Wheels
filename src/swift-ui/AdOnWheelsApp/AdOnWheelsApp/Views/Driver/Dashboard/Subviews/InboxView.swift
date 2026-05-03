@@ -114,7 +114,6 @@ struct InboxRow: View {
     }
 }
 
-// MARK: - Message Detail View
 
 struct MessageDetailView: View {
     let message: Message

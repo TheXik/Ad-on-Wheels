@@ -14,3 +14,5 @@ src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/LocalConfig.swift
 # Xcode per-user state
 *.xcuserstate
 xcuserdata/
+# Claude Code session state
+.claude/

@@ -17,4 +17,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     boolean existsByDriverIdAndCampaignId(Long driverId, Long campaignId);
 
     boolean existsByDriverIdAndStatus(Long driverId, ApplicationStatus status);
-} 
+
+    long countByCampaignIdAndStatus(Long campaignId, ApplicationStatus status);
+}

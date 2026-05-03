@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.service;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.Application;
 import com.adonwheels.gatewayservice.dto.ApplicationWithDriver;
 import com.adonwheels.gatewayservice.dto.Campaign;
@@ -39,11 +39,11 @@ public class CompanyBffService {
         return campaignClient.get()
                 .uri("/campaigns")
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Campaign>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
+                .map(ApiResponse::getData)
                 .flatMapMany(campaigns -> {
                     List<Campaign> companyCampaigns = campaigns.stream()
-                            .filter(c -> c.getCompanyId() != null && c.getCompanyId().equals(companyId))
+                            .filter(c -> c.companyId() != null && c.companyId().equals(companyId))
                             .toList();
 
                     if (companyCampaigns.isEmpty()) {
@@ -53,31 +53,31 @@ public class CompanyBffService {
                     return campaignClient.get()
                             .uri("/campaigns/{companyId}/applications", companyId)
                             .retrieve()
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Application>>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Application>>>() {})
+                            .map(ApiResponse::getData)
                             .flatMapMany(applications -> {
                                 List<Long> campaignIds = companyCampaigns.stream()
-                                        .map(Campaign::getId)
+                                        .map(Campaign::id)
                                         .toList();
 
                                 return Flux.fromIterable(applications)
-                                        .filter(app -> campaignIds.contains(app.getCampaignId()))
+                                        .filter(app -> campaignIds.contains(app.campaignId()))
                                         .flatMap(app -> {
                                             String campaignName = companyCampaigns.stream()
-                                                    .filter(c -> c.getId().equals(app.getCampaignId()))
-                                                    .map(Campaign::getName)
+                                                    .filter(c -> c.id().equals(app.campaignId()))
+                                                    .map(Campaign::name)
                                                     .findFirst().orElse("");
 
                                             return driverClient.get()
-                                                    .uri("/drivers/{id}", app.getDriverId())
+                                                    .uri("/drivers/{id}", app.driverId())
                                                     .retrieve()
-                                                    .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<Driver>>() {})
-                                                    .map(ApiResponseWrapper::getData)
+                                                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
+                                                    .map(ApiResponse::getData)
                                                     .map(driver -> new ApplicationWithDriver(
-                                                            app.getId(),
-                                                            app.getCampaignId(),
+                                                            app.id(),
+                                                            app.campaignId(),
                                                             campaignName,
-                                                            app.getStatus(),
+                                                            app.status(),
                                                             driver
                                                     ));
                                         });
@@ -91,15 +91,15 @@ public class CompanyBffService {
         return campaignClient.get()
                 .uri("/campaigns/company/{companyId}", companyId)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<Campaign>>>() {})
-                .map(ApiResponseWrapper::getData)
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
+                .map(ApiResponse::getData)
                 .flatMap(campaigns -> {
                     if (campaigns.isEmpty()) {
                         return Mono.just(Collections.<CampaignWithStats>emptyList());
                     }
 
                     String ids = campaigns.stream()
-                            .map(c -> String.valueOf(c.getId()))
+                            .map(c -> String.valueOf(c.id()))
                             .collect(Collectors.joining(","));
 
                     return rideClient.get()
@@ -108,20 +108,20 @@ public class CompanyBffService {
                                     .queryParam("ids", ids)
                                     .build())
                             .retrieve()
-                            .bodyToMono(new ParameterizedTypeReference<ApiResponseWrapper<List<CampaignRideStats>>>() {})
-                            .map(ApiResponseWrapper::getData)
+                            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<CampaignRideStats>>>() {})
+                            .map(ApiResponse::getData)
                             .map(statsList -> {
                                 Map<Long, CampaignRideStats> statsMap = statsList.stream()
-                                        .collect(Collectors.toMap(CampaignRideStats::getCampaignId, s -> s));
+                                        .collect(Collectors.toMap(CampaignRideStats::campaignId, s -> s));
 
                                 return campaigns.stream().map(campaign -> {
-                                    CampaignRideStats stats = statsMap.getOrDefault(campaign.getId(),
-                                            new CampaignRideStats(campaign.getId(), 0, 0.0, 0, 0.0, 0));
+                                    CampaignRideStats stats = statsMap.getOrDefault(campaign.id(),
+                                            new CampaignRideStats(campaign.id(), 0, 0.0, 0, 0.0, 0));
                                     return new CampaignWithStats(campaign, stats);
                                 }).toList();
                             })
                             .onErrorReturn(campaigns.stream()
-                                    .map(c -> new CampaignWithStats(c, new CampaignRideStats(c.getId(), 0, 0.0, 0, 0.0, 0)))
+                                    .map(c -> new CampaignWithStats(c, new CampaignRideStats(c.id(), 0, 0.0, 0, 0.0, 0)))
                                     .toList());
                 });
     }
@@ -131,23 +131,23 @@ public class CompanyBffService {
             StringBuilder csv = new StringBuilder();
             csv.append("Campaign ID,Name,Status,Start Date,End Date,Budget,Max Drivers,Est. Reach,Km Driven,Rides,Earnings Paid,Active Drivers\n");
             for (CampaignWithStats cs : stats) {
-                Campaign c = cs.getCampaign();
-                CampaignRideStats r = cs.getRideStats();
-                csv.append(c.getId()).append(",\"")
-                   .append(c.getName().replace("\"", "\"\"")).append("\",")
-                   .append(c.getStatus()).append(",")
-                   .append(c.getStartDate()).append(",")
-                   .append(c.getEndDate()).append(",")
-                   .append(c.getBudget()).append(",")
-                   .append(c.getMaxDrivers()).append(",")
-                   .append(c.getEstimatedReach() != null ? c.getEstimatedReach() : "N/A").append(",")
-                   .append(String.format("%.2f", r.getTotalDistanceKm())).append(",")
-                   .append(r.getTotalRides()).append(",")
-                   .append(String.format("%.2f", r.getTotalEarnings())).append(",")
-                   .append(r.getActiveDriverCount())
+                Campaign c = cs.campaign();
+                CampaignRideStats r = cs.rideStats();
+                csv.append(c.id()).append(",\"")
+                   .append(c.name().replace("\"", "\"\"")).append("\",")
+                   .append(c.status()).append(",")
+                   .append(c.startDate()).append(",")
+                   .append(c.endDate()).append(",")
+                   .append(c.budget()).append(",")
+                   .append(c.maxDrivers()).append(",")
+                   .append(c.estimatedReach() != null ? c.estimatedReach() : "N/A").append(",")
+                   .append(String.format("%.2f", r.totalDistanceKm())).append(",")
+                   .append(r.totalRides()).append(",")
+                   .append(String.format("%.2f", r.totalEarnings())).append(",")
+                   .append(r.activeDriverCount())
                    .append("\n");
             }
-            return csv.toString().getBytes(StandardCharsets.UTF_8);
+            return ('\uFEFF' + csv.toString()).getBytes(StandardCharsets.UTF_8);
         });
     }
 }

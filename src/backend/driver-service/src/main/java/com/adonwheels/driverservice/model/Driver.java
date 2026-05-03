@@ -1,5 +1,6 @@
 package com.adonwheels.driverservice.model;
 
+import com.adonwheels.dto.validation.NoHtml;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,18 +20,20 @@ public class Driver {
 
     @Column(nullable = false)
     @NotBlank
+    @NoHtml
     private String name;
 
     @Column(nullable = false)
     @Email
     @NotBlank
     private String email;
-    
-    // Vehicle info
+
     @Column(nullable = true)
+    @NoHtml
     private String vehicleMake;
-    
+
     @Column(nullable = true)
+    @NoHtml
     private String vehicleModel;
     
     @Column(nullable = true)
@@ -38,35 +41,19 @@ public class Driver {
     
     @Column(nullable = true)
     private String vehiclePlate;
-    
-    @Column(nullable = true)
-    private String vehicleColor;
 
     @Column(nullable = true)
     private String vehicleImageUrl;
 
-    @Column(nullable = true)
-    private Boolean vehicleVerified;
-    
-    // Rating
-    @Column(nullable = true)
-    private Double rating;
-    
-    @Column(nullable = true)
-    private LocalDateTime lastVerificationDate;
-
-    // Monthly driving goal
     @Column(nullable = true)
     private Double monthlyGoalKm;
 
     @Column(nullable = true)
     private Boolean onboardingCompleted;
 
-    // Registration date
     @Column(nullable = true)
     private LocalDateTime memberSince;
 
-    // Getters and setters
     public Long getId() {
         return id;
     }
@@ -123,44 +110,12 @@ public class Driver {
         this.vehiclePlate = vehiclePlate;
     }
 
-    public String getVehicleColor() {
-        return vehicleColor;
-    }
-
-    public void setVehicleColor(String vehicleColor) {
-        this.vehicleColor = vehicleColor;
-    }
-
     public String getVehicleImageUrl() {
         return vehicleImageUrl;
     }
 
     public void setVehicleImageUrl(String vehicleImageUrl) {
         this.vehicleImageUrl = vehicleImageUrl;
-    }
-
-    public Boolean getVehicleVerified() {
-        return vehicleVerified;
-    }
-
-    public void setVehicleVerified(Boolean vehicleVerified) {
-        this.vehicleVerified = vehicleVerified;
-    }
-
-    public Double getRating() {
-        return rating;
-    }
-
-    public void setRating(Double rating) {
-        this.rating = rating;
-    }
-
-    public LocalDateTime getLastVerificationDate() {
-        return lastVerificationDate;
-    }
-
-    public void setLastVerificationDate(LocalDateTime lastVerificationDate) {
-        this.lastVerificationDate = lastVerificationDate;
     }
 
     public LocalDateTime getMemberSince() {

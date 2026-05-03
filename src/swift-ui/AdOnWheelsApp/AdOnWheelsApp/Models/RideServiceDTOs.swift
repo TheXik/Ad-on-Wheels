@@ -16,7 +16,6 @@ struct EndRideResponse: Decodable {
     let durationSeconds: Int
 }
 
-// MARK: - UC013 Deferred Ride DTOs
 
 struct DeferredLocationPoint: Codable {
     let lat: Double
@@ -27,5 +26,6 @@ struct DeferredLocationPoint: Codable {
 struct DeferredRideRequest: Encodable {
     let driverId: String
     let campaignId: Int?
+    let ratePerKm: Double?
     let locationPoints: [DeferredLocationPoint]
 }

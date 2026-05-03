@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats } from '../services/api';
+import CampaignCoverageMap from '../components/CampaignCoverageMap';
 
 export default function CampaignDetailPage() {
   const { id } = useParams();
@@ -139,12 +140,15 @@ export default function CampaignDetailPage() {
         </div>
       )}
 
+      <CampaignCoverageMap campaignId={campaign.id} />
+
       <div className="detail-grid">
         <div className="detail-card">
           <h3>Details</h3>
           <p>{campaign.description}</p>
           <div className="detail-meta">
             <div><strong>Budget:</strong> €{campaign.budget}</div>
+            <div><strong>Pay per km:</strong> €{campaign.ratePerKm != null ? Number(campaign.ratePerKm).toFixed(2) : '—'}</div>
             <div><strong>Max Drivers:</strong> {campaign.maxDrivers}</div>
             <div><strong>Start:</strong> {new Date(campaign.startDate).toLocaleDateString()}</div>
             <div><strong>End:</strong> {new Date(campaign.endDate).toLocaleDateString()}</div>
@@ -176,13 +180,7 @@ export default function CampaignDetailPage() {
                       <div><strong>Vehicle:</strong> {app.driver.vehicleMake && app.driver.vehicleModel
                         ? `${app.driver.vehicleYear || ''} ${app.driver.vehicleMake} ${app.driver.vehicleModel}`.trim()
                         : 'Not set'}</div>
-                      <div><strong>Color:</strong> {app.driver.vehicleColor || 'N/A'}</div>
                       <div><strong>Plate:</strong> {app.driver.vehiclePlate || 'N/A'}</div>
-                      <div><strong>Rating:</strong> {app.driver.rating ? `${app.driver.rating.toFixed(1)} / 5` : 'New driver'}</div>
-                      <div><strong>Verified:</strong> {app.driver.vehicleVerified ? 'Yes' : 'No'}</div>
-                      {app.driver.memberSince && (
-                        <div><strong>Member since:</strong> {new Date(app.driver.memberSince).toLocaleDateString()}</div>
-                      )}
                     </div>
                   )}
                   <div className="application-actions">

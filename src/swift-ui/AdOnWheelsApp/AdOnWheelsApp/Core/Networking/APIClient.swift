@@ -25,38 +25,29 @@ final class APIClient: APIClientProtocol {
     
     func send<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         do {
-            // Prepare Request
             let request = try endpoint.makeURLRequest(baseURL: baseURL)
-            
-            // Network Call
             let (data, response) = try await session.data(for: request)
 
-            // Validate HTTP Response
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw NetworkError.transport(URLError(.badServerResponse))
             }
-            
-            // Handle Success (200-299)
+
             if (200...299).contains(httpResponse.statusCode) {
-                // Handle Empty Response Case
                 if T.self == EmptyResponse.self {
                     return EmptyResponse() as! T
                 }
-                
-                // Decode the Standard ApiResponse Wrapper
+
                 let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
                 
                 if apiResponse.success, let data = apiResponse.data {
                     return data
                 } else if let errorDetails = apiResponse.error {
-                    // The server replied 200 OK, but said success=false (Logical Error)
                     throw NetworkError.serverError(errorDetails)
                 } else {
                     throw NetworkError.decoding(URLError(.cannotParseResponse))
                 }
             }
-            
-            // Non-2xx: attempt to surface structured error messages
+
             if let wrapped = try? decoder.decode(ApiResponse<EmptyResponse>.self, from: data),
                let details = wrapped.error {
                 throw NetworkError.serverError(details)
@@ -81,7 +72,6 @@ final class APIClient: APIClientProtocol {
         let _: EmptyResponse = try await send(endpoint)
     }
 
-    // Convenience wrappers that map NetworkError to AppError
     func sendMapped<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
         do {
             return try await send(endpoint)

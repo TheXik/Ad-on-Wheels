@@ -1,7 +1,7 @@
 package com.adonwheels.companyservice.exception;
 
-import dto.AppErrorCode;
-import dto.exception.BusinessException;
+import com.adonwheels.dto.AppErrorCode;
+import com.adonwheels.dto.exception.BusinessException;
 
 public class CompanyNotFoundException extends BusinessException {
     public CompanyNotFoundException(Long id) {

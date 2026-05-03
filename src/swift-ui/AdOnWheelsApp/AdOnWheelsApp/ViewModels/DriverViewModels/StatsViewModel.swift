@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 @MainActor
 class StatsViewModel: ObservableObject {
@@ -7,8 +6,7 @@ class StatsViewModel: ObservableObject {
     @Published var recentRides: [Ride] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // Computed properties from backend stats
+
     var weeklyEarnings: Double {
         statistics?.weeklyEarnings ?? 0
     }
@@ -28,13 +26,9 @@ class StatsViewModel: ObservableObject {
     var totalEarnings: Double {
         statistics?.totalEarnings ?? 0
     }
-    
-    var totalDistance: Double {
-        statistics?.totalDistanceKm ?? 0
-    }
-    
+
     var totalRides: Int {
-        statistics?.totalRides ?? 0
+        Int(statistics?.totalRides ?? 0)
     }
     
     var averageSpeed: Double {
@@ -76,15 +70,14 @@ class StatsViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            // Fetch statistics
             let statsEndpoint = Endpoint(path: "api/drivers/\(driverId)/statistics")
             let stats: RideStatistics = try await api.send(statsEndpoint)
             self.statistics = stats
             
-            // Fetch recent rides
+            // 500 covers ~a month at typical activity, enough for the 30-day chart.
             let ridesEndpoint = Endpoint(
                 path: "api/drivers/\(driverId)/rides",
-                queryItems: [URLQueryItem(name: "limit", value: "10")]
+                queryItems: [URLQueryItem(name: "limit", value: "500")]
             )
             let rides: [Ride] = try await api.send(ridesEndpoint)
             self.recentRides = rides
@@ -110,13 +103,40 @@ class StatsViewModel: ObservableObject {
         String(format: "%.1f km", distance(for: period))
     }
     
-    // Daily earnings (placeholder - would need daily aggregation endpoint)
-    var dailyEarnings: [Double] {
-        // TODO: Add daily aggregation endpoint to backend
-        // For now return estimated split
-        let weekly = weeklyEarnings
-        if weekly == 0 { return Array(repeating: 0, count: 7) }
-        let daily = weekly / 7.0
-        return Array(repeating: daily, count: 7)
+    // Daily earnings over the requested window, oldest first. Verified rides
+    // only, to match the backend's weekly/monthly earnings totals.
+    func dailyEarnings(_ days: Int = 7) -> [Double] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        var buckets = [Double](repeating: 0, count: days)
+        for ride in recentRides {
+            guard ride.verified == true else { continue }
+            guard let endString = ride.endTime,
+                  let endDate = StatsViewModel.parseLocalDateTime(endString) else { continue }
+            let rideDay = calendar.startOfDay(for: endDate)
+            guard let daysAgo = calendar.dateComponents([.day], from: rideDay, to: today).day else { continue }
+            guard daysAgo >= 0 && daysAgo < days else { continue }
+            let index = days - 1 - daysAgo
+            buckets[index] += ride.earnings ?? 0
+        }
+        return buckets
+    }
+
+    // Server LocalDateTime has no zone designator but is UTC; force UTC
+    // here so day-binning matches RideDetailView.parseBackendDate.
+    static func parseLocalDateTime(_ value: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        for format in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS",
+                       "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+                       "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                       "yyyy-MM-dd'T'HH:mm:ss"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: value) {
+                return date
+            }
+        }
+        return nil
     }
 }

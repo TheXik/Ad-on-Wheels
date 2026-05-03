@@ -66,11 +66,17 @@ export const campaigns = {
   getApplications: (companyId) =>
     request(`/api/campaigns/${companyId}/applications`),
   acceptApplication: (applicationId) =>
-    request(`/api/campaigns/applications/${applicationId}/accept`, { method: 'POST' }),
+    request(`/api/campaigns/applications/${applicationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'ACCEPTED' }),
+    }),
   declineApplication: (applicationId) =>
-    request(`/api/campaigns/applications/${applicationId}/decline`, { method: 'POST' }),
-  exportCsv: (companyId) => request(`/api/campaigns/company/${companyId}/export`),
+    request(`/api/campaigns/applications/${applicationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'DECLINED' }),
+    }),
   exportCampaignCsv: (campaignId) => request(`/api/campaigns/${campaignId}/export`),
+  getCoverage: (campaignId) => request(`/api/campaigns/${campaignId}/coverage`),
 };
 
 export const companies = {
@@ -85,8 +91,6 @@ export const messages = {
     request('/api/messages', { method: 'POST', body: JSON.stringify(data) }),
   markRead: (messageId) =>
     request(`/api/messages/${messageId}/read`, { method: 'PATCH' }),
-  getUnreadCount: (userId) =>
-    request(`/api/messages/unread-count/${userId}`),
 };
 
 export const drivers = {

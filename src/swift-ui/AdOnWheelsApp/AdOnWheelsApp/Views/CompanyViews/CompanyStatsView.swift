@@ -99,7 +99,13 @@ struct CompanyStatsView: View {
         .refreshable {
             await dashboard.loadAll()
         }
-        .onChange(of: dashboard.exportedFileURL) { url in
+        .onChange(of: dashboard.campaigns.count) { _, _ in
+            // Reset selection when the campaigns list changes (e.g. after a delete)
+            // so the picker doesn't silently snap to a different campaign at the
+            // same index.
+            selectedCampaignIndex = -1
+        }
+        .onChange(of: dashboard.exportedFileURL) { _, url in
             if url != nil {
                 showShareSheet = true
             }
@@ -176,9 +182,9 @@ struct CompanyStatsView: View {
                 iconColor: .orange
             )
             CompanyStatCard(
-                icon: "chart.bar.fill",
-                value: "\(statsSource.count)",
-                label: "Campaigns",
+                icon: "eurosign.circle.fill",
+                value: String(format: "€%.2f", dashboard.totalEarningsPaid),
+                label: "Earnings Paid",
                 iconColor: .accentBlue
             )
         }
@@ -308,18 +314,6 @@ struct CompanyStatsView: View {
 
                         Spacer()
 
-                        if let rating = item.driver.rating, rating > 0 {
-                            HStack(spacing: 3) {
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.orange)
-                                Text(String(format: "%.1f", rating))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-
                         Text(item.driver.vehicleDisplayName)
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -376,7 +370,6 @@ struct CompanyStatsView: View {
     }
 }
 
-// MARK: - Share Sheet (UC008)
 
 struct ShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]

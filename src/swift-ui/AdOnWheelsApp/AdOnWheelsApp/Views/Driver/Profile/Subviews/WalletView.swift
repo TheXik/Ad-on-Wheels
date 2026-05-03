@@ -2,12 +2,10 @@ import SwiftUI
 
 struct WalletView: View {
     @ObservedObject var viewModel: ProfileViewModel
-    @State private var showCashOutAlert = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 25) {
-                // Balance Card
                 VStack(spacing: 10) {
                     Text("Total Earnings")
                         .font(.subheadline)
@@ -15,17 +13,6 @@ struct WalletView: View {
                     Text(viewModel.formattedBalance)
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(.white)
-                    
-                    Button(action: { showCashOutAlert = true }) {
-                        Text("Cash Out")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 30)
-                            .padding(.vertical, 10)
-                            .background(Color.white)
-                            .cornerRadius(20)
-                    }
-                    .padding(.top, 10)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
@@ -34,7 +21,6 @@ struct WalletView: View {
                 .padding()
                 .shadow(radius: 5)
                 
-                // Summary Stats from Backend
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Earnings Summary")
                         .font(.headline)
@@ -55,7 +41,6 @@ struct WalletView: View {
                     .padding(.horizontal)
                 }
                 
-                // Additional Stats
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Performance Stats")
                         .font(.headline)
@@ -78,13 +63,6 @@ struct WalletView: View {
         }
         .background(Color(UIColor.systemGroupedBackground))
         .navigationBarTitle("Wallet")
-        .alert(isPresented: $showCashOutAlert) {
-            Alert(
-                title: Text("Coming Soon"),
-                message: Text("Cash out functionality will be available in a future update."),
-                dismissButton: .default(Text("OK"))
-            )
-        }
     }
 }
 

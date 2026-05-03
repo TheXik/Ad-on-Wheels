@@ -11,6 +11,7 @@ class CreateCampaignViewModel: ObservableObject {
     @Published var endDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
     @Published var budget = ""
     @Published var maxDrivers = ""
+    @Published var ratePerKm = "0.10"
     @Published var estimatedReach = ""
     @Published var selectedImages: [UIImage] = []
     @Published var isSubmitting = false
@@ -32,6 +33,7 @@ class CreateCampaignViewModel: ObservableObject {
         !description.trimmingCharacters(in: .whitespaces).isEmpty &&
         Double(budget) != nil && Double(budget)! > 0 &&
         Int(maxDrivers) != nil && Int(maxDrivers)! > 0 &&
+        Double(ratePerKm) != nil && Double(ratePerKm)! > 0 &&
         endDate > startDate
     }
 
@@ -73,6 +75,7 @@ class CreateCampaignViewModel: ObservableObject {
                 endDate: fmt.string(from: endDate),
                 budget: Double(budget) ?? 0,
                 maxDrivers: Int(maxDrivers) ?? 0,
+                ratePerKm: Double(ratePerKm) ?? 0,
                 estimatedReach: Int(estimatedReach),
                 status: "RECRUITING"
             )
@@ -104,6 +107,7 @@ private struct CreateCampaignRequest: Encodable {
     let endDate: String
     let budget: Double
     let maxDrivers: Int
+    let ratePerKm: Double
     let estimatedReach: Int?
     let status: String
 }

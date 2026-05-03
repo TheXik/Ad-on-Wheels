@@ -1,10 +1,7 @@
 import SwiftUI
 
-// UC007 — Sort options for driver applications
 enum DriverSortOption: String, CaseIterable {
     case newest = "Newest"
-    case ratingHigh = "Rating ↓"
-    case ratingLow = "Rating ↑"
     case nameAZ = "Name A–Z"
 }
 
@@ -12,15 +9,11 @@ struct CompanyApplicationsView: View {
     @ObservedObject var dashboard: CompanyDashboardViewModel
     @State private var selectedFilter = 0
     @State private var searchText = ""
-    @State private var minRating: Double = 0
-    @State private var verifiedOnly = false
     @State private var sortOption: DriverSortOption = .newest
     @State private var showFilters = false
 
     var activeFilterCount: Int {
         var count = 0
-        if minRating > 0 { count += 1 }
-        if verifiedOnly { count += 1 }
         if !searchText.isEmpty { count += 1 }
         if sortOption != .newest { count += 1 }
         return count
@@ -28,7 +21,6 @@ struct CompanyApplicationsView: View {
 
     var filteredApplications: [ApplicationWithDriver] {
         var result: [ApplicationWithDriver]
-        // Status filter
         switch selectedFilter {
         case 0: result = dashboard.applications
         case 1: result = dashboard.applications.filter { $0.status.uppercased() == "APPLIED" }
@@ -37,7 +29,6 @@ struct CompanyApplicationsView: View {
         default: result = dashboard.applications
         }
 
-        // UC007: Search by driver name or vehicle
         if !searchText.isEmpty {
             let query = searchText.lowercased()
             result = result.filter {
@@ -47,24 +38,9 @@ struct CompanyApplicationsView: View {
             }
         }
 
-        // UC007: Rating filter
-        if minRating > 0 {
-            result = result.filter { ($0.driver.rating ?? 0) >= minRating }
-        }
-
-        // UC007: Verified vehicle filter
-        if verifiedOnly {
-            result = result.filter { $0.driver.isVehicleVerified }
-        }
-
-        // UC007: Sorting
         switch sortOption {
         case .newest:
-            break // keep original order (newest first from API)
-        case .ratingHigh:
-            result.sort { ($0.driver.rating ?? 0) > ($1.driver.rating ?? 0) }
-        case .ratingLow:
-            result.sort { ($0.driver.rating ?? 0) < ($1.driver.rating ?? 0) }
+            break
         case .nameAZ:
             result.sort { $0.driver.name.lowercased() < $1.driver.name.lowercased() }
         }
@@ -79,7 +55,6 @@ struct CompanyApplicationsView: View {
                     Text("Applications")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                     Spacer()
-                    // UC007: Filter toggle button
                     if !dashboard.applications.isEmpty {
                         Button(action: { withAnimation { showFilters.toggle() } }) {
                             ZStack(alignment: .topTrailing) {
@@ -103,7 +78,6 @@ struct CompanyApplicationsView: View {
                     }
                 }
 
-                // UC007: Search bar
                 if !dashboard.applications.isEmpty {
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
@@ -122,42 +96,8 @@ struct CompanyApplicationsView: View {
                     .cornerRadius(12)
                 }
 
-                // UC007: Advanced filters panel
                 if showFilters {
                     VStack(alignment: .leading, spacing: 14) {
-                        // Rating filter
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text("Min Rating")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                HStack(spacing: 3) {
-                                    Image(systemName: "star.fill")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.orange)
-                                    Text(minRating > 0 ? String(format: "%.1f+", minRating) : "Any")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                }
-                            }
-                            Slider(value: $minRating, in: 0...5, step: 0.5)
-                                .tint(.orange)
-                        }
-
-                        // Verified vehicle toggle
-                        Toggle(isOn: $verifiedOnly) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                                Text("Verified vehicles only")
-                                    .font(.subheadline)
-                            }
-                        }
-                        .toggleStyle(SwitchToggleStyle(tint: .green))
-
-                        // Sort picker
                         HStack {
                             Text("Sort by")
                                 .font(.caption)
@@ -185,11 +125,8 @@ struct CompanyApplicationsView: View {
                             }
                         }
 
-                        // Clear filters
                         if activeFilterCount > 0 {
                             Button(action: {
-                                minRating = 0
-                                verifiedOnly = false
                                 searchText = ""
                                 sortOption = .newest
                             }) {
@@ -328,8 +265,6 @@ struct ApplicationCard: View {
     let onDecline: () -> Void
     @State private var showComposeMessage = false
 
-    private var actionInProgress: Int? { nil }
-
     var statusColor: Color {
         switch application.status.uppercased() {
         case "ACCEPTED": return .green
@@ -375,13 +310,36 @@ struct ApplicationCard: View {
                 if !application.driver.vehicleDisplayName.isEmpty {
                     Label(application.driver.vehicleDisplayName, systemImage: "car.fill")
                 }
-                if let rating = application.driver.rating, rating > 0 {
-                    Label(String(format: "%.1f", rating), systemImage: "star.fill")
-                        .foregroundColor(.orange)
-                }
             }
             .font(.caption)
             .foregroundColor(.secondary)
+
+            if let url = application.driver.resolvedVehicleImageURL {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    case .failure:
+                        ZStack {
+                            Color(.systemGray6)
+                            Image(systemName: "car.fill")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                        }
+                    default:
+                        ZStack {
+                            Color(.systemGray6)
+                            ProgressView()
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 160)
+                .clipped()
+                .cornerRadius(12)
+            }
 
             if application.status.uppercased() == "APPLIED" {
                 HStack(spacing: 10) {
@@ -425,7 +383,6 @@ struct ApplicationCard: View {
                 }
             }
 
-            // Message button for accepted drivers
             if application.status.uppercased() == "ACCEPTED" {
                 Button(action: { showComposeMessage = true }) {
                     HStack {

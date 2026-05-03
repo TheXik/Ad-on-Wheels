@@ -41,7 +41,6 @@ struct ProfileView: View {
                         
                         HStack(spacing: 20) {
                             ProfileStatBox(title: "Total Rides", value: "\(viewModel.totalRides)")
-                            ProfileStatBox(title: "Rating", value: viewModel.formattedRating)
                             ProfileStatBox(title: "Earnings", value: viewModel.formattedTotalEarnings)
                         }
                         .padding(.horizontal)

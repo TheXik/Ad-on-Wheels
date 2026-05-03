@@ -6,25 +6,15 @@ private struct MapAnnotationItem: Identifiable {
     let coordinate: CLLocationCoordinate2D
 }
 
-private struct MockCompany: Identifiable {
-    let id: UUID
-    let name: String
-    let coordinate: CLLocationCoordinate2D
-
-    init(_ name: String, _ latitude: Double, _ longitude: Double) {
-        self.id = UUID()
-        self.name = name
-        self.coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-    }
-}
-
 struct RidingView: View {
     @ObservedObject var viewModel: RideViewModel
     var onEndRide: () -> Void
 
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378),
-        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 50.0755, longitude: 14.4378),
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
     )
     @State private var hasInitializedRegion = false
 
@@ -32,52 +22,31 @@ struct RidingView: View {
     @State private var isSimulating = false
     #endif
 
-    private static let mockCompanies: [MockCompany] = [
-        MockCompany("Tesco", 50.0780, 14.4350),
-        MockCompany("Lidl", 50.0730, 14.4420),
-        MockCompany("Billa", 50.0810, 14.4480),
-        MockCompany("Kaufland", 50.0760, 14.4530),
-    ]
-
     private var allAnnotations: [MapAnnotationItem] {
-        var items = Self.mockCompanies.map {
-            MapAnnotationItem(id: $0.name, coordinate: $0.coordinate)
-        }
+        var items: [MapAnnotationItem] = []
         if let loc = viewModel.currentLocation {
             items.append(MapAnnotationItem(id: "user", coordinate: loc))
         }
         return items
     }
 
+    private static func centeredRegion(on coord: CLLocationCoordinate2D) -> MKCoordinateRegion {
+        MKCoordinateRegion(
+            center: coord,
+            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
-            Map(
-                coordinateRegion: $region,
-                showsUserLocation: false,
-                annotationItems: allAnnotations
-            ) { item in
-                MapAnnotation(coordinate: item.coordinate) {
-                    if item.id == "user" {
+            Map(position: $cameraPosition) {
+                ForEach(allAnnotations) { item in
+                    Annotation("", coordinate: item.coordinate) {
                         Circle()
                             .fill(Color.blue)
                             .frame(width: 16, height: 16)
                             .overlay(Circle().stroke(Color.white, lineWidth: 3))
                             .shadow(radius: 4)
-                    } else {
-                        VStack(spacing: 2) {
-                            Image(systemName: "building.2.fill")
-                                .foregroundColor(.blue)
-                                .padding(6)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .shadow(radius: 2)
-                            Text(item.id)
-                                .font(.system(size: 10, weight: .medium))
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
-                                .background(Color.white.opacity(0.9))
-                                .cornerRadius(4)
-                        }
                     }
                 }
             }
@@ -86,29 +55,22 @@ struct RidingView: View {
             .onAppear {
                 viewModel.requestLocationPermission()
                 if let coord = viewModel.currentLocation, !hasInitializedRegion {
-                    region = MKCoordinateRegion(
-                        center: coord,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    )
+                    cameraPosition = .region(Self.centeredRegion(on: coord))
                     hasInitializedRegion = true
                 }
             }
-            .onChange(of: viewModel.locationVersion) { _ in
+            .onChange(of: viewModel.locationVersion) { _, _ in
                 guard let coord = viewModel.currentLocation else { return }
                 if !hasInitializedRegion {
-                    region = MKCoordinateRegion(
-                        center: coord,
-                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                    )
+                    cameraPosition = .region(Self.centeredRegion(on: coord))
                     hasInitializedRegion = true
                 } else {
                     withAnimation(.easeInOut(duration: 0.5)) {
-                        region.center = coord
+                        cameraPosition = .region(Self.centeredRegion(on: coord))
                     }
                 }
             }
 
-            // Top HUD
             VStack {
                 HStack {
                     VStack(alignment: .leading) {
@@ -144,7 +106,6 @@ struct RidingView: View {
                 Spacer()
             }
 
-            // Bottom Stats Sheet
             VStack(spacing: 20) {
                 HStack(spacing: 40) {
                     VStack {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { auth } from '../services/api';
 
 export default function GoogleLoginButton({ onRoleMismatch }) {

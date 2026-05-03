@@ -1,10 +1,9 @@
 package com.adonwheels.gatewayservice.controller;
 
-import com.adonwheels.gatewayservice.dto.ApiResponseWrapper;
+import com.adonwheels.dto.ApiResponse;
 import com.adonwheels.gatewayservice.dto.ApplicationWithDriver;
 import com.adonwheels.gatewayservice.dto.CampaignWithStats;
 import com.adonwheels.gatewayservice.service.CompanyBffService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -17,21 +16,20 @@ import java.util.List;
 public class CompanyBffController {
     private final CompanyBffService companyBffService;
 
-    @Autowired
     public CompanyBffController(CompanyBffService companyBffService) {
         this.companyBffService = companyBffService;
     }
 
     @GetMapping(value = "/{companyId}/applications-with-drivers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<List<ApplicationWithDriver>>> getApplicationsWithDrivers(@PathVariable Long companyId) {
+    public Mono<ApiResponse<List<ApplicationWithDriver>>> getApplicationsWithDrivers(@PathVariable Long companyId) {
         return companyBffService.getApplicationsWithDrivers(companyId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
 
     @GetMapping(value = "/{companyId}/campaign-stats", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponseWrapper<List<CampaignWithStats>>> getCampaignStats(@PathVariable Long companyId) {
+    public Mono<ApiResponse<List<CampaignWithStats>>> getCampaignStats(@PathVariable Long companyId) {
         return companyBffService.getCampaignStats(companyId)
-                .map(ApiResponseWrapper::success);
+                .map(ApiResponse::success);
     }
 
     @GetMapping(value = "/{companyId}/export-csv", produces = "text/csv; charset=UTF-8")

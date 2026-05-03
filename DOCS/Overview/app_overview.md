@@ -2,7 +2,7 @@
 
 Ad-on-Wheels is a two-sided marketplace that connects **car owners** (drivers)
 who are willing to rent their vehicle's exterior as advertising space with
-**companies** seeking a mobile, per-kilometre alternative to billboard
+**companies** seeking a mobile, per-kilometer alternative to billboard
 advertising. The platform measures how far a driver actually drives with a
 mounted advertisement, computes earnings from that measurement, and lets
 companies create and manage their own campaigns without going through a managed
@@ -10,7 +10,7 @@ sales team.
 
 The platform addresses gaps identified in the review of existing car-advertising
 services (Wrapify, Carvertise, Nickelytics, Brand Riders): no single existing
-platform combines self-service campaign creation, per-kilometre GPS-verified
+platform combines self-service campaign creation, per-kilometer GPS-verified
 payouts, and a smartphone-only verification gesture without extra hardware.
 
 
@@ -22,7 +22,7 @@ payouts, and a smartphone-only verification gesture without extra hardware.
   a start and end time, a position trace, total distance, computed earnings,
   and an explicit verification status (`unverified` or `verified`).
 - **Application** - a request submitted by a driver to join a specific
-  campaign; it is always in one of three states: `pending`, `accepted`, or
+  campaign; it is always in one of three states: `applied`, `accepted`, or
   `declined`.
 - **QR Code Verification** - a lightweight, client-side verification gesture
   performed at the end of a ride to confirm that the driver was actually
@@ -77,7 +77,7 @@ user-role enumeration so the role can be added later without schema changes.
 
 ## Related Requirements Docs
 
-- [`Requirements/functional_requirements.md`](../Requirements/functional_requirements.md) - 22 functional requirements grouped by area.
-- [`Requirements/non_functional_requirements.md`](../Requirements/non_functional_requirements.md) - 6 non-functional requirements.
+- [`Requirements/functional_requirements.md`](../Requirements/functional_requirements.md) - 25 functional requirements grouped by area.
+- [`Requirements/non_functional_requirements.md`](../Requirements/non_functional_requirements.md) - 5 non-functional requirements.
 - [`Requirements/constraints.md`](../Requirements/constraints.md) - external constraints the design must respect.
 - [`Usecases/`](../Usecases) - detailed use case descriptions.

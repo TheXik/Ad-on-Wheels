@@ -36,18 +36,6 @@ class CompanyDashboardViewModel: ObservableObject {
         campaigns.reduce(0) { $0 + $1.budget }
     }
 
-    var activeBudget: Double {
-        activeCampaigns.reduce(0) { $0 + $1.budget }
-    }
-
-    var totalReach: Int {
-        campaigns.compactMap { $0.estimatedReach }.reduce(0, +)
-    }
-
-    var totalDriverSlots: Int {
-        campaigns.reduce(0) { $0 + $1.maxDrivers }
-    }
-
     var acceptedDriverCount: Int {
         applications.filter { $0.status.uppercased() == "ACCEPTED" }.count
     }
@@ -56,21 +44,14 @@ class CompanyDashboardViewModel: ObservableObject {
         applications.filter { $0.status.uppercased() == "APPLIED" }.count
     }
 
-    var budgetUtilization: Double {
-        guard totalBudget > 0 else { return 0 }
-        return activeBudget / totalBudget
-    }
-
     var campaignStatusBreakdown: [(label: String, count: Int, color: String)] {
-        let statuses = ["RECRUITING", "ACTIVE", "PAUSED", "COMPLETED"]
+        let statuses = ["RECRUITING", "COMPLETED"]
         return statuses.compactMap { status in
             let count = campaigns.filter { $0.status == status }.count
             guard count > 0 else { return nil }
             let color: String
             switch status {
             case "RECRUITING": color = "blue"
-            case "ACTIVE": color = "green"
-            case "PAUSED": color = "orange"
             default: color = "gray"
             }
             return (label: status.capitalized, count: count, color: color)
@@ -103,7 +84,7 @@ class CompanyDashboardViewModel: ObservableObject {
             let fetched: Company = try await api.send(endpoint)
             self.company = fetched
         } catch {
-            // Non-critical — we still have the ID
+            // Non-critical - we still have the ID
         }
     }
 
@@ -133,7 +114,10 @@ class CompanyDashboardViewModel: ObservableObject {
             let fetched: [CampaignRideStat] = try await api.send(endpoint)
             self.campaignRideStats = fetched
         } catch {
-            // Non-critical — stats may not be available yet
+            // Surface as a banner: with stats unavailable, "Km Driven" / "Total
+            // Rides" / "Earnings Paid" all read zero, which would otherwise be
+            // indistinguishable from an empty company.
+            self.errorMessage = "Stats temporarily unavailable: \(error.localizedDescription)"
         }
     }
 
@@ -147,10 +131,6 @@ class CompanyDashboardViewModel: ObservableObject {
 
     var totalEarningsPaid: Double {
         campaignRideStats.reduce(0) { $0 + $1.rideStats.totalEarnings }
-    }
-
-    func rideStatsFor(campaignId: Int) -> RideStatsData? {
-        campaignRideStats.first { $0.campaign.id == campaignId }?.rideStats
     }
 
     func deleteCampaign(_ campaignId: Int) async {
@@ -168,9 +148,11 @@ class CompanyDashboardViewModel: ObservableObject {
         actionInProgress = applicationId
         defer { actionInProgress = nil }
         do {
+            let body = try JSONSerialization.data(withJSONObject: ["status": "ACCEPTED"])
             let endpoint = Endpoint(
-                path: "api/campaigns/applications/\(applicationId)/accept",
-                method: .post
+                path: "api/campaigns/applications/\(applicationId)",
+                method: .patch,
+                body: body
             )
             let _: Application = try await api.send(endpoint)
             if let idx = applications.firstIndex(where: { $0.id == applicationId }) {
@@ -189,9 +171,11 @@ class CompanyDashboardViewModel: ObservableObject {
         actionInProgress = applicationId
         defer { actionInProgress = nil }
         do {
+            let body = try JSONSerialization.data(withJSONObject: ["status": "DECLINED"])
             let endpoint = Endpoint(
-                path: "api/campaigns/applications/\(applicationId)/decline",
-                method: .post
+                path: "api/campaigns/applications/\(applicationId)",
+                method: .patch,
+                body: body
             )
             let _: Application = try await api.send(endpoint)
             if let idx = applications.firstIndex(where: { $0.id == applicationId }) {
@@ -206,7 +190,6 @@ class CompanyDashboardViewModel: ObservableObject {
         }
     }
 
-    // MARK: - CSV Export (UC008)
 
     /// Export a single campaign's stats as CSV.
     func exportCampaignCSV(campaignId: Int) async {
