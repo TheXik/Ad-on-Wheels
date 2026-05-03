@@ -6,14 +6,12 @@ struct CompanyCampaignsView: View {
     @State private var selectedFilter = 0
     @State private var campaignToDelete: Campaign?
 
-    private let filterOptions = ["All", "Recruiting", "Active", "Paused", "Completed"]
+    private let filterOptions = ["All", "Recruiting", "Completed"]
 
     var filteredCampaigns: [Campaign] {
         switch selectedFilter {
         case 1: return dashboard.campaigns.filter { $0.status == "RECRUITING" }
-        case 2: return dashboard.campaigns.filter { $0.status == "ACTIVE" }
-        case 3: return dashboard.campaigns.filter { $0.status == "PAUSED" }
-        case 4: return dashboard.campaigns.filter { $0.status == "COMPLETED" }
+        case 2: return dashboard.campaigns.filter { $0.status == "COMPLETED" }
         default: return dashboard.campaigns
         }
     }
@@ -163,8 +161,6 @@ struct CampaignDetailCard: View {
     var statusColor: Color {
         switch campaign.status {
         case "RECRUITING": return .blue
-        case "ACTIVE": return .green
-        case "PAUSED": return .orange
         default: return .gray
         }
     }
