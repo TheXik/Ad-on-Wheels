@@ -13,17 +13,13 @@ class ProfileViewModel: ObservableObject {
     }
     
     var totalRides: Int {
-        statistics?.totalRides ?? 0
+        Int(statistics?.totalRides ?? 0)
     }
-    
+
     var totalEarnings: Double {
         statistics?.totalEarnings ?? 0
     }
-    
-    var driverRating: Double {
-        driver?.rating ?? 0
-    }
-    
+
     var memberSince: String {
         if let date = driver?.memberSince {
             return date
@@ -133,13 +129,5 @@ class ProfileViewModel: ObservableObject {
     
     var formattedBalance: String {
         String(format: "€%.2f", currentBalance)
-    }
-    
-    var formattedRating: String {
-        String(format: "%.1f", driverRating)
-    }
-    
-    var vehicleDisplayName: String {
-        driver?.vehicleDisplayName ?? "No vehicle"
     }
 }

@@ -1,14 +1,11 @@
 import Foundation
 
 struct RideStatistics: Codable {
-    let totalRides: Int
-    let completedRides: Int
-    let verifiedRides: Int
+    // Backend Long fields → Int64; backend Integer fields → Int.
+    let totalRides: Int64
+    let completedRides: Int64
     let totalDurationSeconds: Int
-    let averageDurationSeconds: Int
-    let activeRidesCount: Int
-    
-    // New fields for distance and earnings
+
     let totalDistanceKm: Double?
     let weeklyDistanceKm: Double?
     let monthlyDistanceKm: Double?
@@ -16,7 +13,6 @@ struct RideStatistics: Codable {
     let weeklyEarnings: Double?
     let monthlyEarnings: Double?
     let averageSpeedKmh: Double?
-    let rating: Double?
     
     // Formatted computed properties
     var formattedTotalDistance: String {
@@ -53,12 +49,7 @@ struct RideStatistics: Codable {
         guard let speed = averageSpeedKmh else { return "0 km/h" }
         return String(format: "%.1f km/h", speed)
     }
-    
-    var formattedRating: String {
-        guard let rating = rating else { return "N/A" }
-        return String(format: "%.1f", rating)
-    }
-    
+
     var formattedTotalDuration: String {
         let hours = totalDurationSeconds / 3600
         let minutes = (totalDurationSeconds % 3600) / 60

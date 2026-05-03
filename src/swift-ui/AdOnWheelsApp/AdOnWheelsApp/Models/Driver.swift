@@ -11,14 +11,11 @@ struct Driver: Identifiable, Codable {
     let vehicleYear: String?
     let vehiclePlate: String?
     let vehicleImageUrl: String?
-    
-    // Driver info
-    let rating: Double?
+
     let monthlyGoalKm: Double?
     let onboardingCompleted: Bool?
     let memberSince: String?
-    
-    // Computed properties
+
     var vehicleDisplayName: String {
         guard let make = vehicleMake, let model = vehicleModel else {
             return "No vehicle"
@@ -28,14 +25,9 @@ struct Driver: Identifiable, Codable {
         }
         return "\(make) \(model)"
     }
-    
-    var formattedRating: String {
-        guard let rating = rating else { return "N/A" }
-        return String(format: "%.1f", rating)
-    }
-    
+
     var needsOnboarding: Bool {
-        !(onboardingCompleted ?? false) && vehicleMake == nil
+        !(onboardingCompleted ?? false) || vehicleMake == nil
     }
 
     var resolvedVehicleImageURL: URL? {
