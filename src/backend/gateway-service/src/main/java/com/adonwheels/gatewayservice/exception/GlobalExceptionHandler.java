@@ -35,8 +35,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({WebClientResponseException.class, WebClientRequestException.class})
     public ResponseEntity<ApiResponse<Void>> handleWebClient(Exception ex) {
         logger.error("Downstream service call failed: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body(ApiResponse.error(AppErrorCode.SERVICE_UNAVAILABLE,
+        AppErrorCode code = AppErrorCode.SERVICE_UNAVAILABLE;
+        return ResponseEntity.status(code.getHttpStatus())
+                .body(ApiResponse.error(code,
                         "A required service is currently unavailable. Please try again later."));
     }
 
