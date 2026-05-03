@@ -36,19 +36,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest loginRequest) {
         LoginResponse loginData = authService.verify(loginRequest);
-        LoginResponse loginResponseData = new LoginResponse(loginData.token(), "User successfully logged in");
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(loginResponseData));
+        return ResponseEntity.ok(ApiResponse.success(loginData));
     }
 
     @PostMapping("/google")
     public ResponseEntity<ApiResponse<LoginResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
         LoginResponse loginData = authService.loginWithGoogle(request);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.success(loginData));
+        return ResponseEntity.ok(ApiResponse.success(loginData));
     }
 }
