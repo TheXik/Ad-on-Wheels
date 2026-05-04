@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
-import { companies, applicationsWithDrivers, campaigns } from '../services/api';
+import { companies, applicationsWithDrivers, campaigns, resolveImageUrl } from '../services/api';
 
 export default function CompanyProfilePage() {
   const { user } = useAuth();
@@ -104,6 +104,13 @@ export default function CompanyProfilePage() {
                   <div><strong>Email:</strong> {app.driver?.email || 'N/A'}</div>
                   <div><strong>Vehicle:</strong> {[app.driver?.vehicleYear, app.driver?.vehicleMake, app.driver?.vehicleModel].filter(Boolean).join(' ') || 'N/A'}</div>
                   <div><strong>Plate:</strong> {app.driver?.vehiclePlate || 'N/A'}</div>
+                  {app.driver?.vehicleImageUrl && (
+                    <img
+                      src={resolveImageUrl(app.driver.vehicleImageUrl)}
+                      alt={`${app.driver.name || 'Driver'} vehicle`}
+                      className="driver-vehicle-image"
+                    />
+                  )}
                 </div>
                 {app.status === 'APPLIED' && (
                   <div className="application-actions">
