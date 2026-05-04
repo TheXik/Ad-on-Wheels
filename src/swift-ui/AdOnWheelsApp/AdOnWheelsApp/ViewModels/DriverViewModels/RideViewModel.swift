@@ -333,14 +333,16 @@ extension RideViewModel: CLLocationManagerDelegate {
                     if self.isRiding {
                         self.distanceTravelled += dist / 1000.0
                     }
-                    self.currentSpeed = location.speed >= 0 ? location.speed * 3.6 : impliedSpeedKmh
                     self.lastLocation = location
-                } else {
-                    self.currentSpeed = 0
                 }
             } else {
                 self.lastLocation = location
-                self.currentSpeed = 0
+            }
+
+            // Speed display is decoupled from the distance threshold: trust the Doppler-derived
+            // location.speed on every valid fix; speedStaleTimer zeroes it after 3 s of no fix.
+            if location.speed >= 0 {
+                self.currentSpeed = location.speed * 3.6
             }
         }
     }
