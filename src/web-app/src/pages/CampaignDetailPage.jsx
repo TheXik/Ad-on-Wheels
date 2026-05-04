@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats } from '../services/api';
+import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats, resolveImageUrl } from '../services/api';
 import CampaignCoverageMap from '../components/CampaignCoverageMap';
 
 export default function CampaignDetailPage() {
@@ -181,6 +181,13 @@ export default function CampaignDetailPage() {
                         ? `${app.driver.vehicleYear || ''} ${app.driver.vehicleMake} ${app.driver.vehicleModel}`.trim()
                         : 'Not set'}</div>
                       <div><strong>Plate:</strong> {app.driver.vehiclePlate || 'N/A'}</div>
+                      {app.driver.vehicleImageUrl && (
+                        <img
+                          src={resolveImageUrl(app.driver.vehicleImageUrl)}
+                          alt={`${app.driver.name || 'Driver'} vehicle`}
+                          className="driver-vehicle-image"
+                        />
+                      )}
                     </div>
                   )}
                   <div className="application-actions">
