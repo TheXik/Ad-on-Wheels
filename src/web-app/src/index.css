@@ -1020,6 +1020,9 @@ body {
   border-radius: var(--radius, 12px);
   overflow: hidden;
   border: 1px solid var(--border, #e5e7eb);
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .coverage-map-legend {
