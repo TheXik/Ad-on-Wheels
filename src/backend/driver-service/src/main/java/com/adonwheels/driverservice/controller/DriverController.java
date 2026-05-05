@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -42,6 +43,19 @@ public class DriverController {
         requireOwnership(callerId, callerRole, id);
         Driver driver = service.getDriver(id);
         return ResponseEntity.ok(ApiResponse.success(driver));
+    }
+
+    // Internal batch lookup for the company BFF aggregator. Restricted to ADMIN
+    // (the BFF stamps this) so a driver cannot enumerate other drivers.
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Driver>>> driversByIds(
+            @RequestParam("ids") List<Long> ids,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        if (!"ADMIN".equals(callerRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to act on this resource");
+        }
+        return ResponseEntity.ok(ApiResponse.success(service.getDriversByIds(ids)));
     }
 
     @PutMapping("/{id}")
