@@ -12,20 +12,46 @@ struct Message: Identifiable, Codable {
     let isRead: Bool
     let createdAt: String
 
-    var relativeDate: String {
-        let dateStr = String(createdAt.prefix(10))
-        let today = formatDate(Date())
-        let yesterday = formatDate(Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date())
+    // Backend sends LocalDateTime without timezone. JVM in Docker is UTC.
+    // Append Z and format in Europe/Prague.
+    private static let pragueTimeZone = TimeZone(identifier: "Europe/Prague") ?? .current
 
-        if dateStr == today { return "Today" }
-        if dateStr == yesterday { return "Yesterday" }
-        return dateStr
+    private static let isoUTCFormatters: [ISO8601DateFormatter] = {
+        let withFractional = ISO8601DateFormatter()
+        withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let withoutFractional = ISO8601DateFormatter()
+        withoutFractional.formatOptions = [.withInternetDateTime]
+        return [withFractional, withoutFractional]
+    }()
+
+    private var date: Date? {
+        let trimmed = createdAt.contains("Z") || createdAt.contains("+") ? createdAt : createdAt + "Z"
+        for formatter in Self.isoUTCFormatters {
+            if let d = formatter.date(from: trimmed) { return d }
+        }
+        return nil
     }
 
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
+    private static func dateFormatter(_ format: String) -> DateFormatter {
+        let f = DateFormatter()
+        f.dateFormat = format
+        f.timeZone = pragueTimeZone
+        f.locale = Locale(identifier: "en_GB")
+        return f
+    }
+
+    var relativeDate: String {
+        guard let d = date else { return String(createdAt.prefix(10)) }
+        var pragueCal = Calendar(identifier: .gregorian)
+        pragueCal.timeZone = Self.pragueTimeZone
+        if pragueCal.isDateInToday(d) { return "Today" }
+        if pragueCal.isDateInYesterday(d) { return "Yesterday" }
+        return Self.dateFormatter("yyyy-MM-dd").string(from: d)
+    }
+
+    var formattedDateTime: String {
+        guard let d = date else { return createdAt }
+        return Self.dateFormatter("d.M.yyyy, HH:mm").string(from: d)
     }
 
     var preview: String {

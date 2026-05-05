@@ -20,9 +20,7 @@ struct CompanyHomeView: View {
                 } else {
                     statsGrid
 
-                    if inboxVM.unreadCount > 0 {
-                        messagesBanner
-                    }
+                    messagesBanner
 
                     if !dashboard.activeCampaigns.isEmpty {
                         activeCampaignsSection
@@ -46,9 +44,18 @@ struct CompanyHomeView: View {
             await inboxVM.loadInbox()
         }
         .task {
+            // 15s poll bound to view lifetime. Refreshes unread banner.
             await inboxVM.loadInbox()
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(15))
+                guard !Task.isCancelled else { break }
+                await inboxVM.loadInbox()
+            }
         }
-        .sheet(isPresented: $showInbox) {
+        .sheet(isPresented: $showInbox, onDismiss: {
+            // Refresh banner after the user closes the inbox.
+            Task { await inboxVM.loadInbox() }
+        }) {
             NavigationView {
                 InboxView(userId: dashboard.companyId, userRole: "COMPANY")
             }
@@ -118,18 +125,32 @@ struct CompanyHomeView: View {
         }
     }
 
+    private var messagesTitle: String {
+        let count = inboxVM.unreadCount
+        if count == 0 { return "No new messages" }
+        return "\(count) new message\(count == 1 ? "" : "s")"
+    }
+
+    private var messagesSubtitle: String {
+        inboxVM.unreadCount == 0 ? "You're all caught up" : "Tap to read your messages"
+    }
+
+    private var messagesIcon: String {
+        inboxVM.unreadCount > 0 ? "envelope.badge.fill" : "envelope.fill"
+    }
+
     var messagesBanner: some View {
         Button(action: { showInbox = true }) {
             HStack(spacing: 12) {
-                Image(systemName: "envelope.badge.fill")
+                Image(systemName: messagesIcon)
                     .font(.title3)
                     .foregroundColor(.accentBlue)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(inboxVM.unreadCount) unread message\(inboxVM.unreadCount == 1 ? "" : "s")")
+                    Text(messagesTitle)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                    Text("Tap to open inbox")
+                    Text(messagesSubtitle)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -143,10 +164,13 @@ struct CompanyHomeView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.accentBlue.opacity(0.08))
+                    .fill(inboxVM.unreadCount > 0 ? Color.accentBlue.opacity(0.08) : Color.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(Color.accentBlue.opacity(0.15), lineWidth: 1)
+                            .strokeBorder(
+                                inboxVM.unreadCount > 0 ? Color.accentBlue.opacity(0.15) : Color.clear,
+                                lineWidth: 1
+                            )
                     )
             )
         }
