@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -34,7 +35,11 @@ public class DriverController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Driver>> one(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Driver>> one(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, id);
         Driver driver = service.getDriver(id);
         return ResponseEntity.ok(ApiResponse.success(driver));
     }
@@ -42,7 +47,10 @@ public class DriverController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Driver>> replaceDriver(
             @Valid @RequestBody Driver newDriver,
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, id);
         Driver updatedDriver = service.updateDriver(id, newDriver);
         return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
@@ -50,7 +58,10 @@ public class DriverController {
     @PatchMapping("/{id}/vehicle")
     public ResponseEntity<ApiResponse<Driver>> addVehicle(
             @PathVariable Long id,
-            @Valid @RequestBody VehicleRequest vehicle) {
+            @Valid @RequestBody VehicleRequest vehicle,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, id);
         Driver updatedDriver = service.addVehicle(id, vehicle);
         return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
@@ -58,7 +69,10 @@ public class DriverController {
     @PatchMapping("/{id}/onboarding")
     public ResponseEntity<ApiResponse<Driver>> completeOnboarding(
             @PathVariable Long id,
-            @Valid @RequestBody OnboardingRequest request) {
+            @Valid @RequestBody OnboardingRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, id);
         Driver updatedDriver = service.completeOnboarding(id, request);
         return ResponseEntity.ok(ApiResponse.success(updatedDriver));
     }
@@ -66,9 +80,12 @@ public class DriverController {
     @PostMapping("/{id}/vehicle-image")
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadVehicleImage(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, id);
         String key = imageService.upload(id, file);
-        String imageUrl = "/drivers/images/" + key;
+        String imageUrl = "/api/drivers/images/" + key;
         return ResponseEntity.ok(ApiResponse.success(Map.of("imageUrl", imageUrl)));
     }
 
@@ -84,8 +101,25 @@ public class DriverController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteDriver(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteDriver(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, id);
         service.deleteDriver(id);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    // The gateway role-class gate (A3) only proves "this caller has DRIVER or
+    // ADMIN role". This per-endpoint check pins the specific driver id so a
+    // driver cannot read or mutate another driver's profile.
+    private void requireOwnership(Long callerId, String callerRole, Long pathOwnerId) {
+        if ("ADMIN".equals(callerRole)) {
+            return;
+        }
+        if (callerId == null || !callerId.equals(pathOwnerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to act on this resource");
+        }
     }
 }

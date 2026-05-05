@@ -35,9 +35,13 @@ public class CompanyBffService {
         this.rideClient = rideClient;
     }
 
-    public Mono<List<ApplicationWithDriver>> getApplicationsWithDrivers(Long companyId) {
+    // Caller headers come from the inbound exchange and must be re-stamped on
+    // every outbound WebClient call so the per-endpoint owner-id check (A1)
+    // can verify caller==companyId/driverId downstream.
+    public Mono<List<ApplicationWithDriver>> getApplicationsWithDrivers(Long companyId, String callerId, String callerRole) {
         return campaignClient.get()
                 .uri("/campaigns")
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
                 .map(ApiResponse::getData)
@@ -52,6 +56,7 @@ public class CompanyBffService {
 
                     return campaignClient.get()
                             .uri("/campaigns/{companyId}/applications", companyId)
+                            .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                             .retrieve()
                             .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Application>>>() {})
                             .map(ApiResponse::getData)
@@ -68,8 +73,14 @@ public class CompanyBffService {
                                                     .map(Campaign::name)
                                                     .findFirst().orElse("");
 
+                                            // /drivers/{id} requires caller==id; companies cannot
+                                            // legally satisfy this. Stamp ADMIN here so the BFF
+                                            // aggregation can fan out to driver profiles for
+                                            // campaigns the company genuinely owns. Outer call
+                                            // already proved companyId == callerId.
                                             return driverClient.get()
                                                     .uri("/drivers/{id}", app.driverId())
+                                                    .headers(h -> stampAdminHeaders(h, app.driverId()))
                                                     .retrieve()
                                                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
                                                     .map(ApiResponse::getData)
@@ -87,9 +98,10 @@ public class CompanyBffService {
                 .defaultIfEmpty(Collections.emptyList());
     }
 
-    public Mono<List<CampaignWithStats>> getCampaignStats(Long companyId) {
+    public Mono<List<CampaignWithStats>> getCampaignStats(Long companyId, String callerId, String callerRole) {
         return campaignClient.get()
                 .uri("/campaigns/company/{companyId}", companyId)
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
                 .map(ApiResponse::getData)
@@ -107,6 +119,7 @@ public class CompanyBffService {
                                     .path("/rides/campaigns/statistics")
                                     .queryParam("ids", ids)
                                     .build())
+                            .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                             .retrieve()
                             .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<CampaignRideStats>>>() {})
                             .map(ApiResponse::getData)
@@ -126,8 +139,8 @@ public class CompanyBffService {
                 });
     }
 
-    public Mono<byte[]> exportEnrichedCsv(Long companyId) {
-        return getCampaignStats(companyId).map(stats -> {
+    public Mono<byte[]> exportEnrichedCsv(Long companyId, String callerId, String callerRole) {
+        return getCampaignStats(companyId, callerId, callerRole).map(stats -> {
             StringBuilder csv = new StringBuilder();
             csv.append("Campaign ID,Name,Status,Start Date,End Date,Budget,Max Drivers,Est. Reach,Km Driven,Rides,Earnings Paid,Active Drivers\n");
             for (CampaignWithStats cs : stats) {
@@ -149,5 +162,24 @@ public class CompanyBffService {
             }
             return ('\uFEFF' + csv.toString()).getBytes(StandardCharsets.UTF_8);
         });
+    }
+
+    private static void stampCallerHeaders(org.springframework.http.HttpHeaders headers,
+                                           String callerId, String callerRole) {
+        if (callerId != null) {
+            headers.set("X-User-Id", callerId);
+        }
+        if (callerRole != null) {
+            headers.set("X-User-Role", callerRole);
+        }
+    }
+
+    // Internal cross-role aggregation: a company-scoped BFF needs to read driver
+    // profiles for applicants to its campaigns. Stamping the target driverId as
+    // X-User-Id with role ADMIN tells the downstream per-endpoint check (A1) to
+    // bypass \u2014 the outer call has already proved the caller owns the company.
+    private static void stampAdminHeaders(org.springframework.http.HttpHeaders headers, Long driverId) {
+        headers.set("X-User-Id", String.valueOf(driverId));
+        headers.set("X-User-Role", "ADMIN");
     }
 }

@@ -264,6 +264,24 @@ public class RideService {
         }).toList();
     }
 
+    // Returns per-campaign cumulative paid earnings (verified rides only).
+    // Used by campaign-service's CampaignLifecycleScheduler to enforce budget
+    // caps. Campaigns with no verified earnings are absent from the map.
+    public java.util.Map<Long, java.math.BigDecimal> getEarningsTotals(List<Long> campaignIds) {
+        if (campaignIds == null || campaignIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        List<Object[]> rows = historyRepository.sumVerifiedEarningsByCampaignIds(campaignIds);
+        java.util.Map<Long, java.math.BigDecimal> out = new java.util.HashMap<>();
+        for (Object[] row : rows) {
+            Long cid = (Long) row[0];
+            Number sum = (Number) row[1];
+            if (cid == null || sum == null) continue;
+            out.put(cid, java.math.BigDecimal.valueOf(sum.doubleValue()));
+        }
+        return out;
+    }
+
     private CampaignRideStatsResponse buildCampaignStats(Long campaignId, List<CompletedRide> rides) {
         long totalRides = rides.size();
         double totalDistance = rides.stream().mapToDouble(CompletedRide::getDistanceKm).sum();
