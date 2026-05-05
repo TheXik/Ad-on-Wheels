@@ -11,6 +11,16 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/../.env"
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    set +a
+fi
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-root}"
+
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  Ad-on-Wheels Backend Status${NC}"
 echo -e "${BLUE}========================================${NC}"
@@ -66,7 +76,7 @@ check_internal_endpoint "Eureka Server (in-network)" "http://eureka-server:8761/
 check_public_endpoint "Gateway API (8080)        " "http://localhost:8080/actuator/health"
 
 # Check MySQL
-if docker compose exec -T mysql mysqladmin ping -h localhost -u root -proot_password > /dev/null 2>&1; then
+if docker compose exec -T mysql mysqladmin ping -h localhost -u root -p"$MYSQL_ROOT_PASSWORD" > /dev/null 2>&1; then
     echo -e "  ${GREEN}✓${NC} MySQL Database (3306)  - ${GREEN}UP${NC}"
 else
     echo -e "  ${RED}✗${NC} MySQL Database (3306)  - ${RED}DOWN${NC}"

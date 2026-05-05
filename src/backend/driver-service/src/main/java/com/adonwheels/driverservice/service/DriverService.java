@@ -9,6 +9,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class DriverService {
     private final DriverRepository repository;
@@ -20,6 +22,10 @@ public class DriverService {
     public Driver getDriver(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new DriverNotFoundException(id));
+    }
+
+    public List<Driver> getDriversByIds(List<Long> ids) {
+        return repository.findAllById(ids);
     }
 
     @Transactional
