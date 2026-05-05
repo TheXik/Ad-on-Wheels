@@ -2,8 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("isDarkMode") private var isDarkMode = false
-    @AppStorage("monthlyGoalKm") private var monthlyGoalKm: Double = 200
-    @State private var goalText = ""
     @State private var showClearDataAlert = false
     @State private var isClearing = false
     @State private var clearError: String?
@@ -23,27 +21,6 @@ struct SettingsView: View {
                         Image(systemName: isDarkMode ? "moon.fill" : "sun.max.fill")
                             .foregroundColor(isDarkMode ? .purple : .orange)
                         Text("Dark Mode")
-                    }
-                }
-            }
-
-            Section(header: Text("Goals")) {
-                HStack {
-                    Text("Monthly Goal")
-                    Spacer()
-                    TextField("200", text: $goalText)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 80)
-                    Text("km")
-                        .foregroundColor(.gray)
-                }
-                .onAppear {
-                    goalText = String(format: "%.0f", monthlyGoalKm)
-                }
-                .onChange(of: goalText) { _, newValue in
-                    if let goal = Double(newValue), goal > 0 {
-                        monthlyGoalKm = goal
                     }
                 }
             }
