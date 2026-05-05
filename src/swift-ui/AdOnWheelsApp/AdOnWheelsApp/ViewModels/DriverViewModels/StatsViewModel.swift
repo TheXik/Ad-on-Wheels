@@ -81,8 +81,9 @@ class StatsViewModel: ObservableObject {
             )
             let rides: [Ride] = try await api.send(ridesEndpoint)
             self.recentRides = rides
-            
+
         } catch {
+            if error.isCancellation { return }
             self.errorMessage = error.localizedDescription
         }
     }

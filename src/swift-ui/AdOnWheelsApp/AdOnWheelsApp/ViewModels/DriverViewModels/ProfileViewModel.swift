@@ -71,8 +71,9 @@ class ProfileViewModel: ObservableObject {
             
             self.driver = response.driver
             self.statistics = response.statistics
-            
+
         } catch {
+            if error.isCancellation { return }
             self.errorMessage = error.localizedDescription
         }
     }
@@ -111,6 +112,7 @@ class ProfileViewModel: ObservableObject {
             vehicleSaveSuccess = true
             await fetchProfile()
         } catch {
+            if error.isCancellation { return }
             errorMessage = error.localizedDescription
         }
     }

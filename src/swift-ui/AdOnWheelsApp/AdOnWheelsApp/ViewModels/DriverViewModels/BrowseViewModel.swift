@@ -47,6 +47,7 @@ class BrowseViewModel: ObservableObject {
             self.skippedCampaigns = []
             self.allCampaignsSeen = unseen.isEmpty && !fetchedCampaigns.isEmpty
         } catch {
+            if error.isCancellation { return }
             self.errorMessage = error.localizedDescription
             self.campaigns = []
         }
@@ -106,6 +107,7 @@ class BrowseViewModel: ObservableObject {
                 errorMessage = error.localizedDescription
             }
         } catch {
+            if error.isCancellation { return }
             errorMessage = error.localizedDescription
         }
     }

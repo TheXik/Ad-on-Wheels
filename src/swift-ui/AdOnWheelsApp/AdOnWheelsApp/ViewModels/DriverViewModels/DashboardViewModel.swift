@@ -48,6 +48,7 @@ class DashboardViewModel: ObservableObject {
             let response: DriverHomePageResponse = try await api.send(endpoint)
             updateUIFromResponse(response)
         } catch {
+            if error.isCancellation { return }
             self.errorMessage = error.localizedDescription
         }
 
@@ -89,6 +90,7 @@ class DashboardViewModel: ObservableObject {
             try await api.send(endpoint)
             myApplications.removeAll { $0.id == application.id }
         } catch {
+            if error.isCancellation { return }
             errorMessage = error.localizedDescription
         }
     }

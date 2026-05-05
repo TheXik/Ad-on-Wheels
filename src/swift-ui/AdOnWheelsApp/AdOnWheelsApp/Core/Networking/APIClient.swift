@@ -72,12 +72,16 @@ final class APIClient: APIClientProtocol {
         } catch let error as NetworkError {
             throw error
         } catch let urlError as URLError {
+            // Map task cancellation back to CancellationError so callers can ignore it.
+            if urlError.code == .cancelled { throw CancellationError() }
             throw NetworkError.transport(urlError)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             throw NetworkError.decoding(error)
         }
     }
-    
+
     func send(_ endpoint: Endpoint) async throws {
         let _: EmptyResponse = try await send(endpoint)
     }
@@ -116,7 +120,10 @@ final class APIClient: APIClientProtocol {
         } catch let error as NetworkError {
             throw error
         } catch let urlError as URLError {
+            if urlError.code == .cancelled { throw CancellationError() }
             throw NetworkError.transport(urlError)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             throw NetworkError.decoding(error)
         }

@@ -43,7 +43,7 @@ enum AppError: LocalizedError, Equatable {
         case .invalidCredentials:
             return "Invalid email or password."
         case .unauthorized:
-            return "Your session has expired. Please login again."
+            return nil
         case .roleMismatch(let existingRole):
             return "This email is already registered as a \(existingRole.rawValue)."
         case .serverMessage(let message):

@@ -94,6 +94,7 @@ class CompanyDashboardViewModel: ObservableObject {
             let fetched: [Campaign] = try await api.send(endpoint)
             self.campaigns = fetched
         } catch {
+            if error.isCancellation { return }
             self.errorMessage = error.localizedDescription
         }
     }
@@ -117,6 +118,7 @@ class CompanyDashboardViewModel: ObservableObject {
             // Surface as a banner: with stats unavailable, "Km Driven" / "Total
             // Rides" / "Earnings Paid" all read zero, which would otherwise be
             // indistinguishable from an empty company.
+            if error.isCancellation { return }
             self.errorMessage = "Stats temporarily unavailable: \(error.localizedDescription)"
         }
     }
@@ -140,6 +142,7 @@ class CompanyDashboardViewModel: ObservableObject {
             campaigns.removeAll { $0.id == campaignId }
             applications.removeAll { $0.campaignId == campaignId }
         } catch {
+            if error.isCancellation { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -163,6 +166,7 @@ class CompanyDashboardViewModel: ObservableObject {
                 )
             }
         } catch {
+            if error.isCancellation { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -186,6 +190,7 @@ class CompanyDashboardViewModel: ObservableObject {
                 )
             }
         } catch {
+            if error.isCancellation { return }
             errorMessage = error.localizedDescription
         }
     }
