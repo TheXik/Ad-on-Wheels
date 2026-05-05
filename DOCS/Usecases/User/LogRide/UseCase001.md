@@ -43,8 +43,12 @@ looking for a decodable code until one is read.
 
 **6b. The driver leaves the verification step without scanning.** The
 system records the ride as *unverified*, and its earnings do not
-contribute to the driver's cumulative totals. The driver can return later
-and scan the QR code to promote the ride to *verified*.
+contribute to the driver's cumulative totals. The backend exposes
+`POST /api/rides/{id}/verify` so the ride can later be promoted to
+*verified*. The current iOS build does not expose a re-scan entry point
+on the ride-detail screen, so the promotion path is reachable only by
+completing the scan in the same session; this gap is acknowledged in the
+Conclusion's *Limitations* section.
 
 
 ## Postconditions

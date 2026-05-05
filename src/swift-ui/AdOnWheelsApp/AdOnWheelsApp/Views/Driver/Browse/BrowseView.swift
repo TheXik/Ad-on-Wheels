@@ -9,7 +9,7 @@ struct BrowseView: View {
         VStack {
             HStack {
                 Spacer()
-                Text("Swipe Ads")
+                Text("Discover")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
