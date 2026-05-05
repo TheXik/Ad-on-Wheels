@@ -33,14 +33,16 @@ b. The driver needs to find an advertising campaign to participate in.
 ## Alternative Flows
 
 **3a. The driver reverses the most recent skip.** The system restores
-the just-skipped campaign and offers it to the driver again.
+the just-skipped campaign and offers it to the driver again. The basic
+flow continues at step 3 with the restored campaign.
 
 **3b. The driver has an accepted campaign.** The system rejects the
-application, tells the driver they cannot run two campaigns at once, and
-advances to the next campaign.
+application and tells the driver they cannot run two campaigns at once.
+The basic flow continues at step 4.
 
 **3c. The application cannot be submitted for any other reason.** The
-system tells the driver the application failed and lets them retry.
+system tells the driver the application failed. The basic flow continues
+at step 3 with the same campaign so the driver can retry.
 
 
 ## Postconditions

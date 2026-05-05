@@ -46,11 +46,13 @@ c. The driver needs to record the kilometers driven so that they are
   speed as unavailable, retains the last known position, and resumes
   step 3 when a new position is available.
 - **6a. The QR code is not immediately decoded.** The system continues
-  looking for a decodable code until one is read.
+  looking for a decodable code; once a code is read, the basic flow
+  continues at step 7.
 - **6b. The driver leaves the verification step without scanning.**
   The system records the ride as *unverified*, and its earnings do not
   contribute to the driver's cumulative totals. The driver can return
-  later and scan the QR code to promote the ride to *verified*.
+  later and complete the scan to promote the ride to *verified*. The
+  use case ends.
 
 **Postconditions.**
 a. A ride is recorded with its position trace, total distance, total
@@ -90,12 +92,13 @@ b. The driver needs to find an advertising campaign to participate in.
 
 - **3a. The driver reverses the most recent skip.** The system
   restores the just-skipped campaign and offers it to the driver again.
+  The basic flow continues at step 3 with the restored campaign.
 - **3b. The driver has an accepted campaign.** The system rejects the
-  application, tells the driver they cannot run two campaigns at once,
-  and advances to the next campaign.
+  application and tells the driver they cannot run two campaigns at
+  once. The basic flow continues at step 4.
 - **3c. The application cannot be submitted for any other reason.**
-  The system tells the driver the application failed and lets them
-  retry.
+  The system tells the driver the application failed. The basic flow
+  continues at step 3 with the same campaign so the driver can retry.
 
 **Postconditions.**
 a. Every campaign the driver applied to during the session is
@@ -301,18 +304,30 @@ c. The company user needs to choose which drivers to accept for one
 
 - **2a. The campaign has no pending applications.** The system tells
   the company user the application list is empty and offers to share
-  the campaign or edit its parameters.
+  the campaign or edit its parameters. The use case ends.
 - **3a. The accept or decline cannot be recorded.** The system keeps
-  the application in its previous state and lets the company user
-  retry.
+  the application in its previous state. The basic flow continues at
+  step 3 so the company user can retry.
+- **4a. The campaign passes its end date while accepted drivers still
+  hold accepted applications.** A scheduled task transitions every
+  *accepted* application on the now-ended campaign to *expired*,
+  releasing each driver from the cooperation so that they become
+  eligible to apply to another campaign. The transition is automatic
+  and requires no company-user action; expired applications remain
+  visible in the company's per-campaign view, distinguished from
+  currently-accepted ones, so the historical roster of who drove for
+  the campaign is preserved.
 
 **Postconditions.**
 a. Every application the company user acted on is in the *accepted*
-   or *declined* state.
+   or *declined* state, or, if its parent campaign has since passed
+   its end date, the *expired* state.
 b. Accepted drivers appear in the campaign's participants list and
    can exchange messages with the company within the context of that
    campaign.
-c. No driver is accepted on more than one campaign at the same time.
+c. No driver is accepted on more than one campaign at the same time,
+   and a driver whose previously accepted campaign has expired is
+   once again eligible to apply elsewhere.
 
 
 ## UC08: Export Campaign Statistics
@@ -387,36 +402,43 @@ b. The user needs an account to access the features of their chosen
 
 **Alternative Flows.**
 
-- **2a. The user signs in with a federated identity provider, and
+- **2a. The user signs in with an external identity provider, and
   the returned e-mail is not yet registered.** The system creates a
   new account under the chosen role, signs the user in, and the flow
   continues at step 5.
-- **2b. The user signs in with a federated identity provider, and
+- **2b. The user signs in with an external identity provider, and
   the returned e-mail is already registered under the same role.**
   The system signs the user in. The use case ends.
-- **2c. The user signs in with a federated identity provider, and
+- **2c. The user signs in with an external identity provider, and
   the returned e-mail is already registered under a different role.**
   The system tells the user the e-mail belongs to the other role and
-  offers to sign them in as that role instead.
+  offers to sign them in as that role instead. The use case ends.
 - **4a. The e-mail is already in use under the same role.** The
   system rejects the submission and offers to sign the user in
-  instead.
+  instead. The use case ends.
 - **4b. The e-mail is already in use under a different role.** The
   system rejects the submission and tells the user which role the
-  e-mail belongs to.
+  e-mail belongs to. The use case ends.
 - **4c. The credentials cannot be recorded after the profile has
   been created.** The system removes the just-created profile, tells
-  the user the registration failed, and invites them to retry.
+  the user the registration failed, and invites them to retry. The
+  use case ends.
 - **5a. The driver leaves onboarding before completing it.** The
-  system records a minimal driver profile and reminds the driver to
-  complete onboarding before starting a ride.
+  system discards the partially-entered onboarding state when the
+  application is backgrounded or terminated, and presents the wizard
+  from its first step on the next sign-in. The driver account already
+  exists at this point (it was created in step 4 of the basic flow),
+  so re-entering the wizard does not require re-registering
+  credentials, only the vehicle and goal information that the driver
+  did not finish entering. The use case ends.
 
 **Postconditions.**
 a. An account exists for the user with credentials and a matching
    profile.
 b. The user is signed in to the interface for their role.
-c. A driver registered from a mobile device has either completed
-   onboarding or is reminded to complete it before starting a ride.
+c. A driver registered from a mobile device has either completed the
+   onboarding wizard or will be presented with it again on the next
+   sign-in.
 
 
 ## UC10: Driver Sign-In
@@ -449,9 +471,6 @@ c. The driver needs to access the features of the driver role.
 - **4b. The Google sign-in returns an e-mail that has no account
   yet.** The system creates a driver account for the e-mail (per
   **FR.4**) and the flow continues at step 5.
-- **4c. The driver has forgotten their password.** The system sends
-  a password-reset link to the driver's e-mail address and the use
-  case ends.
 
 **Postconditions.**
 a. The driver is signed in and on the driver home screen.
@@ -666,9 +685,6 @@ c. The company user needs to access the features of the company role.
 - **4b. The Google sign-in returns an e-mail registered under a
   different role.** The system tells the company user the e-mail
   belongs to the other role and does not sign them in.
-- **4c. The company user has forgotten their password.** The system
-  sends a password-reset link to the company user's e-mail address
-  and the use case ends.
 
 **Postconditions.**
 a. The company user is signed in and on the company home dashboard.
@@ -713,7 +729,8 @@ d. The driver needs to record a drive they did not start through
 - **4a. The driver declines the offer.** The system discards the
   collected samples and the use case ends without creating a ride.
 - **5a. The reconstruction cannot be recorded.** The system retains
-  the collected samples and lets the driver retry.
+  the collected samples. The basic flow continues at step 4 so the
+  driver can retry.
 
 **Postconditions.**
 a. Either a deferred, unverified ride exists with its reconstructed

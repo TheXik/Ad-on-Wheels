@@ -38,10 +38,6 @@ e-mail or password is incorrect and lets them retry.
 The system creates a driver account for the e-mail (per **FR.4**) and
 the flow continues at step 5.
 
-**4c. The driver has forgotten their password.** The system sends a
-password-reset link to the driver's e-mail address and the use case
-ends.
-
 
 ## Postconditions
 

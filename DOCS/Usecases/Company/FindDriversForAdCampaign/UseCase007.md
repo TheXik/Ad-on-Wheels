@@ -39,17 +39,31 @@ c. The company user needs to choose which drivers to accept for one of
 
 **2a. The campaign has no pending applications.** The system tells the
 company user the application list is empty and offers to share the
-campaign or edit its parameters.
+campaign or edit its parameters. The use case ends.
 
 **3a. The accept or decline cannot be recorded.** The system keeps the
-application in its previous state and lets the company user retry.
+application in its previous state. The basic flow continues at step 3
+so the company user can retry.
+
+**4a. The campaign passes its end date while accepted drivers still
+hold accepted applications.** A scheduled task transitions every
+*accepted* application on the now-ended campaign to *expired*,
+releasing each driver from the cooperation so that they become
+eligible to apply to another campaign. The transition is automatic and
+requires no company-user action; expired applications remain visible
+in the company's per-campaign view, distinguished from
+currently-accepted ones, so the historical roster of who drove for the
+campaign is preserved.
 
 
 ## Postconditions
 
-a. Every application the company user acted on is in the *accepted* or
-   *declined* state.
+a. Every application the company user acted on is in the *accepted*
+   or *declined* state, or, if its parent campaign has since passed
+   its end date, the *expired* state.
 b. Accepted drivers appear in the campaign's participants list and can
    exchange messages with the company within the context of that
    campaign.
-c. No driver is accepted on more than one campaign at the same time.
+c. No driver is accepted on more than one campaign at the same time,
+   and a driver whose previously accepted campaign has expired is once
+   again eligible to apply elsewhere.

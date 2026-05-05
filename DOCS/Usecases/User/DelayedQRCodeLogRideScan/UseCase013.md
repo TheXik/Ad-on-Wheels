@@ -47,7 +47,8 @@ the use case ends without creating a ride.
 collected samples and the use case ends without creating a ride.
 
 **5a. The reconstruction cannot be recorded.** The system retains the
-collected samples and lets the driver retry.
+collected samples. The basic flow continues at step 4 so the driver can
+retry.
 
 
 ## Postconditions

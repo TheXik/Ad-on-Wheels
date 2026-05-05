@@ -7,9 +7,10 @@ the design must respect, not behavior the platform must produce.
 
 
 - **C.1 — Smartphone-only ride verification.** Per the thesis assignment,
-  the platform must be able to verify from a smartphone that the driver is
-  physically driving their registered vehicle with the campaign's
-  advertisement displayed.
+  the platform must offer a smartphone-based verification step at the end
+  of a ride, performed by the driver, to indicate that the campaign's
+  advertisement is displayed on the vehicle. The QR scan does not need to
+  be cryptographically tied to a specific vehicle or campaign.
 
 - **C.2 — GDPR.** The platform processes personal data (e-mail addresses,
   vehicle identification, position traces) and therefore falls under the

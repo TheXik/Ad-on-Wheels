@@ -35,34 +35,39 @@ b. The user needs an account to access the features of their chosen role.
 
 ## Alternative Flows
 
-**2a. The user signs in with a federated identity provider, and the
+**2a. The user signs in with an external identity provider, and the
 returned e-mail is not yet registered.** The system creates a new account
 under the chosen role, signs the user in, and the flow continues at
 step 5.
 
-**2b. The user signs in with a federated identity provider, and the
+**2b. The user signs in with an external identity provider, and the
 returned e-mail is already registered under the same role.** The system
 signs the user in. The use case ends.
 
-**2c. The user signs in with a federated identity provider, and the
+**2c. The user signs in with an external identity provider, and the
 returned e-mail is already registered under a different role.** The
 system tells the user the e-mail belongs to the other role and offers to
-sign them in as that role instead.
+sign them in as that role instead. The use case ends.
 
 **4a. The e-mail is already in use under the same role.** The system
-rejects the submission and offers to sign the user in instead.
+rejects the submission and offers to sign the user in instead. The use
+case ends.
 
 **4b. The e-mail is already in use under a different role.** The system
 rejects the submission and tells the user which role the e-mail belongs
-to.
+to. The use case ends.
 
 **4c. The credentials cannot be recorded after the profile has been
 created.** The system removes the just-created profile, tells the user
-the registration failed, and invites them to retry.
+the registration failed, and invites them to retry. The use case ends.
 
 **5a. The driver leaves onboarding before completing it.** The system
-records a minimal driver profile and reminds the driver to complete
-onboarding before starting a ride.
+discards the partially-entered onboarding state when the application is
+backgrounded or terminated, and presents the wizard from its first step
+on the next sign-in. The driver account already exists at this point (it
+was created in step 4 of the basic flow), so re-entering the wizard does
+not require re-registering credentials, only the vehicle and goal
+information that the driver did not finish entering. The use case ends.
 
 
 ## Postconditions
@@ -70,5 +75,6 @@ onboarding before starting a ride.
 a. An account exists for the user with credentials and a matching
    profile.
 b. The user is signed in to the interface for their role.
-c. A driver registered from a mobile device has either completed
-   onboarding or is reminded to complete it before starting a ride.
+c. A driver registered from a mobile device has either completed the
+   onboarding wizard or will be presented with it again on the next
+   sign-in.

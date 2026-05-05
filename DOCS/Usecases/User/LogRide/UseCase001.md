@@ -39,16 +39,14 @@ unavailable, retains the last known position, and resumes step 3 when a
 new position is available.
 
 **6a. The QR code is not immediately decoded.** The system continues
-looking for a decodable code until one is read.
+looking for a decodable code; once a code is read, the basic flow
+continues at step 7.
 
 **6b. The driver leaves the verification step without scanning.** The
 system records the ride as *unverified*, and its earnings do not
-contribute to the driver's cumulative totals. The backend exposes
-`POST /api/rides/{id}/verify` so the ride can later be promoted to
-*verified*. The current iOS build does not expose a re-scan entry point
-on the ride-detail screen, so the promotion path is reachable only by
-completing the scan in the same session; this gap is acknowledged in the
-Conclusion's *Limitations* section.
+contribute to the driver's cumulative totals. The driver can return
+later and complete the scan to promote the ride to *verified*. The use
+case ends.
 
 
 ## Postconditions

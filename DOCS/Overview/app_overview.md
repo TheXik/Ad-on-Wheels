@@ -22,8 +22,9 @@ payouts, and a smartphone-only verification gesture without extra hardware.
   a start and end time, a position trace, total distance, computed earnings,
   and an explicit verification status (`unverified` or `verified`).
 - **Application** - a request submitted by a driver to join a specific
-  campaign; it is always in one of three states: `applied`, `accepted`, or
-  `declined`.
+  campaign; it is always in one of four states: `applied`, `accepted`,
+  `declined`, or `expired` when the campaign ends before any ride against
+  it is started.
 - **QR Code Verification** - a lightweight, client-side verification gesture
   performed at the end of a ride to confirm that the driver was actually
   driving the campaign's vehicle.

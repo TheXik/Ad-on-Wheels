@@ -39,10 +39,6 @@ the e-mail or password is incorrect and lets them retry.
 role.** The system tells the company user the e-mail belongs to the
 other role and does not sign them in.
 
-**4c. The company user has forgotten their password.** The system sends
-a password-reset link to the company user's e-mail address and the use
-case ends.
-
 
 ## Postconditions
 

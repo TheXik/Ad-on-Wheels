@@ -14,8 +14,10 @@ groupings, matching the thesis (Chapter 1, Section 1.5).
   prevent duplicate accounts.
 - **FR.3** — Registered users must be able to log in using their e-mail and
   password. Passwords must be stored only in hashed form.
-- **FR.4** — The mobile application must support sign-in via Google OAuth2,
-  creating an account automatically if none exists for the returned e-mail.
+- **FR.4** — Both clients must support sign-in via Google OAuth2, creating
+  an account automatically if none exists for the returned e-mail. The
+  mobile application supports this flow for both roles. The web dashboard
+  restricts it to companies, in line with **FR.1**.
 - **FR.5** — A registration that fails partway through must trigger
   compensating actions that undo any already-completed steps, leaving no
   partial user record.
@@ -73,8 +75,8 @@ groupings, matching the thesis (Chapter 1, Section 1.5).
   must be able to send them a direct message within the context of that
   campaign.
 - **FR.20** — Companies must be able to see aggregate metrics across all
-  their campaigns: total campaigns, number of active campaigns, total
-  kilometers driven, and total number of completed rides.
+  their campaigns: total campaigns, number of active (still recruiting)
+  campaigns, total kilometers driven, and total number of completed rides.
 - **FR.21** — Companies must be able to export campaign statistics as a
   downloadable file, either for a single campaign or across all campaigns of
   the company.
