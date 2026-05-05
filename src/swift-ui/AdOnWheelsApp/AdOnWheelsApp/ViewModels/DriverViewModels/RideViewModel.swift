@@ -53,6 +53,7 @@ class RideViewModel: NSObject, ObservableObject {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.activityType = .automotiveNavigation
+        locationManager.pausesLocationUpdatesAutomatically = false
     }
 
     func requestLocationPermission() {
@@ -88,6 +89,9 @@ class RideViewModel: NSObject, ObservableObject {
             gpsBuffer = []
             stopGPSBuffering()
 
+            // Background mode is only enabled while a ride is active (battery-friendly).
+            // Requires the `location` entry in UIBackgroundModes (Info.plist).
+            locationManager.allowsBackgroundLocationUpdates = true
             locationManager.startUpdatingLocation()
             startElapsedTimer()
             startTrackTimer()
@@ -112,6 +116,7 @@ class RideViewModel: NSObject, ObservableObject {
         stopTrackTimer()
         stopElapsedTimer()
         stopSpeedStaleTimer()
+        locationManager.allowsBackgroundLocationUpdates = false
 
         #if DEBUG
         stopSimulatedMovement()
@@ -200,6 +205,12 @@ class RideViewModel: NSObject, ObservableObject {
     func stopGPSBuffering() {
         bufferTimer?.cancel()
         bufferTimer = nil
+    }
+
+    func discardDeferredBuffer() {
+        bufferTimer?.cancel()
+        bufferTimer = nil
+        gpsBuffer = []
     }
 
     func submitDeferredRide() async {

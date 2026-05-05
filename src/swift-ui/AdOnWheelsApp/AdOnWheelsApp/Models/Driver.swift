@@ -34,7 +34,11 @@ struct Driver: Identifiable, Codable {
         if path.hasPrefix("http") {
             return URL(string: path)
         }
-        let normalized = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        var prefixed = path
+        if prefixed.hasPrefix("/drivers/images/") {
+            prefixed = "/api" + prefixed
+        }
+        let normalized = prefixed.hasPrefix("/") ? String(prefixed.dropFirst()) : prefixed
         return AppConfig.baseURL.appendingPathComponent(normalized)
     }
 }

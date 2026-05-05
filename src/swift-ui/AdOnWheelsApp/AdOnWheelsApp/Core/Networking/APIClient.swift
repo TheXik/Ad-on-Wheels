@@ -32,13 +32,21 @@ final class APIClient: APIClientProtocol {
                 throw NetworkError.transport(URLError(.badServerResponse))
             }
 
+            // The gateway returns Spring's default error JSON for an expired/invalid JWT,
+            // which doesn't match ApiResponse<T>. Short-circuit before decode and notify
+            // the app root so it can sign the user out.
+            if httpResponse.statusCode == 401 {
+                NotificationCenter.default.post(name: .authTokenExpired, object: nil)
+                throw AppError.unauthorized
+            }
+
             if (200...299).contains(httpResponse.statusCode) {
                 if T.self == EmptyResponse.self {
                     return EmptyResponse() as! T
                 }
 
                 let apiResponse = try decoder.decode(ApiResponse<T>.self, from: data)
-                
+
                 if apiResponse.success, let data = apiResponse.data {
                     return data
                 } else if let errorDetails = apiResponse.error {
@@ -58,7 +66,9 @@ final class APIClient: APIClientProtocol {
             }
 
             throw NetworkError.malformedErrorResponse(statusCode: httpResponse.statusCode)
-            
+
+        } catch let appError as AppError {
+            throw appError
         } catch let error as NetworkError {
             throw error
         } catch let urlError as URLError {
@@ -151,4 +161,10 @@ final class APIClient: APIClientProtocol {
     }
 
     private struct EmptyResponse: Decodable {}
+}
+
+extension Notification.Name {
+    /// Posted by `APIClient` when the gateway returns 401. The app root subscribes
+    /// and forces a sign-out; UI should show a transient "Session expired" toast.
+    static let authTokenExpired = Notification.Name("auth.tokenExpired")
 }

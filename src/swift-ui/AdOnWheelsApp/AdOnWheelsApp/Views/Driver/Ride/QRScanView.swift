@@ -173,7 +173,7 @@ struct QRScanView: View {
                 }
 
                 Button(action: {
-                    // Discard buffered data and return
+                    rideViewModel?.discardDeferredBuffer()
                     onScanComplete()
                 }) {
                     Text("No, Discard")
