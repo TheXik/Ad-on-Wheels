@@ -17,7 +17,23 @@ class RideViewModel: NSObject, ObservableObject {
     @Published var locationVersion: Int = 0
 
     @Published private(set) var gpsBuffer: [DeferredLocationPoint] = []
-    var hasDeferredRideData: Bool { gpsBuffer.count >= 2 }
+    // 100m extent gate keeps stationary GPS jitter from triggering deferred-ride.
+    var hasDeferredRideData: Bool {
+        guard gpsBuffer.count >= 2 else { return false }
+        return maxBufferDisplacementMeters() >= Self.minBufferDisplacementMeters
+    }
+
+    private func maxBufferDisplacementMeters() -> Double {
+        guard let first = gpsBuffer.first else { return 0 }
+        let originLoc = CLLocation(latitude: first.lat, longitude: first.lon)
+        var maxDist: Double = 0
+        for p in gpsBuffer.dropFirst() {
+            let loc = CLLocation(latitude: p.lat, longitude: p.lon)
+            let d = loc.distance(from: originLoc)
+            if d > maxDist { maxDist = d }
+        }
+        return maxDist
+    }
 
     var activeCampaignName: String = "Active Campaign"
     var activeCampaignId: Int?
@@ -312,6 +328,7 @@ extension RideViewModel: CLLocationManagerDelegate {
 
     private static let minDistanceMeters: Double = 10
     private static let maxPlausibleSpeedKmh: Double = 200
+    private static let minBufferDisplacementMeters: Double = 100
 
     nonisolated func locationManager(
         _ manager: CLLocationManager,
