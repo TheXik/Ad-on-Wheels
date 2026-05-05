@@ -48,22 +48,22 @@ The purpose of this project is to develop a mobile application that connects car
 - **Language**: Swift, SwiftUI.
 - **Architecture**: MVVM with `@Published` state; `URLSession` async/await networking.
 - **Security**: Keychain token storage.
-- **Platform**: iOS 15.0+.
+- **Platform**: iOS 18.4+.
 
 #### Web dashboard
 - **Stack**: React 19 + Vite 8, React Router 7, Leaflet for the coverage map, `@react-oauth/google` for sign-in.
 
 ## Getting Started
 
-### Prerequisites
+### System Requirements
 
-#### For Backend
-- **Docker** 20.10+ ([Install](https://docs.docker.com/get-docker/))
-- **Docker Compose** 2.0+ (included with Docker Desktop)
+**Driver device.** iPhone running iOS 18.4 or later, with GPS hardware. Location permission must be granted in *While Using the App* mode; *Always* is neither requested nor required. Camera permission is requested the first time the driver verifies a ride via QR.
 
-#### For iOS App
-- **macOS** (required for iOS development)
-- **Xcode** 14.0+ ([Install from App Store](https://apps.apple.com/us/app/xcode/id497799835))
+**Company workstation.** Any current desktop browser (Chromium-family, Firefox, or Safari) on any operating system. No plug-ins, extensions, or native installers are required. The dashboard is also reachable from the same iOS application drivers use, for company users who prefer mobile.
+
+**Backend host.** Linux, macOS, or Windows WSL with at least 8 GB of free RAM, [Docker Engine](https://docs.docker.com/get-docker/) 20.10 or newer, and Docker Compose v2 (included with Docker Desktop). A container runtime is the only hard dependency; no JDK, Python, or Node installation is required on the host.
+
+**iOS development (optional).** macOS with Xcode 16.0 or newer (required for the iOS 18.4 SDK), [installable from the App Store](https://apps.apple.com/us/app/xcode/id497799835).
 
 ### Quick Start
 
@@ -98,12 +98,11 @@ The sync script writes `src/swift-ui/.../LocalConfig.swift` (gitignored) and `sr
 ```bash
 cd src/backend
 
-# Build all microservices (first run: a few minutes for image builds)
-./scripts/build.sh
-
-# Start all services
-./scripts/start.sh
+# Single command: build every microservice image, then start the stack
+./scripts/up.sh
 ```
+
+The first run takes about five to ten minutes (Maven build + image layers). Later runs reuse the cache. `./scripts/build.sh` and `./scripts/start.sh` run the two halves separately if you prefer; `./scripts/start-detached.sh` runs the stack in the background.
 
 **Wait for all services to start** (look for "Started GatewayServiceApplication" in logs).
 
@@ -246,8 +245,7 @@ Response:
 {
   "success": true,
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "message": "Registration successful"
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   },
   "errors": null
 }
