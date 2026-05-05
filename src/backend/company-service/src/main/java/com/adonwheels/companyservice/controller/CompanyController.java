@@ -24,12 +24,26 @@ public class CompanyController {
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Id", required = false) Long callerId,
             @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
-        requireOwnership(callerId, callerRole, id);
+        // Read open to ADMIN. DRIVER may read for chat thread names. Owning company too.
+        // Delete below stays locked to requireOwnership.
+        if (!"ADMIN".equals(callerRole)
+                && !"DRIVER".equals(callerRole)
+                && (callerId == null || !callerId.equals(id))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to act on this resource");
+        }
         return ResponseEntity.ok(ApiResponse.success(companyService.findById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Company>> createCompany(@Valid @RequestBody Company company) {
+    public ResponseEntity<ApiResponse<Company>> createCompany(
+            @Valid @RequestBody Company company,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // Saga calls service-to-service without X-User-Role; gateway callers must be ADMIN.
+        if (callerRole != null && !"ADMIN".equals(callerRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to create company records");
+        }
         Company saved = companyService.addCompany(company);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved));
     }

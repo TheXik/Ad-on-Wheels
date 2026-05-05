@@ -30,7 +30,14 @@ public class DriverController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Driver>> newDriver(@Valid @RequestBody Driver newDriver) {
+    public ResponseEntity<ApiResponse<Driver>> newDriver(
+            @Valid @RequestBody Driver newDriver,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // Saga calls service-to-service without X-User-Role; gateway callers must be ADMIN.
+        if (callerRole != null && !"ADMIN".equals(callerRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to create driver records");
+        }
         Driver savedDriver = service.addDriver(newDriver);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(savedDriver));
     }
@@ -40,7 +47,14 @@ public class DriverController {
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Id", required = false) Long callerId,
             @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
-        requireOwnership(callerId, callerRole, id);
+        // Read open to ADMIN. COMPANY may read for chat thread names. Owning driver too.
+        // Writes below stay locked to requireOwnership.
+        if (!"ADMIN".equals(callerRole)
+                && !"COMPANY".equals(callerRole)
+                && (callerId == null || !callerId.equals(id))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to act on this resource");
+        }
         Driver driver = service.getDriver(id);
         return ResponseEntity.ok(ApiResponse.success(driver));
     }

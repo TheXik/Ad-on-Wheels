@@ -32,13 +32,21 @@ public class RoleAuthorizationFilter implements WebFilter {
     // /api/rides/campaign/{id}/* and /api/rides/campaigns/statistics for their
     // own campaigns. Per-endpoint checks in RideController gate the per-driver
     // write paths (/start, /track, /end, /deferred, /{driverId}/*).
+    // Bare prefixes. matches() covers both /api/X and /api/X/Y so the
+    // collection-level POSTs are gated alongside item-level routes.
     private static final Map<String, Set<String>> PATH_ROLE_RULES = Map.of(
-            "/api/drivers/", Set.of(ROLE_DRIVER, ROLE_ADMIN),
-            "/api/rides/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
-            "/api/companies/", Set.of(ROLE_COMPANY, ROLE_ADMIN),
-            "/api/campaigns/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
-            "/api/messages/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN)
+            // Cross-role for read. Chat threads need the other side display name.
+            // Per-endpoint owner checks in the controllers gate writes.
+            "/api/drivers", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
+            "/api/rides", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
+            "/api/companies", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
+            "/api/campaigns", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
+            "/api/messages", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN)
     );
+
+    private static boolean matches(String path, String prefix) {
+        return path.equals(prefix) || path.startsWith(prefix + "/");
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -48,7 +56,7 @@ public class RoleAuthorizationFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        boolean isApiPath = PATH_ROLE_RULES.keySet().stream().anyMatch(path::startsWith);
+        boolean isApiPath = PATH_ROLE_RULES.keySet().stream().anyMatch(p -> matches(path, p));
         if (!isApiPath) {
             return chain.filter(exchange);
         }
@@ -60,7 +68,7 @@ public class RoleAuthorizationFilter implements WebFilter {
         String role = roleHeader.getFirst();
 
         Set<String> allowed = PATH_ROLE_RULES.entrySet().stream()
-                .filter(e -> path.startsWith(e.getKey()))
+                .filter(e -> matches(path, e.getKey()))
                 .map(Map.Entry::getValue)
                 .findFirst()
                 .orElse(Set.of());
