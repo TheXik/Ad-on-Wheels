@@ -39,6 +39,11 @@ public class MessageService {
         return repository.findByRecipientIdAndRecipientRoleOrderByCreatedAtDesc(recipientId, recipientRole);
     }
 
+    public List<Message> getAllForUser(Long userId, String role) {
+        return repository.findByRecipientIdAndRecipientRoleOrSenderIdAndSenderRoleOrderByCreatedAtDesc(
+                userId, role, userId, role);
+    }
+
     public List<Message> getConversation(Long campaignId, Long userId1, Long userId2) {
         return repository
                 .findByCampaignIdAndSenderIdAndRecipientIdOrCampaignIdAndSenderIdAndRecipientIdOrderByCreatedAtAsc(

@@ -60,6 +60,21 @@ public class MessageController {
                 messageService.getInbox(recipientId, callerRole)));
     }
 
+    // All messages where caller is sender or recipient (sent + received).
+    @GetMapping("/all/{userId}")
+    public ResponseEntity<ApiResponse<List<Message>>> getAllForUser(
+            @PathVariable Long userId,
+            @RequestHeader("X-User-Id") Long callerId,
+            @RequestHeader("X-User-Role") String callerRole) {
+
+        if (!callerId.equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot access another user's messages");
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(
+                messageService.getAllForUser(userId, callerRole)));
+    }
+
     @GetMapping("/conversation")
     public ResponseEntity<ApiResponse<List<Message>>> getConversation(
             @RequestParam Long campaignId,
