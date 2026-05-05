@@ -23,9 +23,13 @@ public class CoverageBffService {
         this.rideClient = rideClient;
     }
 
-    public Mono<CampaignCoverage> getCampaignCoverage(Long campaignId) {
+    public Mono<CampaignCoverage> getCampaignCoverage(Long campaignId, String callerId, String callerRole) {
         return rideClient.get()
                 .uri("/rides/campaign/{campaignId}/routes", campaignId)
+                .headers(h -> {
+                    if (callerId != null) h.set("X-User-Id", callerId);
+                    if (callerRole != null) h.set("X-User-Role", callerRole);
+                })
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<CampaignRouteEntry>>>() {})
                 .map(ApiResponse::getData)

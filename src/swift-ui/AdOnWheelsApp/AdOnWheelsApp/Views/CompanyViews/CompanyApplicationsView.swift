@@ -269,6 +269,7 @@ struct ApplicationCard: View {
         switch application.status.uppercased() {
         case "ACCEPTED": return .green
         case "DECLINED": return .red
+        case "EXPIRED": return .gray
         default: return .orange
         }
     }

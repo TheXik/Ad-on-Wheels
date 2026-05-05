@@ -43,6 +43,10 @@ public class RideService {
     // Fallback when no campaign rate is supplied; per-campaign rates override this.
     private static final double DEFAULT_EARNINGS_RATE_PER_KM = 0.10;
 
+    // No track point in this window means the iOS app died or was killed; the
+    // session is treated as abandoned so the driver can start a new ride.
+    private static final Duration ABANDONED_SESSION_THRESHOLD = Duration.ofMinutes(2);
+
     private final RideRepository repository;
     private final RideHistoryRepository historyRepository;
     private final ObjectMapper objectMapper;
@@ -61,9 +65,16 @@ public class RideService {
     }
 
     public StartRideResponse startRide(String driverId, Long campaignId, Double ratePerKm) {
-        if (repository.findByDriverId(driverId).isPresent()) {
-            throw new BusinessException(AppErrorCode.RIDE_ALREADY_STARTED);
-        }
+        repository.findByDriverId(driverId).ifPresent(existing -> {
+            LocalDateTime lastActivity = existing.getRouteHistory().stream()
+                    .map(LocationPoint::getCapturedAt)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(existing.getStartTime());
+            if (Duration.between(lastActivity, LocalDateTime.now()).compareTo(ABANDONED_SESSION_THRESHOLD) < 0) {
+                throw new BusinessException(AppErrorCode.RIDE_ALREADY_STARTED);
+            }
+            repository.deleteById(existing.getRideId());
+        });
         String rideId = UUID.randomUUID().toString();
         RideSession session = new RideSession(rideId, driverId, LocalDateTime.now(), campaignId, ratePerKm);
         repository.save(session);
@@ -251,6 +262,24 @@ public class RideService {
                     .toList();
             return buildCampaignStats(cid, campaignRides);
         }).toList();
+    }
+
+    // Returns per-campaign cumulative paid earnings (verified rides only).
+    // Used by campaign-service's CampaignLifecycleScheduler to enforce budget
+    // caps. Campaigns with no verified earnings are absent from the map.
+    public java.util.Map<Long, java.math.BigDecimal> getEarningsTotals(List<Long> campaignIds) {
+        if (campaignIds == null || campaignIds.isEmpty()) {
+            return java.util.Map.of();
+        }
+        List<Object[]> rows = historyRepository.sumVerifiedEarningsByCampaignIds(campaignIds);
+        java.util.Map<Long, java.math.BigDecimal> out = new java.util.HashMap<>();
+        for (Object[] row : rows) {
+            Long cid = (Long) row[0];
+            Number sum = (Number) row[1];
+            if (cid == null || sum == null) continue;
+            out.put(cid, java.math.BigDecimal.valueOf(sum.doubleValue()));
+        }
+        return out;
     }
 
     private CampaignRideStatsResponse buildCampaignStats(Long campaignId, List<CompletedRide> rides) {

@@ -53,6 +53,7 @@ class RideViewModel: NSObject, ObservableObject {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.activityType = .automotiveNavigation
+        locationManager.pausesLocationUpdatesAutomatically = false
     }
 
     func requestLocationPermission() {
@@ -88,6 +89,9 @@ class RideViewModel: NSObject, ObservableObject {
             gpsBuffer = []
             stopGPSBuffering()
 
+            // Background mode is only enabled while a ride is active (battery-friendly).
+            // Requires the `location` entry in UIBackgroundModes (Info.plist).
+            locationManager.allowsBackgroundLocationUpdates = true
             locationManager.startUpdatingLocation()
             startElapsedTimer()
             startTrackTimer()
@@ -112,6 +116,7 @@ class RideViewModel: NSObject, ObservableObject {
         stopTrackTimer()
         stopElapsedTimer()
         stopSpeedStaleTimer()
+        locationManager.allowsBackgroundLocationUpdates = false
 
         #if DEBUG
         stopSimulatedMovement()
@@ -200,6 +205,12 @@ class RideViewModel: NSObject, ObservableObject {
     func stopGPSBuffering() {
         bufferTimer?.cancel()
         bufferTimer = nil
+    }
+
+    func discardDeferredBuffer() {
+        bufferTimer?.cancel()
+        bufferTimer = nil
+        gpsBuffer = []
     }
 
     func submitDeferredRide() async {
@@ -333,14 +344,16 @@ extension RideViewModel: CLLocationManagerDelegate {
                     if self.isRiding {
                         self.distanceTravelled += dist / 1000.0
                     }
-                    self.currentSpeed = location.speed >= 0 ? location.speed * 3.6 : impliedSpeedKmh
                     self.lastLocation = location
-                } else {
-                    self.currentSpeed = 0
                 }
             } else {
                 self.lastLocation = location
-                self.currentSpeed = 0
+            }
+
+            // Speed display is decoupled from the distance threshold: trust the Doppler-derived
+            // location.speed on every valid fix; speedStaleTimer zeroes it after 3 s of no fix.
+            if location.speed >= 0 {
+                self.currentSpeed = location.speed * 3.6
             }
         }
     }

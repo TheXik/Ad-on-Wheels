@@ -15,14 +15,36 @@ struct VehicleView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-                    Image(systemName: "car.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 150)
-                        .foregroundColor(.blue)
-                        .padding()
+                    if let url = viewModel.driver?.resolvedVehicleImageURL {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image.resizable().scaledToFill()
+                            case .failure, .empty:
+                                Image(systemName: "car.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            @unknown default:
+                                EmptyView()
+                            }
+                        }
+                        .frame(height: 200)
+                        .frame(maxWidth: .infinity)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(20)
+                        .clipped()
+                    } else {
+                        Image(systemName: "car.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 150)
+                            .foregroundColor(.blue)
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(20)
+                    }
 
                     if isEditing {
                         editForm

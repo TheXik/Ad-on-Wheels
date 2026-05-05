@@ -41,11 +41,11 @@ public class RegistrationSagaOrchestratorService {
             }
 
             profileId = authService.createProfile(request.name(), request.email(), request.role());
-            authService.saveUserWithProfile(request, profileId);
+            User saved = authService.saveUserWithProfile(request, profileId);
 
             logger.info("Registration successful for email: {}", request.email());
 
-            String token = authService.generateTokenForNewUser(request.email());
+            String token = authService.generateTokenForNewUser(saved);
 
             logger.info("Auto-login token generated for email: {}", request.email());
             return new RegistrationResponse(token);

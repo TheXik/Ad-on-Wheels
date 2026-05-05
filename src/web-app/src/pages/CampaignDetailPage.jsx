@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats } from '../services/api';
+import { campaigns as campaignsApi, applicationsWithDrivers, messages, campaignStats, resolveImageUrl } from '../services/api';
 import CampaignCoverageMap from '../components/CampaignCoverageMap';
 
 export default function CampaignDetailPage() {
@@ -18,29 +18,33 @@ export default function CampaignDetailPage() {
   const [msgBody, setMsgBody] = useState('');
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [camp, apps, stats] = await Promise.all([
-          campaignsApi.getById(id),
-          applicationsWithDrivers.get(user.profileId),
-          campaignStats.getByCompany(user.profileId).catch(() => []),
-        ]);
-        setCampaign(camp);
-        const campaignApps = (Array.isArray(apps) ? apps : []).filter(
-          (a) => a.campaignId === parseInt(id)
-        );
-        setApplications(campaignApps);
-        const match = (Array.isArray(stats) ? stats : []).find(
-          (s) => s.rideStats?.campaignId === parseInt(id)
-        );
-        if (match) setRideStats(match.rideStats);
-      } catch (err) {
-        setError(err.message);
-      }
-      setLoading(false);
+  async function load() {
+    try {
+      const [camp, apps, stats] = await Promise.all([
+        campaignsApi.getById(id),
+        applicationsWithDrivers.get(user.profileId),
+        campaignStats.getByCompany(user.profileId).catch(() => []),
+      ]);
+      setCampaign(camp);
+      const campaignApps = (Array.isArray(apps) ? apps : []).filter(
+        (a) => a.campaignId === parseInt(id)
+      );
+      setApplications(campaignApps);
+      const match = (Array.isArray(stats) ? stats : []).find(
+        (s) => s.rideStats?.campaignId === parseInt(id)
+      );
+      if (match) setRideStats(match.rideStats);
+    } catch (err) {
+      setError(err.message);
     }
+    setLoading(false);
+  }
+
+  useEffect(() => {
     load();
+    window.addEventListener('focus', load);
+    return () => window.removeEventListener('focus', load);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user.profileId]);
 
   async function handleApplication(appId, action) {
@@ -57,6 +61,7 @@ export default function CampaignDetailPage() {
       );
     } catch (err) {
       alert(err.message);
+      load();
     }
   }
 
@@ -181,6 +186,13 @@ export default function CampaignDetailPage() {
                         ? `${app.driver.vehicleYear || ''} ${app.driver.vehicleMake} ${app.driver.vehicleModel}`.trim()
                         : 'Not set'}</div>
                       <div><strong>Plate:</strong> {app.driver.vehiclePlate || 'N/A'}</div>
+                      {app.driver.vehicleImageUrl && (
+                        <img
+                          src={resolveImageUrl(app.driver.vehicleImageUrl)}
+                          alt={`${app.driver.name || 'Driver'} vehicle`}
+                          className="driver-vehicle-image"
+                        />
+                      )}
                     </div>
                   )}
                   <div className="application-actions">

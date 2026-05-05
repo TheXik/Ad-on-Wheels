@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -57,7 +58,11 @@ public class CampaignController {
     @GetMapping("/company/{companyId}")
     public ResponseEntity<ApiResponse<List<Campaign>>> getCampaignsByCompany(
             @PathVariable Long companyId,
-            @RequestParam(required = false) CampaignStatus status) {
+            @RequestParam(required = false) CampaignStatus status,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // A company may only list its own campaigns; ADMIN bypasses.
+        requireOwnership(callerId, callerRole, companyId);
         List<Campaign> campaigns = (status != null)
                 ? campaignService.findByCompanyIdAndStatus(companyId, status)
                 : campaignService.findByCompanyId(companyId);
@@ -65,20 +70,35 @@ public class CampaignController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Campaign>> createCampaign(@Valid @RequestBody Campaign campaign) {
+    public ResponseEntity<ApiResponse<Campaign>> createCampaign(
+            @Valid @RequestBody Campaign campaign,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // companyId travels in the body; pin it to the caller (ADMIN bypasses).
+        requireOwnership(callerId, callerRole, campaign.getCompanyId());
         Campaign saved = campaignService.save(campaign);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(saved));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteCampaign(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteCampaign(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // Look up the campaign to find the owning companyId, then check ownership.
+        Campaign existing = campaignService.findById(id);
+        requireOwnership(callerId, callerRole, existing.getCompanyId());
         applicationService.deleteByCampaignId(id);
         campaignService.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/driver/{driverId}")
-    public ResponseEntity<ApiResponse<List<Campaign>>> getCampaignsByDriver(@PathVariable Long driverId) {
+    public ResponseEntity<ApiResponse<List<Campaign>>> getCampaignsByDriver(
+            @PathVariable Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, driverId);
         List<Application> accepted = applicationService.findByDriverIdAndStatus(driverId, ApplicationStatus.ACCEPTED);
         List<Long> campaignIds = accepted.stream().map(Application::getCampaignId).toList();
         List<Campaign> campaigns = campaignIds.stream()
@@ -89,7 +109,10 @@ public class CampaignController {
 
     @GetMapping("/driver/{driverId}/applications")
     public ResponseEntity<ApiResponse<List<ApplicationWithCampaign>>> getApplicationsByDriver(
-            @PathVariable Long driverId) {
+            @PathVariable Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, driverId);
         List<Application> apps = applicationService.findByDriverId(driverId);
         List<ApplicationWithCampaign> result = apps.stream().map(app -> {
             Campaign campaign = campaignService.findById(app.getCampaignId());
@@ -102,7 +125,11 @@ public class CampaignController {
 
     @PostMapping("/{id}/apply")
     public ResponseEntity<ApiResponse<Application>> applyToCampaign(
-            @PathVariable Long id, @RequestParam Long driverId) {
+            @PathVariable Long id,
+            @RequestParam Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, driverId);
         Campaign campaign = campaignService.findById(id);
         Application app = applicationService.apply(campaign, driverId);
         return ResponseEntity.ok(ApiResponse.success(app));
@@ -110,7 +137,10 @@ public class CampaignController {
 
     @GetMapping("/{companyId}/applications")
     public ResponseEntity<ApiResponse<List<Application>>> getApplicationsForCompany(
-            @PathVariable Long companyId) {
+            @PathVariable Long companyId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, companyId);
         List<Application> applications = applicationService.findByCompanyCampaigns(
                 campaignService.findByCompanyId(companyId));
         return ResponseEntity.ok(ApiResponse.success(applications));
@@ -119,11 +149,17 @@ public class CampaignController {
     @PatchMapping("/applications/{id}")
     public ResponseEntity<ApiResponse<Application>> updateApplicationStatus(
             @PathVariable Long id,
-            @RequestBody ApplicationStatusUpdate update) {
+            @RequestBody ApplicationStatusUpdate update,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // Only the owning company (the campaign's companyId) may accept or decline.
+        Application existing = applicationService.findById(id);
+        Campaign campaign = campaignService.findById(existing.getCampaignId());
+        requireOwnership(callerId, callerRole, campaign.getCompanyId());
         Application app = switch (update.status()) {
             case ACCEPTED -> applicationService.accept(id);
             case DECLINED -> applicationService.decline(id);
-            case APPLIED -> throw new BusinessException(
+            case APPLIED, EXPIRED -> throw new BusinessException(
                     AppErrorCode.VALIDATION_ERROR,
                     "Application status can only be transitioned to ACCEPTED or DECLINED.");
         };
@@ -134,14 +170,24 @@ public class CampaignController {
 
     @DeleteMapping("/applications/{id}")
     public ResponseEntity<ApiResponse<Void>> withdrawApplication(
-            @PathVariable Long id, @RequestParam Long driverId) {
+            @PathVariable Long id,
+            @RequestParam Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        // Pin the body driverId to the caller; ApplicationService.withdraw also
+        // re-checks the application's owning driverId for defence in depth.
+        requireOwnership(callerId, callerRole, driverId);
         applicationService.withdraw(id, driverId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/{id}/export")
-    public ResponseEntity<byte[]> exportCampaignStats(@PathVariable Long id) {
+    public ResponseEntity<byte[]> exportCampaignStats(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
         Campaign campaign = campaignService.findById(id);
+        requireOwnership(callerId, callerRole, campaign.getCompanyId());
         List<Application> applications = applicationService.findByCampaignId(id);
 
         long accepted = applications.stream()
@@ -187,8 +233,11 @@ public class CampaignController {
     @PostMapping("/{id}/images")
     public ResponseEntity<ApiResponse<Campaign>> uploadImages(
             @PathVariable Long id,
-            @RequestParam("files") List<MultipartFile> files) {
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
         Campaign campaign = campaignService.findById(id);
+        requireOwnership(callerId, callerRole, campaign.getCompanyId());
         List<String> newKeys = imageStorageService.upload(id, files, campaign.getImageKeys().size());
         campaign.getImageKeys().addAll(newKeys);
         Campaign updated = campaignService.save(campaign);
@@ -209,7 +258,11 @@ public class CampaignController {
     }
 
     @GetMapping("/company/{companyId}/export")
-    public ResponseEntity<byte[]> exportAllCampaignStats(@PathVariable Long companyId) {
+    public ResponseEntity<byte[]> exportAllCampaignStats(
+            @PathVariable Long companyId,
+            @RequestHeader(value = "X-User-Id", required = false) Long callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        requireOwnership(callerId, callerRole, companyId);
         List<Campaign> campaigns = campaignService.findByCompanyId(companyId);
 
         if (campaigns.isEmpty()) {
@@ -234,5 +287,18 @@ public class CampaignController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"company_" + companyId + "_campaigns.csv\"")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(('\uFEFF' + csv.toString()).getBytes(StandardCharsets.UTF_8));
+    }
+
+    // Per-endpoint owner-id check. The gateway role-class gate (A3) only proves
+    // the caller carries the correct role class; this pins the actual
+    // companyId/driverId on the resource. ADMIN bypasses every check.
+    private void requireOwnership(Long callerId, String callerRole, Long pathOwnerId) {
+        if ("ADMIN".equals(callerRole)) {
+            return;
+        }
+        if (callerId == null || pathOwnerId == null || !callerId.equals(pathOwnerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Caller is not authorized to act on this resource");
+        }
     }
 }

@@ -14,6 +14,16 @@ echo -e "${BLUE}  Ad-on-Wheels Clean Script${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
+SKIP_PROMPT=0
+for arg in "$@"; do
+    case "$arg" in
+        -y|--yes) SKIP_PROMPT=1 ;;
+    esac
+done
+if [ "${CLEAN_YES:-0}" = "1" ]; then
+    SKIP_PROMPT=1
+fi
+
 echo -e "${YELLOW} This will remove:${NC}"
 echo "  - All compiled JAR files (target/ directories)"
 echo "  - All Docker containers and images"
@@ -21,12 +31,14 @@ echo "  - All database data (MySQL volumes)"
 echo "  - Maven cache (.m2 directory will be preserved)"
 echo ""
 
-read -p "Are you sure you want to continue? (yes/no): " -r
-echo
+if [ "$SKIP_PROMPT" -ne 1 ]; then
+    read -p "Are you sure you want to continue? (yes/no): " -r
+    echo
 
-if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-    echo "Cancelled."
-    exit 0
+    if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
+        echo "Cancelled."
+        exit 0
+    fi
 fi
 
 echo ""

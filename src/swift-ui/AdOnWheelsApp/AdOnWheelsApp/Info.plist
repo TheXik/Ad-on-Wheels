@@ -23,6 +23,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>CFBundleIdentifier</key>
 	<string></string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
@@ -31,5 +35,7 @@
 	<string>Ad on Wheels uses your location to track your active ride and send GPS data to the ride service.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Ad on Wheels needs camera access to scan the QR code that verifies your ride.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ad on Wheels needs photo-library access so you can pick a vehicle photo for your driver profile and campaign artwork.</string>
 </dict>
 </plist>

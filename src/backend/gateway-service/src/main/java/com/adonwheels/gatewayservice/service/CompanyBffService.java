@@ -11,13 +11,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,61 +35,93 @@ public class CompanyBffService {
         this.rideClient = rideClient;
     }
 
-    public Mono<List<ApplicationWithDriver>> getApplicationsWithDrivers(Long companyId) {
+    // Caller headers come from the inbound exchange and must be re-stamped on
+    // every outbound WebClient call so the per-endpoint owner-id check (A1)
+    // can verify caller==companyId/driverId downstream.
+    public Mono<List<ApplicationWithDriver>> getApplicationsWithDrivers(Long companyId, String callerId, String callerRole) {
         return campaignClient.get()
                 .uri("/campaigns")
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
                 .map(ApiResponse::getData)
-                .flatMapMany(campaigns -> {
+                .flatMap(campaigns -> {
                     List<Campaign> companyCampaigns = campaigns.stream()
                             .filter(c -> c.companyId() != null && c.companyId().equals(companyId))
                             .toList();
 
                     if (companyCampaigns.isEmpty()) {
-                        return Flux.empty();
+                        return Mono.just(Collections.<ApplicationWithDriver>emptyList());
                     }
 
                     return campaignClient.get()
                             .uri("/campaigns/{companyId}/applications", companyId)
+                            .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                             .retrieve()
                             .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Application>>>() {})
                             .map(ApiResponse::getData)
-                            .flatMapMany(applications -> {
+                            .flatMap(applications -> {
                                 List<Long> campaignIds = companyCampaigns.stream()
                                         .map(Campaign::id)
                                         .toList();
 
-                                return Flux.fromIterable(applications)
+                                List<Application> ownApplications = applications.stream()
                                         .filter(app -> campaignIds.contains(app.campaignId()))
-                                        .flatMap(app -> {
-                                            String campaignName = companyCampaigns.stream()
-                                                    .filter(c -> c.id().equals(app.campaignId()))
-                                                    .map(Campaign::name)
-                                                    .findFirst().orElse("");
+                                        .toList();
 
-                                            return driverClient.get()
-                                                    .uri("/drivers/{id}", app.driverId())
-                                                    .retrieve()
-                                                    .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
-                                                    .map(ApiResponse::getData)
-                                                    .map(driver -> new ApplicationWithDriver(
-                                                            app.id(),
-                                                            app.campaignId(),
-                                                            campaignName,
-                                                            app.status(),
-                                                            driver
-                                                    ));
-                                        });
+                                if (ownApplications.isEmpty()) {
+                                    return Mono.just(Collections.<ApplicationWithDriver>emptyList());
+                                }
+
+                                List<Long> driverIds = ownApplications.stream()
+                                        .map(Application::driverId)
+                                        .filter(java.util.Objects::nonNull)
+                                        .distinct()
+                                        .toList();
+
+                                Map<Long, String> campaignNameById = companyCampaigns.stream()
+                                        .collect(Collectors.toMap(Campaign::id, Campaign::name, (a, b) -> a));
+
+                                return fetchDriversBatch(driverIds).map(drivers -> {
+                                    Map<Long, Driver> driverById = drivers.stream()
+                                            .collect(Collectors.toMap(Driver::id, Function.identity(), (a, b) -> a));
+
+                                    return ownApplications.stream()
+                                            .map(app -> new ApplicationWithDriver(
+                                                    app.id(),
+                                                    app.campaignId(),
+                                                    campaignNameById.getOrDefault(app.campaignId(), ""),
+                                                    app.status(),
+                                                    driverById.get(app.driverId())
+                                            ))
+                                            .toList();
+                                });
                             });
                 })
-                .collectList()
                 .defaultIfEmpty(Collections.emptyList());
     }
 
-    public Mono<List<CampaignWithStats>> getCampaignStats(Long companyId) {
+    // /drivers/{id} requires caller==id; a company cannot satisfy that. The
+    // batch /drivers?ids endpoint accepts X-User-Role: ADMIN so the BFF can
+    // fan out once for all driverIds belonging to its own campaigns. The
+    // outer call has already proved companyId == callerId.
+    private Mono<List<Driver>> fetchDriversBatch(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Mono.just(Collections.emptyList());
+        }
+        String csv = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
+        return driverClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/drivers").queryParam("ids", csv).build())
+                .headers(CompanyBffService::stampAdminHeaders)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Driver>>>() {})
+                .map(ApiResponse::getData);
+    }
+
+    public Mono<List<CampaignWithStats>> getCampaignStats(Long companyId, String callerId, String callerRole) {
         return campaignClient.get()
                 .uri("/campaigns/company/{companyId}", companyId)
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Campaign>>>() {})
                 .map(ApiResponse::getData)
@@ -107,6 +139,7 @@ public class CompanyBffService {
                                     .path("/rides/campaigns/statistics")
                                     .queryParam("ids", ids)
                                     .build())
+                            .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                             .retrieve()
                             .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<CampaignRideStats>>>() {})
                             .map(ApiResponse::getData)
@@ -126,8 +159,8 @@ public class CompanyBffService {
                 });
     }
 
-    public Mono<byte[]> exportEnrichedCsv(Long companyId) {
-        return getCampaignStats(companyId).map(stats -> {
+    public Mono<byte[]> exportEnrichedCsv(Long companyId, String callerId, String callerRole) {
+        return getCampaignStats(companyId, callerId, callerRole).map(stats -> {
             StringBuilder csv = new StringBuilder();
             csv.append("Campaign ID,Name,Status,Start Date,End Date,Budget,Max Drivers,Est. Reach,Km Driven,Rides,Earnings Paid,Active Drivers\n");
             for (CampaignWithStats cs : stats) {
@@ -149,5 +182,25 @@ public class CompanyBffService {
             }
             return ('\uFEFF' + csv.toString()).getBytes(StandardCharsets.UTF_8);
         });
+    }
+
+    private static void stampCallerHeaders(org.springframework.http.HttpHeaders headers,
+                                           String callerId, String callerRole) {
+        if (callerId != null) {
+            headers.set("X-User-Id", callerId);
+        }
+        if (callerRole != null) {
+            headers.set("X-User-Role", callerRole);
+        }
+    }
+
+    // Internal cross-role aggregation: a company-scoped BFF needs to read driver
+    // profiles for applicants to its campaigns. Stamping role ADMIN tells the
+    // downstream per-endpoint check to bypass; the outer call has already
+    // proved the caller owns the company. X-User-Id is irrelevant on ADMIN
+    // paths but kept for log-correlation symmetry.
+    private static void stampAdminHeaders(org.springframework.http.HttpHeaders headers) {
+        headers.set("X-User-Id", "0");
+        headers.set("X-User-Role", "ADMIN");
     }
 }

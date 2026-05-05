@@ -22,28 +22,39 @@ public class DriverBffController {
     }
 
     @GetMapping(value = "/{driverId}/home", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponse<DriverHomePageResponse>> getDriverHomePage(@PathVariable("driverId") Long driverId) {
-        return driverBffService.getDriverHomePage(driverId)
+    public Mono<ApiResponse<DriverHomePageResponse>> getDriverHomePage(
+            @PathVariable("driverId") Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return driverBffService.getDriverHomePage(driverId, callerId, callerRole)
                 .map(ApiResponse::success);
     }
-    
+
     @GetMapping(value = "/{driverId}/statistics", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponse<RideStatistics>> getDriverStatistics(@PathVariable("driverId") Long driverId) {
-        return driverBffService.getDriverStatistics(driverId)
+    public Mono<ApiResponse<RideStatistics>> getDriverStatistics(
+            @PathVariable("driverId") Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return driverBffService.getDriverStatistics(driverId, callerId, callerRole)
                 .map(ApiResponse::success);
     }
-    
+
     @DeleteMapping("/{driverId}/rides")
-    public Mono<ApiResponse<Void>> deleteDriverRideHistory(@PathVariable("driverId") Long driverId) {
-        return driverBffService.deleteDriverRideHistory(driverId)
+    public Mono<ApiResponse<Void>> deleteDriverRideHistory(
+            @PathVariable("driverId") Long driverId,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return driverBffService.deleteDriverRideHistory(driverId, callerId, callerRole)
                 .then(Mono.just(ApiResponse.success(null)));
     }
 
     @GetMapping(value = "/{driverId}/rides", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ApiResponse<List<Ride>>> getDriverRideHistory(
             @PathVariable("driverId") Long driverId,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") Integer limit) {
-        return driverBffService.getDriverRideHistory(driverId, limit)
+            @RequestParam(value = "limit", required = false, defaultValue = "50") Integer limit,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return driverBffService.getDriverRideHistory(driverId, limit, callerId, callerRole)
                 .map(ApiResponse::success);
     }
 }
