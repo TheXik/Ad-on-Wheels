@@ -21,19 +21,28 @@ public class CompanyBffController {
     }
 
     @GetMapping(value = "/{companyId}/applications-with-drivers", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponse<List<ApplicationWithDriver>>> getApplicationsWithDrivers(@PathVariable Long companyId) {
-        return companyBffService.getApplicationsWithDrivers(companyId)
+    public Mono<ApiResponse<List<ApplicationWithDriver>>> getApplicationsWithDrivers(
+            @PathVariable Long companyId,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return companyBffService.getApplicationsWithDrivers(companyId, callerId, callerRole)
                 .map(ApiResponse::success);
     }
 
     @GetMapping(value = "/{companyId}/campaign-stats", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ApiResponse<List<CampaignWithStats>>> getCampaignStats(@PathVariable Long companyId) {
-        return companyBffService.getCampaignStats(companyId)
+    public Mono<ApiResponse<List<CampaignWithStats>>> getCampaignStats(
+            @PathVariable Long companyId,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return companyBffService.getCampaignStats(companyId, callerId, callerRole)
                 .map(ApiResponse::success);
     }
 
     @GetMapping(value = "/{companyId}/export-csv", produces = "text/csv; charset=UTF-8")
-    public Mono<byte[]> exportEnrichedCsv(@PathVariable Long companyId) {
-        return companyBffService.exportEnrichedCsv(companyId);
+    public Mono<byte[]> exportEnrichedCsv(
+            @PathVariable Long companyId,
+            @RequestHeader(value = "X-User-Id", required = false) String callerId,
+            @RequestHeader(value = "X-User-Role", required = false) String callerRole) {
+        return companyBffService.exportEnrichedCsv(companyId, callerId, callerRole);
     }
 }

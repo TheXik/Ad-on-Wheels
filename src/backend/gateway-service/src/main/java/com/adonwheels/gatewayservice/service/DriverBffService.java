@@ -31,15 +31,21 @@ public class DriverBffService {
         this.rideClient = rideClient;
     }
 
-    public Mono<DriverHomePageResponse> getDriverHomePage(Long driverId) {
+    // After A1, every downstream /drivers/{id} and /rides/{driverId}/* enforces
+    // X-User-Id == driverId. The outbound WebClients here would otherwise drop
+    // those headers (they only live on the inbound exchange), so we forward
+    // them per call. ADMIN bypasses the downstream check via X-User-Role.
+    public Mono<DriverHomePageResponse> getDriverHomePage(Long driverId, String callerId, String callerRole) {
         return driverClient.get()
                 .uri("/drivers/{id}", driverId)
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<Driver>>() {})
                 .map(ApiResponse::getData)
                 .flatMap(driver -> {
                     Mono<Ride> activeRideMono = rideClient.get()
                             .uri("/rides/{driverId}/active", driverId)
+                            .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                             .bodyToMono(new ParameterizedTypeReference<ApiResponse<Ride>>() {})
@@ -48,6 +54,7 @@ public class DriverBffService {
 
                     Mono<RideStatistics> statisticsMono = rideClient.get()
                             .uri("/rides/{driverId}/statistics", driverId)
+                            .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                             .retrieve()
                             .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                             .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
@@ -64,6 +71,7 @@ public class DriverBffService {
                         if (activeRide != null && activeRide.campaignId() != null) {
                             return campaignClient.get()
                                     .uri("/campaigns/{id}", activeRide.campaignId())
+                                    .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                                     .retrieve()
                                     .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                                     .bodyToMono(new ParameterizedTypeReference<ApiResponse<Campaign>>() {})
@@ -78,9 +86,10 @@ public class DriverBffService {
                 });
     }
 
-    public Mono<RideStatistics> getDriverStatistics(Long driverId) {
+    public Mono<RideStatistics> getDriverStatistics(Long driverId, String callerId, String callerRole) {
         return rideClient.get()
                 .uri("/rides/{driverId}/statistics", driverId)
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<RideStatistics>>() {})
@@ -89,12 +98,13 @@ public class DriverBffService {
                 .defaultIfEmpty(EMPTY_STATS);
     }
 
-    public Mono<List<Ride>> getDriverRideHistory(Long driverId, Integer limit) {
+    public Mono<List<Ride>> getDriverRideHistory(Long driverId, Integer limit, String callerId, String callerRole) {
         return rideClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/rides/{driverId}/history")
                         .queryParam("limit", limit)
                         .build(driverId))
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> Mono.empty())
                 .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<Ride>>>() {})
@@ -103,11 +113,22 @@ public class DriverBffService {
                 .defaultIfEmpty(Collections.emptyList());
     }
 
-    public Mono<Void> deleteDriverRideHistory(Long driverId) {
+    public Mono<Void> deleteDriverRideHistory(Long driverId, String callerId, String callerRole) {
         return rideClient.delete()
                 .uri("/rides/{driverId}/history", driverId)
+                .headers(h -> stampCallerHeaders(h, callerId, callerRole))
                 .retrieve()
                 .bodyToMono(Void.class);
+    }
+
+    private static void stampCallerHeaders(org.springframework.http.HttpHeaders headers,
+                                           String callerId, String callerRole) {
+        if (callerId != null) {
+            headers.set("X-User-Id", callerId);
+        }
+        if (callerRole != null) {
+            headers.set("X-User-Role", callerRole);
+        }
     }
 
     private static final Ride EMPTY_RIDE = new Ride(

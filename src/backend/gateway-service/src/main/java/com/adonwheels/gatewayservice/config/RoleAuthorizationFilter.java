@@ -1,5 +1,6 @@
 package com.adonwheels.gatewayservice.config;
 
+import com.adonwheels.gatewayservice.filter.RouteValidator;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -23,10 +24,18 @@ public class RoleAuthorizationFilter implements WebFilter {
     private static final String ROLE_COMPANY = "COMPANY";
     private static final String ROLE_ADMIN = "ADMIN";
 
+    // Granular role gates per URL prefix. Per-endpoint owner-id checks (callerId
+    // vs. path/body driverId/companyId) live in the downstream controllers; this
+    // filter only enforces the role class that may attempt the call at all.
+    //
+    // /api/rides/ is intentionally cross-role: companies legitimately read
+    // /api/rides/campaign/{id}/* and /api/rides/campaigns/statistics for their
+    // own campaigns. Per-endpoint checks in RideController gate the per-driver
+    // write paths (/start, /track, /end, /deferred, /{driverId}/*).
     private static final Map<String, Set<String>> PATH_ROLE_RULES = Map.of(
-            "/api/drivers/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
+            "/api/drivers/", Set.of(ROLE_DRIVER, ROLE_ADMIN),
             "/api/rides/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
-            "/api/companies/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
+            "/api/companies/", Set.of(ROLE_COMPANY, ROLE_ADMIN),
             "/api/campaigns/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN),
             "/api/messages/", Set.of(ROLE_DRIVER, ROLE_COMPANY, ROLE_ADMIN)
     );
@@ -34,6 +43,10 @@ public class RoleAuthorizationFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
+
+        if (RouteValidator.openApiEndpoints.stream().anyMatch(path::startsWith)) {
+            return chain.filter(exchange);
+        }
 
         boolean isApiPath = PATH_ROLE_RULES.keySet().stream().anyMatch(path::startsWith);
         if (!isApiPath) {

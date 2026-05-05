@@ -69,6 +69,11 @@ public class ApplicationService {
         return applicationRepository.findByDriverId(driverId);
     }
 
+    public Application findById(Long applicationId) {
+        return applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ApplicationNotFoundException(applicationId));
+    }
+
     @Transactional
     public void deleteByCampaignId(Long campaignId) {
         List<Application> apps = applicationRepository.findByCampaignId(campaignId);

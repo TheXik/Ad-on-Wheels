@@ -14,6 +14,7 @@ public class RouteValidator {
             "/auth/login",
             "/auth/google",
             "/api/campaigns/images/",
+            "/api/drivers/images/",
             "/actuator/health",
             "/actuator/info"
     );
