@@ -26,8 +26,25 @@ struct Ride: Identifiable, Codable {
         let lon: Double
     }
 
+    private static let pragueTimeZone = TimeZone(identifier: "Europe/Prague") ?? .current
+
+    private var startDate: Date? {
+        let withZ = startTime.contains("Z") || startTime.contains("+") ? startTime : startTime + "Z"
+        let withFractional = ISO8601DateFormatter()
+        withFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = withFractional.date(from: withZ) { return d }
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return plain.date(from: withZ)
+    }
+
     var displayTitle: String {
-        "Ride #\(id)"
+        guard let date = startDate else { return "Ride" }
+        let f = DateFormatter()
+        f.timeZone = Self.pragueTimeZone
+        f.locale = Locale(identifier: "en_GB")
+        f.dateFormat = "d.M.yyyy, HH:mm"
+        return f.string(from: date)
     }
 
     var trackCoordinates: [CLLocationCoordinate2D] {

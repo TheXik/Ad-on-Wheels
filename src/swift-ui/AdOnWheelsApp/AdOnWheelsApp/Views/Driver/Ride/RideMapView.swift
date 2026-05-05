@@ -60,7 +60,7 @@ struct RideMapView: View {
                 emptyBanner
             }
         }
-        .navigationTitle("Ride #\(rideId)")
+        .navigationTitle("Route")
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadRoute() }
     }
