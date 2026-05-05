@@ -1,7 +1,6 @@
 package com.adonwheels.authservice.service;
 
 import com.adonwheels.authservice.model.User;
-import com.adonwheels.authservice.repository.AuthRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -22,16 +21,7 @@ public class JWTService {
     @Value("${jwt.expiration-ms}")
     private long expirationTime;
 
-    private final AuthRepository authRepository;
-
-    public JWTService(AuthRepository authRepository) {
-        this.authRepository = authRepository;
-    }
-
-    public String generateToken(String email) {
-        User user = authRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found for token generation"));
-
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());
         claims.put("profileID", user.getProfileId());

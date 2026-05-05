@@ -20,7 +20,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
@@ -115,7 +117,7 @@ public class AuthService {
                 .toBodilessEntity()
                 .doOnSuccess(response -> logger.info("Successfully rolled back profile for ID: {}", profileId))
                 .doOnError(error -> logger.error("CRITICAL: Failed to roll back profile for ID: {}. Reason: {}", profileId, error.getMessage()))
-                .retry(3)
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(200)).maxBackoff(Duration.ofSeconds(2)))
                 .block();
     }
 
@@ -123,18 +125,16 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
         );
-        if (loginRequest.expectedRole() != null) {
-            User user = repository.findByEmail(loginRequest.email())
-                    .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
-            if (user.getRole() != loginRequest.expectedRole()) {
-                throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
-            }
+        User user = repository.findByEmail(loginRequest.email())
+                .orElseThrow(() -> new BusinessException(AppErrorCode.USER_NOT_FOUND, "No account found with this email"));
+        if (loginRequest.expectedRole() != null && user.getRole() != loginRequest.expectedRole()) {
+            throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
         }
-        return new LoginResponse(jwtService.generateToken(loginRequest.email()));
+        return new LoginResponse(jwtService.generateToken(user));
     }
 
-    public String generateTokenForNewUser(String email) {
-        return jwtService.generateToken(email);
+    public String generateTokenForNewUser(User user) {
+        return jwtService.generateToken(user);
     }
 
     public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
@@ -147,7 +147,7 @@ public class AuthService {
             if (user.getRole() != request.role()) {
                 throw new BusinessException(AppErrorCode.ROLE_MISMATCH, user.getRole().name());
             }
-            String token = jwtService.generateToken(email);
+            String token = jwtService.generateToken(user);
             return new LoginResponse(token);
         }
 
@@ -164,9 +164,9 @@ public class AuthService {
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             user.setRole(role);
             user.setProfileId(profileId);
-            repository.save(user);
+            User saved = repository.save(user);
 
-            String token = jwtService.generateToken(email);
+            String token = jwtService.generateToken(saved);
             return new LoginResponse(token);
         } catch (Exception e) {
             if (profileId != null) {
