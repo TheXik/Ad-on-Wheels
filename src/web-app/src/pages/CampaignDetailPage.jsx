@@ -173,7 +173,7 @@ export default function CampaignDetailPage() {
                 <div key={app.id} className="driver-card">
                   <div className="driver-card-header">
                     <div>
-                      <span className="driver-name">{app.driver?.name || `Driver #${app.driverId}`}</span>
+                      <span className="driver-name">{app.driver?.name || 'Driver'}</span>
                       <span className="driver-card-campaign">{app.driver?.email}</span>
                     </div>
                     <span className={`status-badge status-${app.status?.toLowerCase()}`}>
@@ -234,7 +234,7 @@ export default function CampaignDetailPage() {
         <div className="compose-overlay" onClick={() => setComposeTo(null)}>
           <div className="compose-modal" onClick={(e) => e.stopPropagation()}>
             <div className="compose-header">
-              <h3>Message {composeTo.driver?.name || `Driver #${composeTo.driverId}`}</h3>
+              <h3>Message {composeTo.driver?.name || 'driver'}</h3>
               <button className="compose-close" onClick={() => setComposeTo(null)}>&times;</button>
             </div>
             <div className="form-group">

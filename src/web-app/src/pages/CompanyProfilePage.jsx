@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { companies, applicationsWithDrivers, campaigns, resolveImageUrl } from '../services/api';
+import ComposeMessageModal from '../components/ComposeMessageModal';
 
 export default function CompanyProfilePage() {
   const { user } = useAuth();
@@ -8,6 +9,7 @@ export default function CompanyProfilePage() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [composeTarget, setComposeTarget] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -103,7 +105,7 @@ export default function CompanyProfilePage() {
               <div key={app.id} className="driver-card">
                 <div className="driver-card-header">
                   <div>
-                    <span className="driver-name">{app.driver?.name || `Driver #${app.id}`}</span>
+                    <span className="driver-name">{app.driver?.name || 'Driver'}</span>
                     <span className="driver-card-campaign">{app.campaignName}</span>
                   </div>
                   <span className={`status-badge status-${app.status?.toLowerCase()}`}>
@@ -122,21 +124,47 @@ export default function CompanyProfilePage() {
                     />
                   )}
                 </div>
-                {app.status === 'APPLIED' && (
-                  <div className="application-actions">
-                    <button className="btn-accept" onClick={() => handleApplication(app.id, 'accept')}>
-                      Accept
+                <div className="application-actions">
+                  {app.status === 'APPLIED' && (
+                    <>
+                      <button className="btn-accept" onClick={() => handleApplication(app.id, 'accept')}>
+                        Accept
+                      </button>
+                      <button className="btn-decline" onClick={() => handleApplication(app.id, 'decline')}>
+                        Decline
+                      </button>
+                    </>
+                  )}
+                  {app.status === 'ACCEPTED' && app.driver?.id && (
+                    <button
+                      className="btn-secondary"
+                      onClick={() =>
+                        setComposeTarget({
+                          driverId: app.driver.id,
+                          driverName: app.driver.name,
+                          campaignId: app.campaignId,
+                          campaignName: app.campaignName,
+                        })
+                      }
+                    >
+                      Message driver
                     </button>
-                    <button className="btn-decline" onClick={() => handleApplication(app.id, 'decline')}>
-                      Decline
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <ComposeMessageModal
+        isOpen={!!composeTarget}
+        onClose={() => setComposeTarget(null)}
+        driverId={composeTarget?.driverId}
+        driverName={composeTarget?.driverName}
+        campaignId={composeTarget?.campaignId}
+        campaignName={composeTarget?.campaignName}
+      />
     </div>
   );
 }

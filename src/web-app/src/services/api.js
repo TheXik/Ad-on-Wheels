@@ -17,6 +17,12 @@ async function request(path, options = {}) {
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
+    }
     const body = await res.json().catch(() => null);
     const err = new Error(body?.error?.message || `Request failed: ${res.status}`);
     err.code = body?.error?.internalCode;
@@ -95,6 +101,7 @@ export const companies = {
 
 export const messages = {
   getInbox: (userId) => request(`/api/messages/inbox/${userId}`),
+  getAllForUser: (userId) => request(`/api/messages/all/${userId}`),
   getConversation: (campaignId, userId1, userId2) =>
     request(`/api/messages/conversation?campaignId=${campaignId}&userId1=${userId1}&userId2=${userId2}`),
   send: (data) =>
