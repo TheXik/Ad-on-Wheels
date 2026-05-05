@@ -245,6 +245,7 @@ private func applicationColor(_ status: String) -> Color {
     switch status.uppercased() {
     case "ACCEPTED": return .green
     case "DECLINED": return .red
+    case "EXPIRED": return .gray
     default: return .orange
     }
 }
@@ -253,6 +254,7 @@ private func applicationIcon(_ status: String) -> String {
     switch status.uppercased() {
     case "ACCEPTED": return "checkmark.circle.fill"
     case "DECLINED": return "xmark.circle.fill"
+    case "EXPIRED": return "clock.badge.xmark.fill"
     default: return "clock.fill"
     }
 }
@@ -261,6 +263,7 @@ private func applicationLabel(_ status: String) -> String {
     switch status.uppercased() {
     case "ACCEPTED": return "Accepted"
     case "DECLINED": return "Declined"
+    case "EXPIRED": return "Campaign ended"
     default: return "Pending"
     }
 }

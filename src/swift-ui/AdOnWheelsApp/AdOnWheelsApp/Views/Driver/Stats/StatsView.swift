@@ -33,8 +33,7 @@ struct StatsView: View {
                 .padding(.bottom, 40)
             }
             .background(Color(UIColor.systemGroupedBackground))
-            .navigationTitle("Statistics")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 Task { await viewModel.fetchStats() }
             }
@@ -315,14 +314,10 @@ private struct RideRow: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(ride.displayTitle)
+                Text("\(ride.formattedDuration) · \(ride.formattedDistance)")
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
-
-                Text("\(ride.formattedDuration) · \(ride.formattedDistance)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
 
             Spacer()

@@ -132,7 +132,7 @@ struct ComposeMessageView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if showSuccess {
                     successContent
@@ -140,6 +140,7 @@ struct ComposeMessageView: View {
                     bodyContent
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.pageBackground)
             .dismissKeyboardOnTap()
             .navigationTitle("New Message")
