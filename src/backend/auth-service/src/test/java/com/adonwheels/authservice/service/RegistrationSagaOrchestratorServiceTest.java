@@ -44,9 +44,15 @@ class RegistrationSagaOrchestratorServiceTest {
 
     @Test
     void register_happyPath_createsProfileSavesUserAndReturnsToken() {
+        User saved = new User();
+        saved.setEmail(EMAIL);
+        saved.setRole(Role.DRIVER);
+        saved.setProfileId(PROFILE_ID);
+
         when(authService.findByEmail(EMAIL)).thenReturn(Optional.empty());
         when(authService.createProfile(NAME, EMAIL, Role.DRIVER)).thenReturn(PROFILE_ID);
-        when(authService.generateTokenForNewUser(EMAIL)).thenReturn(JWT);
+        when(authService.saveUserWithProfile(any(RegistrationRequest.class), eq(PROFILE_ID))).thenReturn(saved);
+        when(authService.generateTokenForNewUser(saved)).thenReturn(JWT);
 
         RegistrationResponse response = saga.register(request(Role.DRIVER));
 
