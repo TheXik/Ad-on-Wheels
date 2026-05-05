@@ -781,6 +781,12 @@ body {
   color: #d97706;
 }
 
+/* Status: expired (campaign ended while application still ACCEPTED) */
+.status-expired {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
 /* Driver cards (profile page) */
 .driver-cards {
   display: grid;

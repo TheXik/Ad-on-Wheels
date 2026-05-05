@@ -46,7 +46,17 @@ export default function MessagesPage() {
     init();
 
     pollRef.current = setInterval(() => loadInbox(), 15000);
-    return () => clearInterval(pollRef.current);
+
+    function onVisible() {
+      if (document.visibilityState === 'visible') loadInbox();
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', loadInbox);
+    return () => {
+      clearInterval(pollRef.current);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', loadInbox);
+    };
   }, [loadInbox]);
 
   async function handleReply() {
@@ -73,10 +83,10 @@ export default function MessagesPage() {
   async function selectMessage(msg) {
     setSelected(msg);
     setReplyText('');
-    if (!msg.read) {
+    if (!msg.isRead) {
       try {
         await messages.markRead(msg.id);
-        setInbox((prev) => prev.map((m) => (m.id === msg.id ? { ...m, read: true } : m)));
+        setInbox((prev) => prev.map((m) => (m.id === msg.id ? { ...m, isRead: true } : m)));
       } catch {
         // non-critical
       }
@@ -96,7 +106,7 @@ export default function MessagesPage() {
             inbox.map((msg) => (
               <div
                 key={msg.id}
-                className={`message-preview ${selected?.id === msg.id ? 'active' : ''} ${!msg.read ? 'unread' : ''}`}
+                className={`message-preview ${selected?.id === msg.id ? 'active' : ''} ${!msg.isRead ? 'unread' : ''}`}
                 onClick={() => selectMessage(msg)}
               >
                 <div className="message-preview-header">

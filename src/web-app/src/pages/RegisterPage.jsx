@@ -69,7 +69,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a password"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="button"

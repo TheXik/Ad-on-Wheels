@@ -3,7 +3,11 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 export function resolveImageUrl(path) {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+  let normalized = path;
+  if (normalized.startsWith('/drivers/images/') || normalized.startsWith('/campaigns/images/')) {
+    normalized = '/api' + normalized;
+  }
+  return `${API_BASE}${normalized.startsWith('/') ? '' : '/'}${normalized}`;
 }
 
 async function request(path, options = {}) {
