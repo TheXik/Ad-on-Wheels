@@ -18,29 +18,33 @@ export default function CampaignDetailPage() {
   const [msgBody, setMsgBody] = useState('');
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [camp, apps, stats] = await Promise.all([
-          campaignsApi.getById(id),
-          applicationsWithDrivers.get(user.profileId),
-          campaignStats.getByCompany(user.profileId).catch(() => []),
-        ]);
-        setCampaign(camp);
-        const campaignApps = (Array.isArray(apps) ? apps : []).filter(
-          (a) => a.campaignId === parseInt(id)
-        );
-        setApplications(campaignApps);
-        const match = (Array.isArray(stats) ? stats : []).find(
-          (s) => s.rideStats?.campaignId === parseInt(id)
-        );
-        if (match) setRideStats(match.rideStats);
-      } catch (err) {
-        setError(err.message);
-      }
-      setLoading(false);
+  async function load() {
+    try {
+      const [camp, apps, stats] = await Promise.all([
+        campaignsApi.getById(id),
+        applicationsWithDrivers.get(user.profileId),
+        campaignStats.getByCompany(user.profileId).catch(() => []),
+      ]);
+      setCampaign(camp);
+      const campaignApps = (Array.isArray(apps) ? apps : []).filter(
+        (a) => a.campaignId === parseInt(id)
+      );
+      setApplications(campaignApps);
+      const match = (Array.isArray(stats) ? stats : []).find(
+        (s) => s.rideStats?.campaignId === parseInt(id)
+      );
+      if (match) setRideStats(match.rideStats);
+    } catch (err) {
+      setError(err.message);
     }
+    setLoading(false);
+  }
+
+  useEffect(() => {
     load();
+    window.addEventListener('focus', load);
+    return () => window.removeEventListener('focus', load);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user.profileId]);
 
   async function handleApplication(appId, action) {
@@ -57,6 +61,7 @@ export default function CampaignDetailPage() {
       );
     } catch (err) {
       alert(err.message);
+      load();
     }
   }
 

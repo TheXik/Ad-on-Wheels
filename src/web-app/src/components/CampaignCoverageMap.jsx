@@ -33,8 +33,16 @@ export default function CampaignCoverageMap({ campaignId }) {
       }
     }
     load();
+
+    function onVisible() {
+      if (document.visibilityState === 'visible') load();
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', load);
     return () => {
       cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', load);
     };
   }, [campaignId]);
 
