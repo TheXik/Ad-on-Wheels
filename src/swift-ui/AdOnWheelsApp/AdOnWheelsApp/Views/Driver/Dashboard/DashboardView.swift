@@ -66,7 +66,7 @@ struct DashboardView: View {
                                 DashboardCardView(
                                     iconName: "megaphone",
                                     title: "No active campaigns",
-                                    subtitle: "Browse",
+                                    subtitle: "Discover",
                                     content: "Swipe through ads to find your first campaign",
                                     subContent: nil
                                 )

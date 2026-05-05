@@ -90,7 +90,7 @@ struct DriverRootView: View {
         ZStack {
             HStack {
                 tabBarButton(icon: "house.fill", label: "Home", index: 0)
-                tabBarButton(icon: "car.fill", label: "Browse", index: 1)
+                tabBarButton(icon: "car.fill", label: "Discover", index: 1)
 
                 Spacer().frame(width: 70)
 
