@@ -29,7 +29,7 @@ The purpose of this project is to develop a mobile application that connects car
 - **Campaign lifecycle** — companies create campaigns, drivers browse and apply, companies accept or decline.
 - **Live ride tracking** — driver app records GPS at five-second cadence; ride-service stores active sessions in Cassandra (24h TTL) and persists completed rides in MySQL.
 - **Earnings and statistics** — daily / weekly breakdown for drivers, computed from verified rides only.
-- **Coverage heat-map** — companies see aggregated ride routes per campaign; verified rides render solid, unverified dashed.
+- **Coverage map** — companies see the routes of every completed ride contributed by accepted drivers, overlaid on a single map per campaign; verified rides render as solid polylines, unverified as dashed.
 - **In-app messaging** between driver and company per campaign.
 
 ### Technology Stack
