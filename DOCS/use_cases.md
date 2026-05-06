@@ -2,8 +2,8 @@
 
 This document collects every use case of the Ad-on-Wheels platform in one
 place, written in the format taught by Martin Nečaský (NSWI041 lecture 04).
-Every use case has six sections — **Title**, **Actors**, **Preconditions**,
-**Basic Flow**, **Alternative Flows**, **Postconditions** — and the basic flow
+Every use case has six sections (**Title**, **Actors**, **Preconditions**,
+**Basic Flow**, **Alternative Flows**, **Postconditions**), and the basic flow
 alternates between actor and system steps without UI jargon.
 
 The use case diagram is in [`diagrams/use-case-diagram.svg`](diagrams/use-case-diagram.svg).
@@ -117,8 +117,8 @@ participating in or one they are evaluating from the discovery flow
 
 **Preconditions.**
 a. The driver is signed in.
-b. The campaign exists and is visible to the driver — currently
-   recruiting, or one the driver has applied to or been accepted for.
+b. The campaign exists and is visible to the driver (currently
+   recruiting, or one the driver has applied to or been accepted for).
 c. The driver needs full information about the campaign before
    committing to it or while participating in it.
 
