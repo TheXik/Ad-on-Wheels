@@ -8,7 +8,7 @@ import { campaigns as campaignsApi } from '../services/api';
 const DEFAULT_CENTER = [50.0755, 14.4378];
 const DEFAULT_ZOOM = 12;
 
-// UC014 — Coverage / heat-map.
+// UC014: Coverage / heat-map.
 // Multi-route map for a single campaign. Verified rides render solid blue;
 // unverified rides render dashed in a lighter tone. The viewport auto-fits
 // the bounding box of every coordinate across all routes when the data

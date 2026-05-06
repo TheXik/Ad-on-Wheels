@@ -27,7 +27,7 @@
 }
 
 body {
-  /* Mirrors the SwiftUI default — San Francisco on Apple devices (delivered
+  /* Mirrors the SwiftUI default. San Francisco on Apple devices (delivered
      by -apple-system / BlinkMacSystemFont), system-ui elsewhere so the OS
      picks its native UI face. */
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display',
