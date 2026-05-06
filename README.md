@@ -4,7 +4,7 @@ A mobile advertising platform connecting drivers with companies for car-based ad
 
 ## Purpose and Goals
 
-The purpose of this project is to develop a mobile application that connects car owners with advertising companies, enabling drivers to earn money by displaying ads on their vehicles. The main goals are to provide a platform for managing ad campaigns, tracking driver performance, and delivering real-time analytics for both drivers and companies. The app aims to simplify the process of on-vehicle advertising, ensure transparency, and maximize benefits for all participants.
+Ad-on-Wheels lets drivers earn money by displaying advertising decals on their cars, and lets companies recruit those drivers, run campaigns, and see where the ads were actually driven. The platform pays per kilometre against GPS-tracked verified rides; companies get a coverage map of every completed ride and can export campaign statistics as CSV.
 
 ## Authors
 
@@ -25,12 +25,12 @@ The purpose of this project is to develop a mobile application that connects car
 
 ### Key Features
 
-- **Driver and Company onboarding** with JWT authentication, Google Sign-In, and saga-based registration that rolls back on partial failure.
-- **Campaign lifecycle** — companies create campaigns, drivers browse and apply, companies accept or decline.
-- **Live ride tracking** — driver app records GPS at five-second cadence; ride-service stores active sessions in Cassandra (24h TTL) and persists completed rides in MySQL.
-- **Earnings and statistics** — daily / weekly breakdown for drivers, computed from verified rides only.
-- **Coverage map** — companies see the routes of every completed ride contributed by accepted drivers, overlaid on a single map per campaign; verified rides render as solid polylines, unverified as dashed.
-- **In-app messaging** between driver and company per campaign.
+- **Driver and company onboarding.** JWT authentication, Google sign-in, and saga-based registration that rolls back on partial failure.
+- **Campaign lifecycle.** Companies create campaigns, drivers browse and apply, companies accept or decline.
+- **Live ride tracking.** The driver app records GPS at a five-second cadence. Ride-service stores active sessions in Cassandra (24h TTL) and persists completed rides in MySQL.
+- **Earnings and statistics.** Daily and weekly breakdown for drivers, computed from verified rides only.
+- **Coverage map.** Companies see the routes of every completed ride contributed by accepted drivers, overlaid on a single map per campaign. Verified rides render as solid polylines, unverified rides as dashed.
+- **In-app messaging** between driver and company, scoped per campaign.
 
 ### Technology Stack
 
@@ -182,7 +182,7 @@ For development against an HTTP backend, the iOS target's `Info.plist` allows ar
 | Cassandra | 9042 | Internal only |
 | MinIO (S3) | 9000 / 9001 | Internal only |
 
-**iOS app should ONLY connect to Gateway (port 8080).**
+The iOS app and the web dashboard talk only to the gateway on port 8080.
 
 ## Development
 
@@ -235,10 +235,10 @@ POST /auth/register
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "role": "DRIVER"  # or "COMPANY"
+  "name": "Demo Driver",
+  "email": "driver-demo@test.dev",
+  "password": "thesis-test-pwd",
+  "role": "DRIVER"
 }
 
 Response:
@@ -257,8 +257,8 @@ POST /auth/login
 Content-Type: application/json
 
 {
-  "email": "john@example.com",
-  "password": "password123"
+  "email": "driver-demo@test.dev",
+  "password": "thesis-test-pwd"
 }
 ```
 
@@ -273,18 +273,18 @@ See full API documentation in [src/backend/README.md](src/backend/README.md#api-
 ## Architecture Patterns
 
 ### Backend
-- **Microservices Architecture** - Independent, scalable services
-- **Service Discovery** - Eureka for dynamic service location
-- **API Gateway** - Single entry point with authentication
-- **SAGA Pattern** - Distributed transaction management
-- **BFF Pattern** - Backend for Frontend data aggregation
-- **Database Per Service** - Isolated data stores
 
-### Frontend
-- **MVVM** - Model-View-ViewModel for clean separation
-- **Reactive State** - Combine framework with `@Published`
-- **Repository Pattern** - Centralized API client
-- **Keychain Storage** - Secure token persistence
+- Seven Spring Boot services plus one shared library (`common-dto`), each registered with a Netflix Eureka discovery server.
+- A Spring Cloud Gateway is the single public entry point. It validates JWTs, gates routes by role, and hosts three BFF aggregators (driver home, company applications view, campaign coverage).
+- Registration is coordinated by `RegistrationSagaOrchestratorService` in the auth service: create profile -> save credentials -> issue JWT, with `deleteProfile` as the compensating rollback (FR.5).
+- Database per service. Five MySQL schemas, one Cassandra keyspace (`ride_service`, with TTL on active sessions), and one MinIO bucket. Cross-service identifiers are stitched in code by the saga (writes) and the BFF endpoints (reads).
+- Ride service uses a dual store: Cassandra absorbs the 5-second GPS writes during an active ride; on `/end` the completed ride is persisted to MySQL and the Cassandra row is deleted (with the 24h TTL as a safety net).
+
+### iOS client
+
+- MVVM. Views, view models with `@Published`, and `Codable` models.
+- A single `APIClient` issues every network request through `URLSession` with `async/await`. Combine appears only where a publisher is genuinely needed (e.g. the `.rideCompleted` notification on the stats view model).
+- The JWT lives in the iOS Keychain. Removing the app drops the credential.
 
 
 

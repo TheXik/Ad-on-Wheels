@@ -1,6 +1,6 @@
 # Ad-on-Wheels Backend
 
-Java microservices backend for the Ad-on-Wheels platform — connecting drivers with advertising companies.
+Java microservices backend for the Ad-on-Wheels platform.
 
 ## Architecture Overview
 
@@ -258,7 +258,7 @@ The Gateway is the only port published on the host. Every other service is reach
 | Cassandra | 9042 | internal only |
 | MinIO | 9000 / 9001 | internal only |
 
-**Client apps must connect only to the Gateway (8080).**
+The iOS app and the web dashboard connect only to the gateway on port 8080.
 
 ### Database Schemas
 
@@ -270,7 +270,7 @@ MySQL holds five separate schemas (database-per-service pattern):
 - `campaign-service` — campaigns, applications, messages, campaign image keys
 - `ride-service` — completed rides with route JSON
 
-Cassandra holds the `ride_service` keyspace with `ride_sessions` (per-ride GPS trace, partitioned by `ride_id`) and `driver_active_rides` (lookup by `driver_id`). Both tables carry a 24h TTL so abandoned sessions clean themselves up.
+Cassandra holds the `ride_service` keyspace with `ride_sessions` (per-ride GPS trace, partitioned by `ride_id`) and `driver_active_rides` (lookup by `driver_id`). Both tables carry a 24h TTL, so the cluster reclaims abandoned sessions without explicit cleanup.
 
 MinIO holds the campaign image bucket (driver decal photos and campaign visual assets).
 
@@ -298,9 +298,9 @@ POST /auth/register
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
+  "name": "Demo Driver",
+  "email": "driver-demo@test.dev",
+  "password": "thesis-test-pwd",
   "role": "DRIVER"            // or "COMPANY"
 }
 
@@ -319,8 +319,8 @@ POST /auth/login
 Content-Type: application/json
 
 {
-  "email": "john@example.com",
-  "password": "password123",
+  "email": "driver-demo@test.dev",
+  "password": "thesis-test-pwd",
   "expectedRole": "DRIVER"    // optional; rejects if mismatched
 }
 
