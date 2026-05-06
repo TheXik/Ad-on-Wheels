@@ -39,7 +39,7 @@ The dashboard reads two environment variables, both injected at build/dev time b
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `VITE_API_BASE_URL` | Gateway URL the browser fetches from | `http://localhost:8080` |
-| `VITE_GOOGLE_WEB_CLIENT_ID` | Google OAuth web client ID | (none — Google sign-in disabled if missing) |
+| `VITE_GOOGLE_WEB_CLIENT_ID` | Google OAuth web client ID | (none, Google sign-in disabled if missing) |
 
 These live in `.env.local`, which is gitignored. The repo's top-level `scripts/sync-backend-url.sh` writes this file from `config/backend.env`, so the values stay in one place per machine. To configure manually:
 

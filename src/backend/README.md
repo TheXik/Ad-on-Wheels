@@ -218,10 +218,10 @@ MYSQL_ROOT_PASSWORD=...
 MYSQL_USER=ad_on_wheels_user
 MYSQL_PASSWORD=...
 
-# JWT — generate with: openssl rand -base64 32
+# JWT (generate with: openssl rand -base64 32)
 JWT_SECRET_KEY=...
 
-# Google OAuth — comma-separated client IDs from Google Cloud Console (iOS, Web)
+# Google OAuth: comma-separated client IDs from Google Cloud Console (iOS, Web)
 GOOGLE_CLIENT_IDS=...,...
 
 # MinIO (S3-compatible object storage)
@@ -231,7 +231,7 @@ MINIO_ACCESS_KEY=...
 MINIO_SECRET_KEY=...
 MINIO_BUCKET=ad-on-wheels
 
-# Gateway CORS — comma-separated origin patterns (defaults to localhost:* / 127.0.0.1:*)
+# Gateway CORS: comma-separated origin patterns (defaults to localhost:* / 127.0.0.1:*)
 GATEWAY_ALLOWED_ORIGINS=http://localhost:*,http://127.0.0.1:*
 ```
 
@@ -264,11 +264,11 @@ The iOS app and the web dashboard connect only to the gateway on port 8080.
 
 MySQL holds five separate schemas (database-per-service pattern):
 
-- `auth-service` — user credentials (`user_credentials` table)
-- `driver-service` — driver profiles with vehicle and onboarding columns
-- `companyservice` — company profiles
-- `campaign-service` — campaigns, applications, messages, campaign image keys
-- `ride-service` — completed rides with route JSON
+- `auth-service`: user credentials (`user_credentials` table)
+- `driver-service`: driver profiles with vehicle and onboarding columns
+- `companyservice`: company profiles
+- `campaign-service`: campaigns, applications, messages, campaign image keys
+- `ride-service`: completed rides with route JSON
 
 Cassandra holds the `ride_service` keyspace with `ride_sessions` (per-ride GPS trace, partitioned by `ride_id`) and `driver_active_rides` (lookup by `driver_id`). Both tables carry a 24h TTL, so the cluster reclaims abandoned sessions without explicit cleanup.
 
@@ -391,7 +391,7 @@ GET    /api/campaigns/{id}/coverage                    # gateway BFF: ride route
 #### Rides
 ```
 POST   /api/rides/start                              # body: { driverId, campaignId, ratePerKm }
-POST   /api/rides/track                              # body: { rideId, lat, lon }  — every 5 s during active ride
+POST   /api/rides/track                              # body: { rideId, lat, lon }, every 5 s during active ride
 POST   /api/rides/end                                # body: { rideId }
 POST   /api/rides/{completedRideId}/verify           # mark ride verified after QR scan
 POST   /api/rides/deferred                           # reconstruct a forgotten drive (UC13)

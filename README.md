@@ -148,18 +148,18 @@ Vite serves on `http://localhost:5173` by default. The dashboard reads `VITE_API
 
 All backend secrets live in `src/backend/.env`, which is gitignored. The committed `src/backend/.env.template` lists the required keys with empty values:
 
-- `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD` — database credentials.
-- `JWT_SECRET_KEY` — generate with `openssl rand -base64 32`.
-- `GOOGLE_CLIENT_IDS` — comma-separated list of OAuth client IDs (iOS, Web), created in Google Cloud Console.
-- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET` — object storage.
-- `GATEWAY_ALLOWED_ORIGINS` — comma-separated origins for CORS (defaults to `http://localhost:*,http://127.0.0.1:*`).
+- `MYSQL_ROOT_PASSWORD`, `MYSQL_USER`, `MYSQL_PASSWORD`: database credentials.
+- `JWT_SECRET_KEY`: generate with `openssl rand -base64 32`.
+- `GOOGLE_CLIENT_IDS`: comma-separated list of OAuth client IDs (iOS, Web), created in Google Cloud Console.
+- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`: object storage.
+- `GATEWAY_ALLOWED_ORIGINS`: comma-separated origins for CORS (defaults to `http://localhost:*,http://127.0.0.1:*`).
 
 ### Backend URL (per machine)
 
 `config/backend.env` is gitignored and personal: it holds `BACKEND_URL` and `GOOGLE_WEB_CLIENT_ID` for the local machine. `scripts/sync-backend-url.sh` reads it and regenerates:
 
-- `src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/LocalConfig.swift` — read by `AppConfig.swift` at runtime.
-- `src/web-app/.env.local` — read by Vite at build/dev time.
+- `src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/Core/Networking/LocalConfig.swift`: read by `AppConfig.swift` at runtime.
+- `src/web-app/.env.local`: read by Vite at build/dev time.
 
 Both generated files are gitignored, so personal IPs never end up in source control. To override at iOS runtime instead of regenerating, set the `API_BASE_URL` key in the build's `Info.plist`; `AppConfig` prefers it over `LocalConfig.backendURL` when present.
 
