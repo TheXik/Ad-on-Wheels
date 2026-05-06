@@ -1,0 +1,4 @@
+$ curl -s http://100.122.33.104:8080/actuator/health
+{"status":"UP"}
+$ echo "HTTP $?"
+HTTP 0

@@ -1,0 +1,11 @@
+SERVICE            STATUS                       PORTS
+mysql              Up About an hour (healthy)   3306/tcp, 33060/tcp
+minio              Up About an hour (healthy)   9000-9001/tcp
+auth-service       Up About an hour (healthy)   8081/tcp
+campaign-service   Up About an hour (healthy)   8084/tcp
+cassandra          Up About an hour (healthy)   7000-7001/tcp, 7199/tcp, 9042/tcp, 9160/tcp
+company-service    Up About an hour (healthy)   8083/tcp
+driver-service     Up About an hour (healthy)   8082/tcp
+eureka-server      Up About an hour (healthy)   8761/tcp
+gateway-service    Up About an hour (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+ride-service       Up About an hour (healthy)   8085/tcp

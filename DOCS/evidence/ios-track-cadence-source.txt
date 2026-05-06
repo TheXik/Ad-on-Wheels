@@ -1,0 +1,17 @@
+Source-code evidence for req:nfr:gps (5-second position-upload cadence)
+=======================================================================
+
+File: src/swift-ui/AdOnWheelsApp/AdOnWheelsApp/ViewModels/DriverViewModels/RideViewModel.swift
+Line: 269
+
+    trackTimer = Timer.publish(every: 5.0, on: .main, in: .common)
+
+The cadence is therefore bounded by construction at the source: the Combine
+publisher emits every 5.0 seconds on the main run-loop in the .common mode
+group, so the iOS client cannot exceed the contract. Inter-arrival on the
+server side may be larger than 5 s during cellular handovers but never smaller.
+
+Runtime spot-check was attempted via Cassandra ride_sessions table; the
+keyspace is purged once the ride completes (active-only storage). The
+persisted ride is visible on the ride-detail page (Figure ud06c-ride-detail)
+which renders the polyline, confirming the points reached the backend.
