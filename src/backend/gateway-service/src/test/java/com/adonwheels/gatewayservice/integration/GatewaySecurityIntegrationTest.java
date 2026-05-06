@@ -1,6 +1,6 @@
 package com.adonwheels.gatewayservice.integration;
 
-import com.adonwheels.gatewayservice.util.TestJwtUtil; // Import our new test utility
+import com.adonwheels.gatewayservice.util.TestJwtUtil;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

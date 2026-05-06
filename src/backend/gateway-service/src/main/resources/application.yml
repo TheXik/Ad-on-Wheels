@@ -8,7 +8,7 @@ spring:
       routes:
 
         # -----------------------------------------------------------------------
-        # Auth — public-facing, no /api/ prefix. Open endpoints defined in
+        # Auth: public-facing, no /api/ prefix. Open endpoints defined in
         # RouteValidator (register, login). All others require a valid JWT.
         # -----------------------------------------------------------------------
         - id: auth-service
@@ -58,7 +58,7 @@ spring:
             - StripPrefix=1
 
         # -----------------------------------------------------------------------
-        # Messages (UC005) — lives in campaign-service at /messages
+        # Messages (UC005): lives in campaign-service at /messages
         # -----------------------------------------------------------------------
         - id: message-service
           uri: lb://campaign-service
