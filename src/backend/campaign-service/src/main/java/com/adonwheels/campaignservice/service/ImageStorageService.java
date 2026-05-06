@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ImageStorageService {
 
     private static final int MAX_IMAGES_PER_CAMPAIGN = 5;
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     private final S3Client s3Client;
 

@@ -115,7 +115,7 @@ public class AuthService {
                 .uri(url, profileId)
                 .retrieve()
                 .toBodilessEntity()
-                .doOnSuccess(response -> logger.info("Successfully rolled back profile for ID: {}", profileId))
+                .doOnSuccess(response -> logger.info("Rolled back profile {}", profileId))
                 .doOnError(error -> logger.error("CRITICAL: Failed to roll back profile for ID: {}. Reason: {}", profileId, error.getMessage()))
                 .retryWhen(Retry.backoff(3, Duration.ofMillis(200)).maxBackoff(Duration.ofSeconds(2)))
                 .block();

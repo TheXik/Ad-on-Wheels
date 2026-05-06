@@ -43,11 +43,7 @@ public class RegistrationSagaOrchestratorService {
             profileId = authService.createProfile(request.name(), request.email(), request.role());
             User saved = authService.saveUserWithProfile(request, profileId);
 
-            logger.info("Registration successful for email: {}", request.email());
-
             String token = authService.generateTokenForNewUser(saved);
-
-            logger.info("Auto-login token generated for email: {}", request.email());
             return new RegistrationResponse(token);
 
         } catch (BusinessException ex) {

@@ -185,8 +185,6 @@ public class RideController {
         return ResponseEntity.ok(ApiResponse.success(rideService.getEarningsTotals(campaignIds)));
     }
 
-    // ---------- per-endpoint authz helpers ----------
-
     private void requireDriverOwnership(Long callerId, String callerRole, Long pathDriverId) {
         if ("ADMIN".equals(callerRole)) {
             return;
