@@ -102,7 +102,7 @@ final class APIClient: APIClientProtocol {
         }
     }
     
-    /// Download raw bytes (e.g. CSV export) without JSON decoding.
+    // Used for CSV export — no JSON decode.
     func sendRawData(_ endpoint: Endpoint) async throws -> Data {
         do {
             let request = try endpoint.makeURLRequest(baseURL: baseURL)

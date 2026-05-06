@@ -42,7 +42,6 @@ class StatsViewModel: ObservableObject {
     init(api: APIClientProtocol = APIClient.shared, authService: AuthenticationService) {
         self.api = api
         self.authService = authService
-        // Auto-refresh stats whenever a ride finishes
         rideCompletedObserver = NotificationCenter.default.addObserver(
             forName: .rideCompleted,
             object: nil,

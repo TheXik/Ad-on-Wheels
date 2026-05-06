@@ -162,7 +162,6 @@ struct SwipeCardContainer: View {
 
     @State private var offset: CGSize = .zero
 
-    /// Normalized drag amount (-1 to 1) for overlay opacity
     private var dragProgress: Double {
         Double(offset.width) / 150.0
     }

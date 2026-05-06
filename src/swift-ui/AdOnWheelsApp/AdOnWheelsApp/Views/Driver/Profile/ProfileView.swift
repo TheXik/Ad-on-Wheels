@@ -135,7 +135,6 @@ struct ProfileMenuItem: View {
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        // Assuming AuthenticationService has a default init or mock
         ProfileView(authService: AuthenticationService())
     }
 }

@@ -61,19 +61,16 @@ struct Ride: Identifiable, Codable {
         return CLLocationCoordinate2D(latitude: lat, longitude: lon)
     }
 
-    // Computed property for formatted distance
     var formattedDistance: String {
         guard let distance = distanceKm else { return "0 km" }
         return String(format: "%.1f km", distance)
     }
-    
-    // Computed property for formatted earnings
+
     var formattedEarnings: String {
         guard let earnings = earnings else { return "€0.00" }
         return String(format: "€%.2f", earnings)
     }
-    
-    // Computed property for formatted duration
+
     var formattedDuration: String {
         guard let duration = duration else { return "0s" }
         let hours = duration / 3600

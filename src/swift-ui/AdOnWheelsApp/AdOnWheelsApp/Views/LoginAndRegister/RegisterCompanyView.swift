@@ -116,7 +116,6 @@ struct RegisterCompanyView: View {
                 Text("This email is already registered as a \(existing.rawValue). Would you like to log in as a \(existing.rawValue) instead?")
             }
 
-            // Auto-navigate to home when registration is successful
             if viewModel.registrationSuccessful && authService.isAuthenticated {
                 CompanyRootView(authService: authService)
                     .transition(.move(edge: .trailing))

@@ -1,5 +1,5 @@
 import SwiftUI
-import UIKit // Required for UIRectCorner and UIBezierPath
+import UIKit
 
 struct RoundedCorner: Shape {
     var radius: CGFloat = .infinity

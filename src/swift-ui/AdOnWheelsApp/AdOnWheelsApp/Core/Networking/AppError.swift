@@ -13,7 +13,6 @@ enum AppError: LocalizedError, Equatable {
     case unknown
 
     init(backendError: ErrorResponse) {
-        // Validation Errors (9001) - Check for detailed map first
         if let validationMap = backendError.validationErrors, !validationMap.isEmpty {
             self = .validation(validationMap)
             return

@@ -196,7 +196,6 @@ class CompanyDashboardViewModel: ObservableObject {
     }
 
 
-    /// Export a single campaign's stats as CSV.
     func exportCampaignCSV(campaignId: Int) async {
         isExporting = true
         defer { isExporting = false }
@@ -215,7 +214,6 @@ class CompanyDashboardViewModel: ObservableObject {
         }
     }
 
-    /// Export all campaigns for this company as enriched CSV (with ride stats).
     func exportAllCampaignsCSV() async {
         isExporting = true
         defer { isExporting = false }

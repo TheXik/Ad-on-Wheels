@@ -5,7 +5,6 @@ import PhotosUI
 class OnboardingViewModel: ObservableObject {
     @Published var currentStep = 0 // 0=welcome, 1=vehicle, 2=photo, 3=goal, 4=done
 
-    // Vehicle fields
     @Published var vehicleMake = ""
     @Published var vehicleModel = ""
     @Published var vehicleYear = ""
@@ -14,14 +13,11 @@ class OnboardingViewModel: ObservableObject {
     // Errors only surface after the first Continue tap on the vehicle step.
     @Published var vehicleFieldsTouched = false
 
-    // Vehicle photo
     @Published var selectedPhotoItem: PhotosPickerItem?
     @Published var vehicleImage: UIImage?
 
-    // Goal
     @Published var monthlyGoalKm: Double = 200
 
-    // State
     @Published var isLoading = false
     @Published var errorMessage: String?
 
