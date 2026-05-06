@@ -22,17 +22,9 @@ set -e
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 PASSWORD="${SEED_PASSWORD:-Test123!}"
 
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
-
 for tool in curl jq python3; do
-    command -v $tool >/dev/null 2>&1 || { echo -e "${RED}Missing required tool: $tool${NC}"; exit 1; }
+    command -v $tool >/dev/null 2>&1 || { echo "Missing required tool: $tool"; exit 1; }
 done
-
-# --- helpers ---------------------------------------------------------------
 
 post_json() {
     local path=$1 data=$2 token=$3
@@ -89,7 +81,7 @@ ensure_user() {
         token=$(echo "$resp" | jq -r '.data.token // empty')
     fi
     if [ -z "$token" ]; then
-        echo -e "${RED}Failed to ensure user $email: $resp${NC}" >&2
+        echo "Failed to ensure user $email: $resp" >&2
         return 1
     fi
     local pid=$(decode_profile_id "$token")
@@ -102,33 +94,29 @@ ensure_onboarded() {
     patch_json "/api/drivers/$id/onboarding" "$body" "$token" >/dev/null
 }
 
-# --- 1. company + drivers --------------------------------------------------
-
-echo -e "${BLUE}== Seeding users ==${NC}"
+echo "Seeding users"
 
 co=$(ensure_user COMPANY "Eval Test Corp s.r.o." "evaluator-co@test.dev")
 co_id=${co%%|*}
 co_token=${co##*|}
-echo -e "  ${GREEN}company id=$co_id${NC}"
+echo "  company id=$co_id"
 
 d1=$(ensure_user DRIVER "Demo Driver 1" "evaluator-d1@test.dev")
 d1_id=${d1%%|*}; d1_token=${d1##*|}
 ensure_onboarded "$d1_id" "$d1_token" "DEMO-1"
-echo -e "  ${GREEN}driver 1 id=$d1_id${NC}"
+echo "  driver 1 id=$d1_id"
 
 d2=$(ensure_user DRIVER "Demo Driver 2" "evaluator-d2@test.dev")
 d2_id=${d2%%|*}; d2_token=${d2##*|}
 ensure_onboarded "$d2_id" "$d2_token" "DEMO-2"
-echo -e "  ${GREEN}driver 2 id=$d2_id${NC}"
+echo "  driver 2 id=$d2_id"
 
 d3=$(ensure_user DRIVER "Demo Driver 3" "evaluator-d3@test.dev")
 d3_id=${d3%%|*}; d3_token=${d3##*|}
 ensure_onboarded "$d3_id" "$d3_token" "DEMO-3"
-echo -e "  ${GREEN}driver 3 id=$d3_id${NC}"
+echo "  driver 3 id=$d3_id"
 
-# --- 2. campaign -----------------------------------------------------------
-
-echo -e "${BLUE}== Seeding campaign ==${NC}"
+echo "Seeding campaign"
 
 CAMPAIGN_NAME="Demo Campaign 2026"
 existing_id=$(get_with_token "/api/campaigns/company/$co_id" "$co_token" \
@@ -136,7 +124,7 @@ existing_id=$(get_with_token "/api/campaigns/company/$co_id" "$co_token" \
 
 if [ -n "$existing_id" ]; then
     campaign_id="$existing_id"
-    echo -e "  ${YELLOW}campaign exists id=$campaign_id${NC}"
+    echo "  campaign exists id=$campaign_id"
 else
     body=$(cat <<EOF
 {
@@ -156,15 +144,13 @@ EOF
     resp=$(post_json /api/campaigns "$body" "$co_token")
     campaign_id=$(echo "$resp" | jq -r '.data.id // empty')
     if [ -z "$campaign_id" ]; then
-        echo -e "${RED}Campaign create failed: $resp${NC}" >&2
+        echo "Campaign create failed: $resp" >&2
         exit 1
     fi
-    echo -e "  ${GREEN}campaign created id=$campaign_id${NC}"
+    echo "  campaign created id=$campaign_id"
 fi
 
-# --- 3. applications -------------------------------------------------------
-
-echo -e "${BLUE}== Seeding applications ==${NC}"
+echo "Seeding applications"
 
 apply_for() {
     local d_id=$1 d_token=$2
@@ -181,7 +167,7 @@ apply_for() {
 app1=$(apply_for "$d1_id" "$d1_token")
 app2=$(apply_for "$d2_id" "$d2_token")
 app3=$(apply_for "$d3_id" "$d3_token")
-echo -e "  apps: d1=$app1, d2=$app2, d3=$app3"
+echo "  apps: d1=$app1, d2=$app2, d3=$app3"
 
 set_status() {
     local app_id=$1 status=$2
@@ -191,18 +177,16 @@ set_status() {
 
 set_status "$app1" ACCEPTED
 set_status "$app3" DECLINED
-echo -e "  ${GREEN}d1=ACCEPTED  d2=APPLIED (pending)  d3=DECLINED${NC}"
+echo "  d1=ACCEPTED  d2=APPLIED (pending)  d3=DECLINED"
 
-# --- 4. rides through Prague (only on first run) ---------------------------
-
-echo -e "${BLUE}== Seeding rides ==${NC}"
+echo "Seeding rides"
 
 # Skip if rides already exist for driver 1 (idempotency).
 existing_rides=$(get_with_token "/api/rides/$d1_id/history" "$d1_token" \
     | jq -r '.data | length // 0')
 
 if [ "$existing_rides" -gt 0 ] 2>/dev/null; then
-    echo -e "  ${YELLOW}driver 1 already has $existing_rides ride(s); skipping ride seed${NC}"
+    echo "  driver 1 already has $existing_rides ride(s); skipping ride seed"
 else
     # Generate three ride traces through Prague with proper timestamps. Each
     # ride is a list of waypoints; we interpolate ~12 GPS points per leg with a
@@ -314,34 +298,27 @@ PY
         pts=$(echo "$rides_json" | jq -c ".[$i]")
         ride_id=$(submit_ride "$pts")
         if [ -n "$ride_id" ]; then
-            # Verify the ride so its earnings count.
             curl -s -X POST "$BASE_URL/api/rides/$ride_id/verify" \
                 -H "Authorization: Bearer $d1_token" >/dev/null
-            echo -e "  ${GREEN}ride $((i+1)) recorded id=$ride_id (verified)${NC}"
+            echo "  ride $((i+1)) recorded id=$ride_id (verified)"
         else
-            echo -e "  ${RED}ride $((i+1)) failed${NC}"
+            echo "  ride $((i+1)) failed"
         fi
     done
 fi
 
-# --- summary ---------------------------------------------------------------
-
-echo ""
-echo -e "${GREEN}===========================================${NC}"
-echo -e "${GREEN}  Seed complete${NC}"
-echo -e "${GREEN}===========================================${NC}"
-echo ""
-echo -e "  Password for everyone: ${YELLOW}$PASSWORD${NC}"
-echo ""
-echo -e "  ${BLUE}Company${NC}"
-echo -e "    evaluator-co@test.dev    Eval Test Corp s.r.o."
-echo ""
-echo -e "  ${BLUE}Drivers${NC}"
-echo -e "    evaluator-d1@test.dev    ACCEPTED  (3 verified rides through Prague)"
-echo -e "    evaluator-d2@test.dev    APPLIED   (waiting for review)"
-echo -e "    evaluator-d3@test.dev    DECLINED"
-echo ""
-echo -e "  ${BLUE}Campaign${NC}"
-echo -e "    $CAMPAIGN_NAME (id=$campaign_id)"
-echo ""
-echo -e "${GREEN}Re-run any time; existing data is reused.${NC}"
+echo
+echo "Seed complete. Password for every account: $PASSWORD"
+echo
+echo "Company:"
+echo "  evaluator-co@test.dev    Eval Test Corp s.r.o."
+echo
+echo "Drivers:"
+echo "  evaluator-d1@test.dev    ACCEPTED  (3 verified rides through Prague)"
+echo "  evaluator-d2@test.dev    APPLIED   (waiting for review)"
+echo "  evaluator-d3@test.dev    DECLINED"
+echo
+echo "Campaign:"
+echo "  $CAMPAIGN_NAME (id=$campaign_id)"
+echo
+echo "Re-run any time; existing data is reused."
